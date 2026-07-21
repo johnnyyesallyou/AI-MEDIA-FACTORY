@@ -2,7 +2,7 @@
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
-from ..models.channel import ChannelConfig, KnowledgeSource, SourceType
+from core.models.channel import ChannelConfig, KnowledgeSource, SourceType
 
 # === REQUEST SCHEMAS ===
 
@@ -77,3 +77,4 @@ class KnowledgeSourceResponse(BaseModel):
     url: str
     priority: int
     is_active: bool
+
