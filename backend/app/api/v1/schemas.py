@@ -78,3 +78,4 @@ class KnowledgeSourceResponse(BaseModel):
     priority: int
     is_active: bool
 
+

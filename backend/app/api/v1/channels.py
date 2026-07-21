@@ -13,7 +13,7 @@ from .schemas import (
     KnowledgeSourceCreateRequest,
     KnowledgeSourceResponse
 )
-from ...models.channel import ChannelConfig, KnowledgeSource
+from core.models.channel import ChannelConfig, KnowledgeSource
 
 router = APIRouter(prefix="/channels", tags=["channels"])
 
@@ -231,3 +231,4 @@ async def list_knowledge_sources(channel_id: str):
         )
         for s in channel.sources
     ]
+
