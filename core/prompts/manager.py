@@ -10,7 +10,7 @@ class PromptManager:
     def load_prompt(self, category: str, prompt_name: str, version: str = "v1") -> Tuple[str, PromptMetadata]:
         """
         Загружает промпт и его метаданные.
-        Пример: load_prompt("writing", "telegram_news", "v2") 
+        Пример: load_prompt("writing", "telegram_news", "v2")
         """
         filename = f"{prompt_name}_{version}.md"
         filepath = self.base_dir / category / filename

@@ -4,7 +4,7 @@ from ..models.prompt_tracking import GenerationRecord, PromptMetadata
 
 class PromptExecutionLogger:
     """
-    Логгер выполнений промптов. 
+    Логгер выполнений промптов.
     В будущем будет заменен на реальный репозиторий (PostgreSQL).
     """
     
