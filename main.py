@@ -9,41 +9,34 @@ from backend.app.api.v1.router import api_v1_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    print(\"🚀 AI Media Factory Dashboard starting...\")
+    print("🚀 AI Media Factory Dashboard starting...")
     yield
-    # Shutdown
-    print(\"👋 Shutting down...\")
+    print("👋 Shutting down...")
 
 app = FastAPI(
-    title=\"AI Media Factory Dashboard API\",
-    description=\"API и интерфейс для управления AI Media Factory\",
-    version=\"1.0.0 Beta\",
+    title="AI Media Factory Dashboard API",
+    description="API и интерфейс для управления AI Media Factory",
+    version="1.0.0 Beta",
     lifespan=lifespan
 )
 
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[\"*\"],
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=[\"*\"],
-    allow_headers=[\"*\"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Подключаем статику
-app.mount(\"/static\", StaticFiles(directory=\"backend/static\"), name=\"static\")
+app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 
-# Подключаем шаблоны
-templates = Jinja2Templates(directory=\"backend/templates\")
+templates = Jinja2Templates(directory="backend/templates")
 
-# Подключаем API роуты
 app.include_router(api_v1_router)
 
-# Главная страница Dashboard
-@app.get(\"/\")
+@app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse(\"dashboard.html\", {\"request\": request})
+    return templates.TemplateResponse("dashboard.html", {"request": request})
 
-if __name__ == \"__main__\":
-    uvicorn.run(\"main:app\", host=\"0.0.0.0\", port=8000, reload=True)
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
