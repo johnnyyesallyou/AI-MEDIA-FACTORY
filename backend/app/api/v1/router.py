@@ -9,6 +9,8 @@ from .knowledge import router as knowledge_router
 from .assets import router as assets_router
 from .integrations import router as integrations_router
 from .logs import router as logs_router
+from .users import router as users_router
+from .settings import router as settings_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -22,3 +24,5 @@ api_v1_router.include_router(knowledge_router)
 api_v1_router.include_router(assets_router)
 api_v1_router.include_router(integrations_router)
 api_v1_router.include_router(logs_router)
+api_v1_router.include_router(users_router)
+api_v1_router.include_router(settings_router)
