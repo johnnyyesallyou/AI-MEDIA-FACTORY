@@ -1,0 +1,91 @@
+﻿import uuid
+from datetime import datetime
+
+from sqlalchemy import Column, String, Integer, DateTime, Text
+
+from core.database import Base
+
+
+class ContentORM(Base):
+    """ORM-модель единицы контента (пост/тема) в жизненном цикле research -> published."""
+    __tablename__ = "content"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
+
+    channel_id = Column(
+        String,
+        nullable=True,
+        index=True
+    )  # nullable для старых демо-записей без канала
+
+    source_url = Column(
+        String,
+        nullable=False
+    )
+
+    headline = Column(
+        String,
+        nullable=False
+    )
+
+    status = Column(
+        String,
+        nullable=False,
+        default="research"
+    )
+
+    prompt_version = Column(
+        String,
+        nullable=True
+    )
+
+    draft_text = Column(
+        String,
+        nullable=True
+    )
+
+    image_url = Column(
+        String,
+        nullable=True
+    )
+
+    # Telegram publishing metadata
+    telegram_message_id = Column(
+        String,
+        nullable=True
+    )
+
+    published_at = Column(
+        DateTime,
+        nullable=True
+    )
+
+    publish_error = Column(
+        Text,
+        nullable=True
+    )
+
+    fact_score = Column(
+        Integer,
+        nullable=True
+    )
+
+    quality_score = Column(
+        Integer,
+        nullable=True
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )

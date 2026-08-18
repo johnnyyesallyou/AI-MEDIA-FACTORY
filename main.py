@@ -1,5 +1,6 @@
-﻿import sys
+import sys
 import os
+import asyncio
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -7,20 +8,35 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
 
-# Добавляем корень проекта в sys.path, чтобы работали импорты из 'core'
+# ????????? ?????? ??????? ? sys.path, ????? ???????? ??????? ?? 'core'
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from backend.app.api.v1.router import api_v1_router
+from backend.automation.scheduler import automation_scheduler
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 AI Media Factory Dashboard starting...")
+    print("?? AI Media Factory Dashboard starting...", flush=True)
+    
+    # Sprint 15: ????????? automation scheduler ? ????
+    asyncio.create_task(automation_scheduler.start())
+    print("?? Automation scheduler task created in background", flush=True)
+    
     yield
-    print("👋 Shutting down...")
+    print("?? Shutting down...", flush=True)
+    
+    # Sprint 15: ????????????? scheduler ??? shutdown
+    try:
+        await automation_scheduler.stop()
+        print("? Automation scheduler stopped", flush=True)
+    except Exception as e:
+        print(f"?? Automation scheduler stop error: {e}", flush=True)
+
 
 app = FastAPI(
     title="AI Media Factory Dashboard API",
-    description="API и интерфейс для управления AI Media Factory",
+    description="API ? ????????? ??? ?????????? AI Media Factory",
     version="1.0.0 Beta",
     lifespan=lifespan
 )
@@ -36,6 +52,10 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 templates = Jinja2Templates(directory="backend/templates")
 app.include_router(api_v1_router)
+
+# Sprint 11: Serving generated assets
+os.makedirs("/app/assets", exist_ok=True)
+app.mount("/assets", StaticFiles(directory="/app/assets"), name="assets")
 
 @app.get("/")
 async def root(request: Request):

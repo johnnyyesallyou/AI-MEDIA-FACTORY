@@ -1,0 +1,33 @@
+﻿version: '3.8'
+
+services:
+  comfyui:
+    image: yanwk/comfyui-boot:latest
+    container_name: amf_comfyui
+    ports:
+      - "8188:8188"
+    volumes:
+      - comfyui_data:/root
+      - ./comfyui/models:/root/models
+      - ./comfyui/output:/root/output
+      - ./comfyui/input:/root/input
+    environment:
+      - CLI_ARGS=--listen 0.0.0.0 --port 8188
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - amf_network
+    restart: unless-stopped
+
+volumes:
+  comfyui_data:
+
+networks:
+  amf_network:
+    external: true
+    name: ai-media-factory_amf_network

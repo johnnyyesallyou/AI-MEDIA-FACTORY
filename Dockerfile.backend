@@ -1,0 +1,21 @@
+﻿FROM python:3.10-slim
+
+WORKDIR /app
+
+# Устанавливаем системные зависимости (включая git)
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
+# Копируем requirements
+COPY requirements.txt .
+
+# Устанавливаем зависимости, добавляя индекс PyTorch для CUDA-версий
+RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121
+
+# Копируем код
+COPY . .
+
+# Открываем порт
+EXPOSE 8000
+
+# Запускаем приложение
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -35,6 +35,8 @@ class ChannelConfig(BaseModel):
     language_search: str = Field(default="en", description="Язык поиска источников")
     language_publish: str = Field(default="ru", description="Язык публикации")
     style_profile: str = Field(default="minimal", description="Стиль: openai, techcrunch, vc, minimal, expert")
+    timezone: str = Field(default="UTC", description="Часовой пояс канала")
+    description: Optional[str] = None
     
     # Интеграции (заглушки для API ключей, в реальности хранить в Secrets Manager)
     bot_token: Optional[str] = None
