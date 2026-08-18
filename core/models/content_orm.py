@@ -1,0 +1,128 @@
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Column, String, Integer, DateTime, Text, JSON, Boolean, ForeignKey
+
+from core.database import Base
+
+
+class ContentORM(Base):
+    """ORM-модель единицы контента (пост/тема) в жизненном цикле research -> published."""
+    __tablename__ = "content"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
+
+    channel_id = Column(
+        String,
+        nullable=True,
+        index=True
+    )  # nullable для старых демо-записей без канала
+
+    source_url = Column(
+        String,
+        nullable=False
+    )
+
+    headline = Column(
+        String,
+        nullable=False
+    )
+
+    source_text = Column(
+        Text,
+        nullable=True
+    )
+
+    status = Column(
+        String,
+        nullable=False,
+        default="research"
+    )
+
+    prompt_version = Column(
+        String,
+        nullable=True
+    )
+
+    draft_text = Column(
+        String,
+        nullable=True
+    )
+
+
+    asset_id = Column(String, ForeignKey("assets.id"), nullable=True)  # Sprint 11
+    image_url = Column(String(500), nullable=True)  # Sprint 11
+    image_prompt = Column(Text, nullable=True)  # Sprint 11
+    # Telegram publishing metadata
+    telegram_message_id = Column(
+        String,
+        nullable=True
+    )
+
+    published_at = Column(
+        DateTime,
+        nullable=True
+    )
+
+    publish_error = Column(
+        Text,
+        nullable=True
+    )
+
+    fact_score = Column(
+        Integer,
+        nullable=True
+    )
+
+    quality_score = Column(
+        Integer,
+        nullable=True
+    )
+
+    revision_count = Column(
+        Integer,
+        default=0
+    )
+
+    last_revision_reason = Column(
+        Text,
+        nullable=True
+    )
+
+
+    # === WritingEngine v2 fields ===
+    validation_issues = Column(
+        JSON,
+        nullable=True,
+        default=list
+    )
+
+    fact_check_passed = Column(
+        Boolean,
+        nullable=True,
+        default=True
+    )
+
+    model_used = Column(
+        String(100),
+        nullable=True,
+        default=""
+    )
+
+    manga_chapter_id = Column(String, nullable=True, index=True)
+    anime_episode_id = Column(String, nullable=True, index=True)
+    news_article_id = Column(String, nullable=True, index=True)
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )

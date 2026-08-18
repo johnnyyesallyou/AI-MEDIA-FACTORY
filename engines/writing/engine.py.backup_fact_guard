@@ -1,0 +1,221 @@
+﻿import os
+import logging
+import requests
+from typing import Dict, Any, Optional
+
+from .models import ContentBrief
+from .prompt_manager import PromptManager
+from .output_guard import OutputGuard
+from .styles.profiles import TELEGRAM_AI_EXPERT
+
+
+logger = logging.getLogger(__name__)
+
+
+class WritingEngine:
+    """
+    Writing Engine.
+    Генерация Telegram-контента через Ollama.
+    """
+
+
+    def __init__(self, model: Optional[str] = None):
+
+        base_url = os.getenv(
+            "OLLAMA_URL",
+            "http://localhost:11434"
+        )
+
+        self.ollama_url = f"{base_url}/api/generate"
+
+        self.model = model or "qwen2.5-coder:3b"
+
+
+
+    def generate(
+        self,
+        brief: ContentBrief,
+        style_profile: dict = None
+    ) -> dict:
+
+        style_profile = style_profile or TELEGRAM_AI_EXPERT
+
+
+        prompt_manager = PromptManager(
+            style_profile
+        )
+
+
+        user_prompt = prompt_manager.build_prompt(
+            brief
+        )
+
+
+        system_prompt = """
+Ты профессиональный редактор Telegram-канала.
+
+КРИТИЧЕСКИЕ ПРАВИЛА:
+
+- Пиши только готовый пост.
+- Не добавляй служебные заголовки.
+- Не пиши "Источник".
+- Не пиши "Факты".
+- Не пиши "Тема".
+- Не выводи URL.
+- Не придумывай события.
+- Не добавляй организации, людей и цифры которых нет в фактах.
+- Не используй вводные фразы.
+- Начинай сразу с текста поста.
+
+Если фактов мало — напиши короткий аккуратный пост.
+"""
+
+
+        logger.info(
+            "WritingEngine started model=%s",
+            self.model
+        )
+
+
+        logger.info(
+            "USER PROMPT:\n%s",
+            user_prompt[:2000]
+        )
+
+        result = self._call_ollama(
+            system_prompt,
+            user_prompt
+        )
+
+
+        if not result:
+            raise Exception(
+                "Ollama returned empty result"
+            )
+
+
+        generated_text = (
+            result.get("response", "")
+            .strip()
+        )
+
+        guard = OutputGuard()
+
+        generated_text = guard.clean(
+            generated_text
+        )
+
+        logger.info(
+            "Generated length=%s",
+            len(generated_text)
+        )
+
+
+        return {
+            "generated_text": generated_text,
+            "tokens_input": len(user_prompt.split()),
+            "tokens_output": len(generated_text.split()),
+            "model_used": self.model,
+        }
+
+
+
+    def clean_output(
+        self,
+        text: str
+    ) -> str:
+
+        bad_prefixes = [
+            "---",
+            "Источник:",
+            "Факты:",
+            "Тема:",
+            "Заголовок:"
+        ]
+
+
+        for prefix in bad_prefixes:
+
+            if text.startswith(prefix):
+
+                text = text.replace(
+                    prefix,
+                    "",
+                    1
+                ).strip()
+
+
+        return text
+
+
+
+    def _call_ollama(
+        self,
+        system_prompt: str,
+        user_prompt: str
+    ) -> Dict[str, Any]:
+
+
+        payload = {
+
+            "model": self.model,
+
+            "system": system_prompt,
+
+            "prompt": user_prompt,
+
+            "stream": False,
+
+
+            "options": {
+
+                "temperature": 0.15,
+
+                "top_p": 0.85,
+
+                "repeat_penalty": 1.15,
+
+                "num_predict": 900,
+
+                "stop": [
+                    "Источник:",
+                    "Факты:",
+                    "Тема:"
+                ]
+
+            }
+
+        }
+
+
+        logger.info(
+            "Sending request to Ollama"
+        )
+
+
+        try:
+
+            response = requests.post(
+
+                self.ollama_url,
+
+                json=payload,
+
+                timeout=(10,300)
+
+            )
+
+
+            response.raise_for_status()
+
+
+            return response.json()
+
+
+        except Exception:
+
+            logger.exception(
+                "Ollama request failed"
+            )
+
+            return None
