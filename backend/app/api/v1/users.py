@@ -1,5 +1,5 @@
 ﻿from fastapi import APIRouter, HTTPException, Header
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
@@ -30,9 +30,13 @@ class UserCreateRequest(BaseModel):
     role: UserRole = UserRole.VIEWER
     password: str = Field(min_length=8, description="В реальности пароль хэшируется (bcrypt/argon2)")
 
+class RoleUpdateRequest(BaseModel):
+    role: UserRole
+
 # === ЗАГЛУШКА БД ===
 _users_db = [
-    User(id="1", email="admin@amf.local", full_name="Главный Администратор", role=UserRole.ADMINISTRATOR)
+    User(id="1", email="admin@amf.local", full_name="Главный Администратор", role=UserRole.ADMINISTRATOR),
+    User(id="2", email="abc@yandex.ru", full_name="Дмитрий", role=UserRole.EDITOR)
 ]
 
 # === ENDPOINTS ===
@@ -40,7 +44,6 @@ _users_db = [
 @router.get("/me", response_model=User)
 async def get_current_user(authorization: Optional[str] = Header(None)):
     '''Получить текущего авторизованного пользователя.'''
-    # В реальности здесь будет декодирование JWT токена из заголовка Authorization
     return _users_db[0]
 
 @router.get("/", response_model=List[User])
@@ -60,11 +63,11 @@ async def create_user(request: UserCreateRequest):
     _users_db.append(new_user)
     return new_user
 
-@router.put("/{user_id}/role")
-async def update_user_role(user_id: str, new_role: UserRole):
+@router.put("/{user_id}/role", response_model=User)
+async def update_user_role(user_id: str, request: RoleUpdateRequest):
     '''Изменить роль пользователя.'''
     for user in _users_db:
         if user.id == user_id:
-            user.role = new_role
-            return {"message": "Role updated", "user": user}
+            user.role = request.role
+            return user
     raise HTTPException(status_code=404, detail="User not found")

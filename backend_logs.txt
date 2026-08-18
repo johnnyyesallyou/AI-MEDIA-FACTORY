@@ -1,0 +1,200 @@
+﻿amf_backend  |     sock.connect(sa)
+amf_backend  | ConnectionRefusedError: [Errno 111] Connection refused
+amf_backend  | 
+amf_backend  | The above exception was the direct cause of the following exception:
+amf_backend  | 
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+amf_backend  |     response = self._make_request(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+amf_backend  |     conn.request(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 500, in request
+amf_backend  |     self.endheaders()
+amf_backend  |   File "/usr/local/lib/python3.10/http/client.py", line 1298, in endheaders
+amf_backend  |     self._send_output(message_body, encode_chunked=encode_chunked)
+amf_backend  |   File "/usr/local/lib/python3.10/http/client.py", line 1058, in _send_output
+amf_backend  |     self.send(msg)
+amf_backend  |   File "/usr/local/lib/python3.10/http/client.py", line 996, in send
+amf_backend  |     self.connect()
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 331, in connect
+amf_backend  |     self.sock = self._new_conn()
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 219, in _new_conn
+amf_backend  |     raise NewConnectionError(
+amf_backend  | urllib3.exceptions.NewConnectionError: HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused
+amf_backend  | 
+amf_backend  | The above exception was the direct cause of the following exception:
+amf_backend  | 
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 645, in send
+amf_backend  |     resp = conn.urlopen(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+amf_backend  |     retries = retries.increment(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/util/retry.py", line 535, in increment
+amf_backend  |     raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+amf_backend  | urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | 
+amf_backend  | During handling of the above exception, another exception occurred:
+amf_backend  | 
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/app/backend/automation/jobs/automation_jobs.py", line 243, in run
+amf_backend  |     result = await writer.generate(brief, style_profile=TELEGRAM_AI_EXPERT)
+amf_backend  |   File "/app/engines/writing/engine.py", line 68, in generate
+amf_backend  |     llm_response = await asyncio.to_thread(
+amf_backend  |   File "/usr/local/lib/python3.10/asyncio/threads.py", line 25, in to_thread
+amf_backend  |     return await loop.run_in_executor(None, func_call)
+amf_backend  |   File "/usr/local/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+amf_backend  |     result = self.fn(*self.args, **self.kwargs)
+amf_backend  |   File "/app/engines/writing/engine.py", line 186, in _call_llm
+amf_backend  |     response = requests.post(url, json=payload, timeout=120)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/api.py", line 115, in post
+amf_backend  |     return request("post", url, data=data, json=json, **kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/api.py", line 59, in request
+amf_backend  |     return session.request(method=method, url=url, **kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 592, in request
+amf_backend  |     resp = self.send(prep, **send_kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 706, in send
+amf_backend  |     r = adapter.send(request, **kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 678, in send
+amf_backend  |     raise ConnectionError(e, request=request)
+amf_backend  | requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | LLM call failed: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | Writing failed item=ec0f0bbf-5a79-4d5e-b90e-18880ba69098 error=HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 204, in _new_conn
+amf_backend  |     sock = connection.create_connection(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+amf_backend  |     raise err
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+amf_backend  |     sock.connect(sa)
+amf_backend  | ConnectionRefusedError: [Errno 111] Connection refused
+amf_backend  | 
+amf_backend  | The above exception was the direct cause of the following exception:
+amf_backend  | 
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+amf_backend  |     response = self._make_request(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+amf_backend  |     conn.request(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 500, in request
+amf_backend  |     self.endheaders()
+amf_backend  |   File "/usr/local/lib/python3.10/http/client.py", line 1298, in endheaders
+amf_backend  |     self._send_output(message_body, encode_chunked=encode_chunked)
+amf_backend  |   File "/usr/local/lib/python3.10/http/client.py", line 1058, in _send_output
+amf_backend  |     self.send(msg)
+amf_backend  |   File "/usr/local/lib/python3.10/http/client.py", line 996, in send
+amf_backend  |     self.connect()
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 331, in connect
+amf_backend  |     self.sock = self._new_conn()
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 219, in _new_conn
+amf_backend  |     raise NewConnectionError(
+amf_backend  | urllib3.exceptions.NewConnectionError: HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused
+amf_backend  | 
+amf_backend  | The above exception was the direct cause of the following exception:
+amf_backend  | 
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 645, in send
+amf_backend  |     resp = conn.urlopen(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+amf_backend  |     retries = retries.increment(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/util/retry.py", line 535, in increment
+amf_backend  |     raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+amf_backend  | urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | 
+amf_backend  | During handling of the above exception, another exception occurred:
+amf_backend  | 
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/app/backend/automation/jobs/automation_jobs.py", line 243, in run
+amf_backend  |     result = await writer.generate(brief, style_profile=TELEGRAM_AI_EXPERT)
+amf_backend  |   File "/app/engines/writing/engine.py", line 68, in generate
+amf_backend  |     llm_response = await asyncio.to_thread(
+amf_backend  |   File "/usr/local/lib/python3.10/asyncio/threads.py", line 25, in to_thread
+amf_backend  |     return await loop.run_in_executor(None, func_call)
+amf_backend  |   File "/usr/local/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+amf_backend  |     result = self.fn(*self.args, **self.kwargs)
+amf_backend  |   File "/app/engines/writing/engine.py", line 186, in _call_llm
+amf_backend  |     response = requests.post(url, json=payload, timeout=120)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/api.py", line 115, in post
+amf_backend  |     return request("post", url, data=data, json=json, **kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/api.py", line 59, in request
+amf_backend  |     return session.request(method=method, url=url, **kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 592, in request
+amf_backend  |     resp = self.send(prep, **send_kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 706, in send
+amf_backend  |     r = adapter.send(request, **kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 678, in send
+amf_backend  |     raise ConnectionError(e, request=request)
+amf_backend  | requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | LLM call failed: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | Writing failed item=5730c69c-dcfc-4588-88e6-19d458327c59 error=HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 204, in _new_conn
+amf_backend  |     sock = connection.create_connection(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+amf_backend  |     raise err
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+amf_backend  |     sock.connect(sa)
+amf_backend  | ConnectionRefusedError: [Errno 111] Connection refused
+amf_backend  | 
+amf_backend  | The above exception was the direct cause of the following exception:
+amf_backend  | 
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+amf_backend  |     response = self._make_request(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+amf_backend  |     conn.request(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 500, in request
+amf_backend  |     self.endheaders()
+amf_backend  |   File "/usr/local/lib/python3.10/http/client.py", line 1298, in endheaders
+amf_backend  |     self._send_output(message_body, encode_chunked=encode_chunked)
+amf_backend  |   File "/usr/local/lib/python3.10/http/client.py", line 1058, in _send_output
+amf_backend  |     self.send(msg)
+amf_backend  |   File "/usr/local/lib/python3.10/http/client.py", line 996, in send
+amf_backend  |     self.connect()
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 331, in connect
+amf_backend  |     self.sock = self._new_conn()
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 219, in _new_conn
+amf_backend  |     raise NewConnectionError(
+amf_backend  | urllib3.exceptions.NewConnectionError: HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused
+amf_backend  | 
+amf_backend  | The above exception was the direct cause of the following exception:
+amf_backend  | 
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 645, in send
+amf_backend  |     resp = conn.urlopen(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+amf_backend  |     retries = retries.increment(
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/urllib3/util/retry.py", line 535, in increment
+amf_backend  |     raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+amf_backend  | urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | 
+amf_backend  | During handling of the above exception, another exception occurred:
+amf_backend  | 
+amf_backend  | Traceback (most recent call last):
+amf_backend  |   File "/app/backend/automation/jobs/automation_jobs.py", line 243, in run
+amf_backend  |     result = await writer.generate(brief, style_profile=TELEGRAM_AI_EXPERT)
+amf_backend  |   File "/app/engines/writing/engine.py", line 68, in generate
+amf_backend  |     llm_response = await asyncio.to_thread(
+amf_backend  |   File "/usr/local/lib/python3.10/asyncio/threads.py", line 25, in to_thread
+amf_backend  |     return await loop.run_in_executor(None, func_call)
+amf_backend  |   File "/usr/local/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+amf_backend  |     result = self.fn(*self.args, **self.kwargs)
+amf_backend  |   File "/app/engines/writing/engine.py", line 186, in _call_llm
+amf_backend  |     response = requests.post(url, json=payload, timeout=120)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/api.py", line 115, in post
+amf_backend  |     return request("post", url, data=data, json=json, **kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/api.py", line 59, in request
+amf_backend  |     return session.request(method=method, url=url, **kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 592, in request
+amf_backend  |     resp = self.send(prep, **send_kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 706, in send
+amf_backend  |     r = adapter.send(request, **kwargs)
+amf_backend  |   File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 678, in send
+amf_backend  |     raise ConnectionError(e, request=request)
+amf_backend  | requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [Errno 111] Connection refused"))
+amf_backend  | Skip empty draft item=97ddfd39-3042-4e6d-82f9-2c66f14b46e5
+amf_backend  | Skip empty draft item=13616a20-ace8-4507-8bad-8b2f274594bb
+amf_backend  | Skip empty draft item=6e1cd9fd-7eba-4ec9-badf-5264b0d53a9a
+amf_backend  | Skip empty draft item=77a4280b-c77d-4b65-80c2-9fd74fcc2ea1
+amf_backend  | Skip empty draft item=fa127efe-16cf-4ce7-80b8-bbd209b991dc
+amf_backend  | Skip empty draft item=4581e5e9-050b-4622-9582-db9e84ac1050
+amf_backend  | Skip empty draft item=4a5e51f6-ce83-4002-8c4b-8cb91d406cb0

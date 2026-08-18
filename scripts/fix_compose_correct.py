@@ -1,0 +1,69 @@
+import pathlib
+
+p = pathlib.Path("/app/docker-compose.yml")
+content = p.read_text(encoding="utf-8")
+
+# 1. ??????? ??????? ???????? environment: (?????? ? ????? ???????)
+# ???? ???? "    environment:\n      - TELEGRAPH_ACCESS_TOKEN=" ? ??????? ???
+lines = content.splitlines(keepends=True)
+
+new_lines = []
+skip_next = 0
+for i, line in enumerate(lines):
+    if skip_next > 0:
+        skip_next -= 1
+        continue
+    
+    # ?????????? ???? "    environment:\n      - TELEGRAPH_ACCESS_TOKEN=..."
+    if line.strip() == "environment:" and i+1 < len(lines) and "TELEGRAPH_ACCESS_TOKEN" in lines[i+1]:
+        skip_next = 1  # ?????????? ????????? ??????
+        continue
+    
+    new_lines.append(line)
+
+content = "".join(new_lines)
+
+# 2. ????????? ???? ?? ??? TELEGRAPH_ACCESS_TOKEN
+if "TELEGRAPH_ACCESS_TOKEN" in content:
+    print("TELEGRAPH_ACCESS_TOKEN already exists, removing duplicates done")
+else:
+    # 3. ??????? ???????????? ?????? environment ? backend ? ????????? ??????????
+    # ???? "      ENVIRONMENT:\n        development\n" (????????? ??????????) ? ????????? ????? ???
+    marker = '      ENVIRONMENT:\n        development\n'
+    if marker in content:
+        insert_text = '\n      TELEGRAPH_ACCESS_TOKEN:\n        82dc98d2b2b08932d80c5fe2b909256544d8fa55a3a04c581881ffcb0e91\n'
+        content = content.replace(marker, marker + insert_text)
+        print("? TELEGRAPH_ACCESS_TOKEN added to existing environment section")
+    else:
+        print("? ENVIRONMENT marker not found")
+        # Fallback: ???? USE_AUTOMATION_V2
+        marker2 = '      USE_AUTOMATION_V2: "true"\n'
+        if marker2 in content:
+            insert_text = '\n      TELEGRAPH_ACCESS_TOKEN:\n        82dc98d2b2b08932d80c5fe2b909256544d8fa55a3a04c581881ffcb0e91\n'
+            content = content.replace(marker2, marker2 + insert_text)
+            print("? TELEGRAPH_ACCESS_TOKEN added after USE_AUTOMATION_V2")
+
+p.write_text(content, encoding="utf-8")
+
+# 4. ?????????: ????????? ??? ?????? ???? ?????? environment:
+env_count = content.count("    environment:")
+print(f"\nValidation: 'environment:' count = {env_count} (should be 1)")
+
+# 5. ?????????? ?????? backend environment
+lines = content.splitlines()
+in_backend = False
+in_env = False
+env_lines = []
+for i, line in enumerate(lines):
+    if "  backend:" in line:
+        in_backend = True
+    if in_backend and "    environment:" in line:
+        in_env = True
+    if in_env:
+        env_lines.append(f"{i:3d}: {line}")
+        if len(env_lines) > 25:
+            break
+
+print("\nEnvironment section:")
+for l in env_lines:
+    print(l)
