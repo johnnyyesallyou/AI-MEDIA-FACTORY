@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 
 const apiClient = axios.create({
   baseURL: '/api/v1',
@@ -112,6 +112,12 @@ export const assetsAPI = {
 export const integrationsAPI = {
   list: () => apiClient.get('/integrations/'),
   check: (id: string) => apiClient.post(`/integrations/${id}/check`),
+};
+
+
+// Metrics API (Sprint 43 — system metrics from Prometheus + health)
+export const metricsAPI = {
+  getSystem: () => apiClient.get('/metrics/system'),
 };
 
 // Logs API
