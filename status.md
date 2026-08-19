@@ -1909,3 +1909,47 @@ python -m core.cli ab-test complete --id <test_id>
 
 ### Следующий шаг
 Sprint 38 — Advanced Image Intelligence
+
+## Sprint 38 — Advanced Image Intelligence (19 августа 2026)
+
+### Что создано
+- ✅ **UnsplashAdapter** (`engines/image/unsplash_adapter.py`)
+  - Search API: stock photos по запросу из headline
+  - Graceful degradation без UNSPLASH_ACCESS_KEY
+- ✅ **DALLEAdapter** (`engines/image/dalle_adapter.py`)
+  - DALL-E 3 генерация (1792x1024, natural style)
+  - Graceful degradation без OPENAI_API_KEY
+- ✅ **Fallback chain** в ImageAcquisitionPolicy:
+  \\\
+  og:image (real) → validate
+       ↓ нет
+  Unsplash (stock, если ключ)
+       ↓ нет
+  DALL-E (AI, если ключ)
+       ↓ нет
+  Pollinations (бесплатный AI)
+       ↓ нет
+  text post
+  \\\
+
+### Правила сохранены
+- Manga/Anime: только реальные обложки (fallback: none)
+- News: fallback chain только при fallback: "ai_generated"
+- Конфигурируемая цепочка: image_policy.fallback_chain
+
+### Тесты
+\\\
+[1] Unsplash available: False (без ключа)
+[2] Search without key: None (graceful)
+[3] Chain: unsplash(skip) → dalle(skip) → pollinations ✅
+[4] Real image priority ✅
+[5] Manga unchanged (NO fallback) ✅
+\\\
+
+### Файлы
+- engines/image/unsplash_adapter.py (новый)
+- engines/image/dalle_adapter.py (новый)
+- engines/publishing/image_acquisition.py (fallback chain)
+
+### Следующий шаг
+Sprint 39 — Content Optimization
