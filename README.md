@@ -1,4 +1,4 @@
-﻿# AI Media Factory
+# AI Media Factory
 
 ## Overview
 

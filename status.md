@@ -2229,3 +2229,27 @@ curl http://localhost:8000/metrics
 - Временной недоступности БД (retry)
 
 ### Следующий шаг: Sprint 42 — CI/CD + Automated Testing
+
+## Sprint 42 — CI/CD + Automated Testing (ЗАВЕРШЁН: 2026-08-20)
+
+### GitHub Actions (.github/workflows/ci.yml)
+- ✅ test: pytest + coverage (tests/ci), psycopg2-binary
+- ✅ lint: ruff smoke lint (E9,F63,F7,F82)
+- ✅ docker-build: сборка backend image (~6 мин)
+
+### Test suite (tests/ci/) — 25 passed
+- test_error_taxonomy.py: 17 кейсов (91% coverage)
+- test_headline_optimizer.py: 5 кейсов, DB-вызовы через monkeypatch (87%)
+- test_image_policy.py: 3 кейса (image_acquisition 71%)
+
+### Инфраструктурные фиксы
+- psycopg2-binary в CI (create_engine импортирует dbapi при import)
+- Убран stray gitlink AI-MEDIA-FACTORY (160000)
+- pytest.ini: collection только tests/ci
+
+### Coverage новых модулей
+core/error_taxonomy 91% | models/analytics 95% | headline_optimizer 87% | image_acquisition 71%
+Total: 12% (legacy не покрыт — растёт в следующих спринтах)
+
+### Следующий шаг
+Sprint 43 — Unified Analytics Dashboard
