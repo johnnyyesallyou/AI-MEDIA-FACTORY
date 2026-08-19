@@ -1,120 +1,61 @@
-"""Health check endpoints."""
-import requests
-import os
-import time
-from sqlalchemy import text
-from fastapi import APIRouter
-from pydantic import BaseModel
+"""Health Endpoints - Sprint 41.
+
+Unified health API для Dashboard и внешних мониторингов.
+"""
+from fastapi import APIRouter, HTTPException
 from typing import Optional
 
-router = APIRouter(prefix="/health", tags=["health"])
+from core.health_unified import UnifiedHealthService
 
 
-class OllamaHealthResponse(BaseModel):
-    """Ответ проверки здоровья Ollama."""
-    status: str  # "ok" | "error"
-    url: str
-    models: list[str] = []
-    message: Optional[str] = None
-    response_time_ms: Optional[int] = None
+router = APIRouter(prefix="/api/health", tags=["health"])
+
+health_service = UnifiedHealthService()
 
 
-@router.get("/ollama", response_model=OllamaHealthResponse)
-async def check_ollama_health():
-    """
-    Sprint 10: Проверяет доступность локального Ollama сервера.
-    
-    Возвращает:
-        - status: "ok" или "error"
-        - url: URL Ollama
-        - models: список доступных models
-        - response_time_ms: время ответа
-    """
-    ollama_url = os.environ.get("OLLAMA_URL", "http://host.docker.internal:11434")
-    
-    start = time.time()
-    
-    try:
-        # Проверяем доступность Ollama
-        r = requests.get(f"{ollama_url}/api/tags", timeout=5)
-        r.raise_for_status()
-        
-        response_time_ms = int((time.time() - start) * 1000)
-        data = r.json()
-        models = [m.get("name", "unknown") for m in data.get("models", [])]
-        
-        return OllamaHealthResponse(
-            status="ok",
-            url=ollama_url,
-            models=models,
-            response_time_ms=response_time_ms,
-            message=f"Ollama is available. {len(models)} models"
-        )
-        
-    except requests.exceptions.Timeout:
-        return OllamaHealthResponse(
-            status="error",
-            url=ollama_url,
-            message=f"Timeout: Ollama not responding within 5s"
-        )
-    except requests.exceptions.ConnectionError as e:
-        return OllamaHealthResponse(
-            status="error",
-            url=ollama_url,
-            message=f"ConnectionError: {str(e)}"
-        )
-    except Exception as e:
-        return OllamaHealthResponse(
-            status="error",
-            url=ollama_url,
-            message=f"Error: {str(e)}"
-        )
+@router.get("")
+def get_health_full():
+    """Полный статус всех компонентов."""
+    return health_service.get_overall_status()
 
 
-@router.get("/postgres")
-async def check_postgres_health():
-    """Проверяет доступность PostgreSQL."""
-    from core.database import SessionLocal
-    start = time.time()
-    
-    try:
-        db = SessionLocal()
-        # Простой запрос для проверки соединения
-        db.execute(text("SELECT 1"))
-        db.close()
-        response_time_ms = int((time.time() - start) * 1000)
-        return {
-            "status": "ok",
-            "message": "PostgreSQL is available",
-            "response_time_ms": response_time_ms
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Ошибка: {str(e)}"
-        }
+@router.get("/database")
+def get_health_database():
+    """Статус базы данных."""
+    return health_service.check_database()
 
 
-@router.get("/redis")
-async def check_redis_health():
-    """Проверяет доступность Redis."""
-    start = time.time()
-    try:
-        import redis
-        r = redis.Redis(
-            host=os.environ.get("REDIS_HOST", "redis"),
-            port=int(os.environ.get("REDIS_PORT", 6379)),
-            socket_timeout=3
-        )
-        r.ping()
-        response_time_ms = int((time.time() - start) * 1000)
-        return {
-            "status": "ok",
-            "message": "Redis is available",
-            "response_time_ms": response_time_ms
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Ошибка: {str(e)}"
-        }
+@router.get("/sources")
+def get_health_sources():
+    """Статус источников контента."""
+    return health_service.check_sources()
+
+
+@router.get("/publishers")
+def get_health_publishers():
+    """Статус publishers (Telegram, VK)."""
+    return health_service.check_publishers()
+
+
+@router.get("/automation")
+def get_health_automation():
+    """Статус automation (scheduler, channels)."""
+    return health_service.check_automation()
+
+
+@router.get("/metrics")
+def get_health_metrics():
+    """Статус metrics endpoint."""
+    return health_service.check_metrics()
+
+
+@router.get("/summary")
+def get_health_summary():
+    """Краткое summary для Dashboard (одной строкой)."""
+    status = health_service.get_overall_status()
+    return {
+        "status": status["status"],
+        "components_ok": status["summary"]["ok"],
+        "components_degraded": status["summary"]["degraded"],
+        "components_error": status["summary"]["error"],
+    }
