@@ -75,3 +75,47 @@ class ChannelRepository:
         self.db.commit()
         self.db.refresh(channel)
         return channel
+
+# === КАСКАДНОЕ УДАЛЕНИЕ КАНАЛА ===
+
+def delete_cascade(self, channel_id: str) -> bool:
+    """Удаляет канал со всеми связанными записями (schedule, sources, etc.)"""
+    try:
+        channel = self.db.query(ChannelORM).filter(ChannelORM.id == channel_id).first()
+        if not channel:
+            return False
+        
+        # Удаляем связанные записи
+        # 1. ChannelScheduleORM
+        self.db.query(ChannelScheduleORM).filter(ChannelScheduleORM.channel_id == channel_id).delete()
+        
+        # 2. KnowledgeSource (если есть таблица)
+        try:
+            from core.models.channel import KnowledgeSource
+            self.db.query(KnowledgeSource).filter(KnowledgeSource.channel_id == channel_id).delete()
+        except Exception:
+            pass  # Таблица может не существовать
+        
+        # 3. ContentORM (посты канала)
+        try:
+            from core.models.content_orm import ContentORM
+            self.db.query(ContentORM).filter(ContentORM.channel_id == channel_id).delete()
+        except Exception:
+            pass
+        
+        # 4. PostMetric (метрики)
+        try:
+            from core.models.analytics import PostMetric
+            self.db.query(PostMetric).filter(PostMetric.channel_id == channel_id).delete()
+        except Exception:
+            pass
+        
+        # 5. Сам канал
+        self.db.delete(channel)
+        self.db.commit()
+        
+        return True
+    except Exception as e:
+        self.db.rollback()
+        print(f"❌ Cascade delete failed: {e}")
+        return False

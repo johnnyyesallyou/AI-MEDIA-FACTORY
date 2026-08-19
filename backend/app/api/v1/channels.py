@@ -1,7 +1,7 @@
 ﻿import uuid
 from datetime import datetime
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Body, HTTPException, Depends
 from typing import List
 from sqlalchemy.orm import Session
 import requests
@@ -112,7 +112,7 @@ async def update_channel(channel_id: str, request: ChannelUpdateRequest, db: Ses
 @router.delete("/{channel_id}", status_code=204)
 async def delete_channel(channel_id: str, db: Session = Depends(get_db)):
     repo = ChannelRepository(db)
-    if not repo.delete(channel_id):
+    if not repo.delete_cascade(channel_id):
         raise HTTPException(status_code=404, detail="Channel not found")
 
 
@@ -349,3 +349,54 @@ async def delete_source(channel_id: str, source_id: str, db: Session = Depends(g
     if not channel:
         raise HTTPException(status_code=404, detail="Channel or source not found")
     return None
+
+
+# === AUTOMATION ENDPOINT ===
+
+@router.post("/{channel_id}/automation/enable")
+async def enable_channel_automation(
+    channel_id: str,
+    request: dict = Body(...),
+    db: Session = Depends(get_db)
+):
+    """Включить автоматизацию для канала"""
+    from core.channel_manager import ChannelManager
+    
+    repo = ChannelRepository(db)
+    channel = repo.get(channel_id)
+    if not channel:
+        raise HTTPException(status_code=404, detail="Channel not found")
+    
+    interval_minutes = request.get("interval_minutes", 120)
+    
+    # Создаём ChannelManager и включаем automation
+    manager = ChannelManager()
+    manager.enable_automation(channel_id, interval_minutes)
+    
+    return {
+        "status": "enabled",
+        "channel_id": channel_id,
+        "interval_minutes": interval_minutes
+    }
+
+@router.post("/{channel_id}/automation/disable")
+async def disable_channel_automation(
+    channel_id: str,
+    db: Session = Depends(get_db)
+):
+    """Отключить автоматизацию для канала"""
+    from core.channel_manager import ChannelManager
+    
+    repo = ChannelRepository(db)
+    channel = repo.get(channel_id)
+    if not channel:
+        raise HTTPException(status_code=404, detail="Channel not found")
+    
+    manager = ChannelManager()
+    manager.disable_automation(channel_id)
+    
+    return {
+        "status": "disabled",
+        "channel_id": channel_id
+    }
+
