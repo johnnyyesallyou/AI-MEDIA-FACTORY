@@ -2343,3 +2343,21 @@ Research → Publishing → Engagement (PostMetric) → Analytics → Optimizati
 
 ### Следующий шаг (по плану)
 Sprint 46 — New Publishing Platforms (Dzen, YouTube, Threads)
+
+## Sprint 46.1 — E2E Channel Flow (ЗАВЕРШЁН: 2026-08-20)
+
+### Что создано
+- ✅ `ChannelRepository.delete_cascade` — schema-driven cascade delete (удаляет из ВСЕХ таблиц с FK на channels через pg_constraint introspection)
+- ✅ `POST /channels/{id}/automation/enable` — graceful handling (возвращает pending_connection вместо 500 если канал не подключён)
+- ✅ E2E тест (8 шагов): create → source → schedule → automation → get → delete
+
+### Результат E2E
+Все 8 шагов прошли: 201/200/200/200/200/200/200/204
+
+### Ключевые фичи
+1. **Schema-driven cascade**: автоматически находит ВСЕ таблицы с FK на channels через pg_constraint → удаляет из всех → удаляет канал (работает для любых будущих таблиц)
+2. **Graceful automation**: если канал не подключён к Telegram → возвращает `{status: "pending_connection", next_step: "Connect Telegram first"}` вместо 500
+3. **E2E flow замкнут**: создать канал → добавить источник → настроить расписание → включить автоматизацию → удалить канал (с cascade)
+
+### Следующий шаг
+Sprint 46.2 — Channel Templates (пресеты 📰 News / 🍥 Anime / 📚 Manga)
