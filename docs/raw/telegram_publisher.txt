@@ -1,0 +1,152 @@
+﻿"""Telegram Publisher тАФ ╨╛╤В╨┐╤А╨░╨▓╨║╨░ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╣ ╤З╨╡╤А╨╡╨╖ Telegram Bot API."""
+
+import re
+import time
+import logging
+from typing import Optional
+
+import requests
+
+
+logger = logging.getLogger(__name__)
+
+
+def _strip_markdown(text: str) -> str:
+    """╨г╨┤╨░╨╗╤П╨╡╤В markdown, ╤З╤В╨╛╨▒╤Л Telegram ╨╜╨╡ ╨╛╤В╨║╨╗╨╛╨╜╤П╨╗ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П."""
+    text = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"\*(.+?)\*", r"\1", text)
+    return text.strip()
+
+
+class TelegramPublisher:
+    """Telegram Bot API Publisher."""
+
+    API_URL = "https://api.telegram.org/bot{token}/{method}"
+
+    def __init__(self, bot_token: str, chat_id: str):
+        self.bot_token = bot_token
+        self.chat_id = chat_id
+
+    def _url(self, method: str) -> str:
+        return self.API_URL.format(token=self.bot_token, method=method)
+
+    def get_me(self) -> dict:
+        response = requests.get(self._url("getMe"), timeout=10)
+        response.raise_for_status()
+        return response.json()
+
+    def get_chat(self) -> dict:
+        response = requests.get(self._url("getChat"), params={"chat_id": self.chat_id}, timeout=10)
+        response.raise_for_status()
+        return response.json()
+
+    def publish(self, text: str, retries: int = 3) -> dict:
+        clean_text = _strip_markdown(text)
+        if not clean_text:
+            raise Exception("╨Я╤Г╤Б╤В╨╛╨╣ ╤В╨╡╨║╤Б╤В ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П")
+
+        message_id = self._send_message(clean_text, retries)
+        if not message_id:
+            raise Exception("Telegram ╨╜╨╡ ╨▓╨╡╤А╨╜╤Г╨╗ message_id")
+
+        logger.info("Telegram published message_id=%s", message_id)
+        return {
+            "status": "published",
+            "message_id": message_id,
+            "chat_id": self.chat_id,
+            "text_length": len(clean_text)
+        }
+
+    def _send_message(self, text: str, retries: int = 3) -> Optional[int]:
+        payload = {"chat_id": self.chat_id, "text": text}
+
+        for attempt in range(1, retries + 1):
+            try:
+                response = requests.post(self._url("sendMessage"), json=payload, timeout=30)
+                data = response.json()
+
+                if data.get("ok"):
+                    return data["result"]["message_id"]
+
+                error_code = data.get("error_code")
+                description = data.get("description")
+                logger.error("Telegram API error code=%s description=%s", error_code, description)
+
+                if error_code == 429:
+                    retry_after = data.get("parameters", {}).get("retry_after", 10)
+                    logger.warning("Telegram flood limit. Waiting %s sec", retry_after)
+                    time.sleep(retry_after)
+                    continue
+
+                return None
+
+            except requests.exceptions.RequestException as e:
+                logger.exception("Telegram network error attempt=%s error=%s", attempt, e)
+                time.sleep(5)
+
+        return None
+
+    def publish_photo(self, text: str, image_url: str) -> dict:
+        """╨Я╤Г╨▒╨╗╨╕╨║╤Г╨╡╤В ╨┐╨╛╤Б╤В ╤Б ╨║╨░╤А╤В╨╕╨╜╨║╨╛╨╣ ╤З╨╡╤А╨╡╨╖ Telegram sendPhoto API."""
+        url = self._url("sendPhoto")
+
+        # Telegram ╨╛╨│╤А╨░╨╜╨╕╤З╨╕╨▓╨░╨╡╤В caption 1024 ╤Б╨╕╨╝╨▓╨╛╨╗╨░╨╝╨╕
+        clean_text = _strip_markdown(text)
+        if len(clean_text) > 1024:
+            clean_text = clean_text[:1021] + "..."
+
+        payload = {
+            "chat_id": self.chat_id,
+            "photo": image_url,
+            "caption": clean_text,
+        }
+
+        try:
+            logger.info("=" * 60)
+            logger.info("ЁЯУ╕ PUBLISH_PHOTO START")
+            logger.info(f"   chat_id: {self.chat_id}")
+            logger.info(f"   image_url: {image_url[:120]}...")
+            logger.info(f"   image_url length: {len(image_url)} chars")
+            logger.info(f"   caption length: {len(clean_text)} chars")
+            logger.info("=" * 60)
+
+            # ╨Т╨Р╨Ц╨Э╨Ю: data= ╨▓╨╝╨╡╤Б╤В╨╛ json= (Telegram ╨╛╨╢╨╕╨┤╨░╨╡╤В form-data)
+            response = requests.post(url, data=payload, timeout=30)
+
+            # ╨Ы╨╛╨│╨╕╤А╤Г╨╡╨╝ ╨╛╤В╨▓╨╡╤В ╨Я╨Х╨а╨Х╨Ф raise_for_status
+            logger.info(f"   HTTP Status: {response.status_code}")
+            logger.info(f"   Response headers: {dict(response.headers)}")
+            logger.info(f"   Response body: {response.text[:500]}")
+
+            data = response.json()
+
+            if data.get("ok"):
+                message_id = data["result"]["message_id"]
+                logger.info(f"тЬЕ Photo sent successfully! message_id={message_id}")
+                return {
+                    "status": "success",
+                    "message_id": message_id,
+                    "chat_id": self.chat_id,
+                    "text_length": len(clean_text)
+                }
+            else:
+                error_code = data.get("error_code")
+                description = data.get("description")
+                logger.error(f"тЭМ Telegram API error: code={error_code}, desc={description}")
+
+                # Flood control
+                if error_code == 429:
+                    retry_after = data.get("parameters", {}).get("retry_after", 10)
+                    logger.warning(f"Flood control: waiting {retry_after} sec")
+                    time.sleep(retry_after)
+                    return self.publish_photo(text, image_url)
+
+                # Fallback ╨║ ╤В╨╡╨║╤Б╤В╤Г
+                logger.info("Falling back to text-only publish")
+                return self.publish(text)
+
+        except Exception as e:
+            logger.error(f"тЭМ sendPhoto exception: {type(e).__name__}: {e}")
+            logger.info("Falling back to text-only publish")
+            return self.publish(text)

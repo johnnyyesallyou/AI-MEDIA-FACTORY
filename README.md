@@ -1,35 +1,116 @@
-﻿# AI-MEDIA-FACTORY
+﻿# AI Media Factory
 
-Платформа для автоматизированного создания и управления медиа-контентом с использованием искусственного интеллекта.
+## Overview
 
-## 🚀 Быстрый старт
+AI Media Factory is a modular AI-powered platform for fully autonomous management of Telegram media channels.
 
-\\\ash
-# Установка зависимостей
-pip install -r requirements.txt
+The system automatically:
 
-# Запуск через Docker
-docker-compose up -d
+- Collects news from multiple sources
+- Deduplicates information
+- Scores topics
+- Generates content using LLMs
+- Creates images
+- Publishes posts to Telegram
+- Collects analytics
+- Continuously improves future content
 
-# Запуск backend
-cd backend
-uvicorn app.main:app --reload
-\\\
+The project is designed as a scalable multi-agent platform.
 
-##  Технологический стек
+---
 
-- **Backend**: FastAPI, Python 3.10
-- **Базы данных**: PostgreSQL 16, Redis 7, Qdrant (векторная БД)
-- **Хранилище**: MinIO (S3-compatible)
-- **AI интеграции**: OpenAI, Stable Diffusion, и другие
+# Current Status
 
-## ️ Архитектура
+See:
 
-- \core/\ - ядро системы, бизнес-логика, DI, оркестратор
-- \engines/\ - специализированные движки (research, image, writing, telegram)
-- \ackend/\ - API слой на FastAPI
-- \infrastructure/docker/\ - Docker конфигурации
+- STATUS.md
 
-## 📝 License
+---
 
-MIT
+# Current Task
+
+See:
+
+- TASK.md
+
+---
+
+# Project Context
+
+See:
+
+- PROJECT_CONTEXT.md
+
+---
+
+# Documentation
+
+docs/
+
+Architecture
+
+- architecture/ARCHITECTURE.md
+- architecture/EVENT_BUS.md
+- architecture/PIPELINES.md
+- architecture/COMPONENTS.md
+
+Backend
+
+- backend/API_CONTRACT.md
+- backend/DATABASE.md
+- backend/SERVICES.md
+- backend/REPOSITORIES.md
+
+AI
+
+- ai/AGENTS.md
+- ai/MODELS.md
+- ai/PROMPTS.md
+- ai/MEMORY.md
+
+Business
+
+- business/BUSINESS_RULES.md
+- business/WORKFLOWS.md
+
+Development
+
+- development/DEVELOPMENT_RULES.md
+- development/CODING_STYLE.md
+- development/TESTING.md
+
+Deployment
+
+- deployment/DEPLOYMENT.md
+- deployment/ENVIRONMENT.md
+- deployment/DOCKER.md
+
+History
+
+- history/CHANGELOG.md
+- history/DECISIONS.md
+
+Engineering
+
+- AI_MEDIA_FACTORY_ENGINEERING_BIBLE.md
+
+---
+
+# AI Engineering Kit
+
+The project includes an AI Engineering Kit that allows Large Language Models to continue development with minimal human guidance.
+
+The AI must always read the following files in order:
+
+1. AI_CONTEXT.md
+2. STATUS.md
+3. TASK.md
+4. PROJECT_CONTEXT.md
+5. Documentation inside docs/
+
+---
+
+# License
+
+Private project.
+

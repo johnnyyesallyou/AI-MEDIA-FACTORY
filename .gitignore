@@ -1,48 +1,27 @@
-﻿# Python
+# Python
 __pycache__/
-*.py[cod]
-*.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+*.pyc
+*.pyo
 *.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environments (КРИТИЧНО ВАЖНО)
+.venv/
 venv/
-ENV/
-env/
-.venv
-backend/venv/
-backend/ENV/
 
-# Environment variables (Секреты)
+# Env & secrets
 .env
-.env.local
-.env.*.local
+.env.*
+*.log
 
-# IDE and OS
+# Assets (generated)
+assets/
+/tmp/
+
+# IDE
 .vscode/
 .idea/
-*.swp
-*.swo
+
+# OS
 .DS_Store
 Thumbs.db
 
-# Docker volumes and logs
-*.log
+# Docker volumes data
 postgres_data/
-qdrant_data/
-minio_data/

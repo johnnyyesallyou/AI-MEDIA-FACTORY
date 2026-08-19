@@ -1,0 +1,97 @@
+﻿"""Image Engine - ╨│╨╡╨╜╨╡╤А╨░╤Ж╨╕╤П ╨║╨░╤А╤В╨╕╨╜╨╛╨║ ╤З╨╡╤А╨╡╨╖ Pollinations AI."""
+import logging
+import urllib.parse
+from typing import Dict, Any
+from engines.image_prompt.engine import ImagePromptEngine
+
+logger = logging.getLogger(__name__)
+
+
+class ImageEngine:
+    """
+    Sprint 11: ╨У╨╡╨╜╨╡╤А╨╕╤А╤Г╨╡╤В ╨║╨░╤А╤В╨╕╨╜╨║╨╕ ╤З╨╡╤А╨╡╨╖ Pollinations AI.
+    
+    ╨Ш╤Б╨┐╨╛╨╗╤М╨╖╤Г╨╡╤В ImagePromptEngine ╨┤╨╗╤П ╤Б╨╛╨╖╨┤╨░╨╜╨╕╤П ╨Ъ╨Ю╨а╨Ю╨в╨Ъ╨Ш╨е ╨░╨╜╨│╨╗╨╕╨╣╤Б╨║╨╕╤Е ╨┐╤А╨╛╨╝╨┐╤В╨╛╨▓,
+    ╤З╤В╨╛╨▒╤Л URL ╨╜╨╡ ╨▒╤Л╨╗ ╤Б╨╗╨╕╤И╨║╨╛╨╝ ╨┤╨╗╨╕╨╜╨╜╤Л╨╝.
+    """
+    
+    BASE_URL = "https://image.pollinations.ai/prompt/"
+    
+    def __init__(self):
+        self.prompt_engine = ImagePromptEngine()
+    
+    def generate(
+        self,
+        headline: str,
+        text: str,
+        platform: str = "telegram",
+        style: str = "anime",
+        width: int = 1024,
+        height: int = 576,
+        model: str = "flux"
+    ) -> Dict[str, Any]:
+        """
+        ╨У╨╡╨╜╨╡╤А╨╕╤А╤Г╨╡╤В URL ╨┤╨╗╤П Pollinations AI.
+        
+        Args:
+            headline: ╨Ч╨░╨│╨╛╨╗╨╛╨▓╨╛╨║ ╨┐╨╛╤Б╤В╨░
+            text: ╨в╨╡╨║╤Б╤В ╨┐╨╛╤Б╤В╨░
+            platform: ╨Я╨╗╨░╤В╤Д╨╛╤А╨╝╨░
+            style: ╨б╤В╨╕╨╗╤М
+            width: ╨и╨╕╤А╨╕╨╜╨░
+            height: ╨Т╤Л╤Б╨╛╤В╨░
+            model: ╨Ь╨╛╨┤╨╡╨╗╤М
+        
+        Returns:
+            {"image_url": str, "prompt": str, "style": str}
+        """
+        try:
+            # ╨У╨╡╨╜╨╡╤А╨╕╤А╤Г╨╡╨╝ ╨║╨╛╤А╨╛╤В╨║╨╕╨╣ ╨┐╤А╨╛╨╝╨┐╤В ╤З╨╡╤А╨╡╨╖ ImagePromptEngine
+            prompt_result = self.prompt_engine.generate_prompt(
+                headline=headline,
+                text=text,
+                platform=platform,
+                language="en",
+                style=style
+            )
+            
+            prompt = prompt_result["prompt"]
+            
+            # URL-encode ╨┐╤А╨╛╨╝╨┐╤В╨░
+            encoded_prompt = urllib.parse.quote(prompt, safe='')
+            
+            # ╨Я╨░╤А╨░╨╝╨╡╤В╤А╤Л
+            params = {
+                "width": width,
+                "height": height,
+                "model": model,
+                "nologo": "true"
+            }
+            
+            query_string = urllib.parse.urlencode(params)
+            image_url = f"{self.BASE_URL}{encoded_prompt}?{query_string}"
+            
+            logger.info(f"ImageEngine: Generated URL (prompt: {len(prompt)} chars, URL: {len(image_url)} chars)")
+            logger.info(f"   Prompt: {prompt}")
+            logger.info(f"   URL: {image_url[:100]}...")
+            
+            return {
+                "image_url": image_url,
+                "prompt": prompt,
+                "style": style,
+                "platform": platform
+            }
+        
+        except Exception as e:
+            logger.exception(f"ImageEngine generation failed: {e}")
+            # Fallback: ╨╛╤З╨╡╨╜╤М ╨║╨╛╤А╨╛╤В╨║╨╕╨╣ ╨┐╤А╨╛╨╝╨┐╤В
+            fallback_prompt = "anime scene, high quality"
+            encoded = urllib.parse.quote(fallback_prompt, safe='')
+            fallback_url = f"{self.BASE_URL}{encoded}?width={width}&height={height}&model={model}&nologo=true"
+            
+            return {
+                "image_url": fallback_url,
+                "prompt": fallback_prompt,
+                "style": style,
+                "platform": platform
+            }

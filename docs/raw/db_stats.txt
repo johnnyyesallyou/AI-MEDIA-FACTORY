@@ -1,0 +1,12 @@
+﻿        tbl        | count 
+-------------------+-------
+ channels          |     4
+ content           |  1345
+ content_published |   486
+ content_approved  |   673
+ assets            |     2
+ workflows         |     4
+ channel_schedules |     4
+ execution_logs    |  2905
+(8 rows)
+

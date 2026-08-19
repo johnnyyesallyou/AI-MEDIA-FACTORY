@@ -1,0 +1,94 @@
+import requests
+import re
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Accept-Language": "ru,en;q=0.9",
+}
+
+print("=" * 70)
+print("READMANGA/GROUPLE API INVESTIGATION")
+print("=" * 70)
+
+# 1. ????????? readmanga.io
+print("\n[1] ????????? readmanga.io:")
+try:
+    r = requests.get("https://readmanga.io/", headers=HEADERS, timeout=20)
+    print(f"  Status: {r.status_code}, Size: {len(r.content)} bytes")
+    
+    # ???? API endpoints ? HTML
+    html = r.text
+    
+    # ???????? API
+    api_patterns = re.findall(r'["\'](/api/[^"\']+)["\']', html)
+    if api_patterns:
+        print(f"  ??????? {len(api_patterns)} API ?????????:")
+        for pattern in list(set(api_patterns))[:10]:
+            print(f"    - {pattern}")
+    
+    # ???????? JSON
+    json_blocks = re.findall(r'window\.__INITIAL_STATE__\s*=\s*({.+?});', html, re.DOTALL)
+    if json_blocks:
+        print(f"\n  ??????? {len(json_blocks)} ?????? __INITIAL_STATE__")
+        print(f"  ?????? ??????? ?????: {len(json_blocks[0])} ????????")
+    
+    # ???????? fetch/axios
+    fetch_calls = re.findall(r'fetch\(["\']([^"\']+)["\']', html)
+    if fetch_calls:
+        print(f"\n  ??????? {len(fetch_calls)} fetch ???????:")
+        for url in list(set(fetch_calls))[:10]:
+            print(f"    - {url}")
+    
+except Exception as e:
+    print(f"  ERROR: {type(e).__name__}: {str(e)[:150]}")
+
+# 2. ????????? ????????? GroupLe API endpoints
+print("\n[2] ????????? ????????? GroupLe API endpoints:")
+test_endpoints = [
+    "https://readmanga.io/api/catalog",
+    "https://readmanga.io/api/titles",
+    "https://readmanga.io/api/updates",
+    "https://readmanga.io/api/latest",
+    "https://grouple.co/api/catalog",
+    "https://grouple.co/api/titles",
+]
+
+for url in test_endpoints:
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        ct = r.headers.get("content-type", "")[:30]
+        print(f"  [{r.status_code}] {url} ({len(r.content)} bytes, {ct})")
+        if r.status_code == 200 and "json" in ct:
+            print(f"    JSON preview: {r.text[:200]}")
+    except Exception as e:
+        print(f"  [ERROR] {url}: {type(e).__name__}")
+
+# 3. ??????????? ????????? HTML ??????? ????????
+print("\n[3] ??????????? ????????? HTML readmanga.io:")
+try:
+    r = requests.get("https://readmanga.io/", headers=HEADERS, timeout=20)
+    html = r.text
+    
+    # ???? ????? ? ????????????
+    update_blocks = re.findall(r'<div[^>]+class="[^"]*update[^"]*"[^>]*>(.*?)</div>', html, re.DOTALL)
+    print(f"  ??????? {len(update_blocks)} ?????? ? 'update' ? class")
+    
+    # ???? ?????? ?? ?????
+    manga_links = re.findall(r'href="(/[^/]+)"', html)
+    print(f"  ??????? {len(manga_links)} ?????? ?? ?????")
+    
+    # ???? JSON ??????
+    script_blocks = re.findall(r'<script[^>]*>(.*?)</script>', html, re.DOTALL)
+    json_in_scripts = []
+    for script in script_blocks:
+        if 'data:' in script and 'title' in script.lower():
+            json_in_scripts.append(script)
+    
+    print(f"  ??????? {len(json_in_scripts)} ???????? ? ??????? ? ???????")
+    if json_in_scripts:
+        print(f"    Preview ???????: {json_in_scripts[0][:300]}")
+    
+except Exception as e:
+    print(f"  ERROR: {type(e).__name__}")
+
+print("\n" + "=" * 70)

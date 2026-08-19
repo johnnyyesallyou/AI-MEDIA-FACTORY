@@ -1,0 +1,76 @@
+﻿class PublishJob:
+    def run(self) -> dict[str, Any]:
+        db = SessionLocal()
+
+        published = 0
+        failed = 0
+
+        try:
+            channel_repo = ChannelRepository(db)
+            content_repo = ContentRepository(db)
+
+            items = content_repo.list_all(
+                status="draft",
+                limit=50
+            )
+
+            for item in items:
+                try:
+                    channel = channel_repo.get(item.channel_id)
+
+                    if not channel:
+                        raise Exception(
+                            f"Channel not found: {item.channel_id}"
+                        )
+
+                    if not channel.bot_token or not channel.chat_id:
+                        raise Exception(
+                            f"Telegram not configured for channel: {channel.id}"
+                        )
+
+                    publisher = TelegramPublisher(
+                        bot_token=channel.bot_token,
+                        chat_id=channel.chat_id
+                    )
+
+                    result = publisher.publish(
+                        item.draft_text or item.headline
+                    )
+
+                    message_id = result.get("message_id")
+
+                    content_repo.update_publish_result(
+                        item.id,
+                        str(message_id)
+                    )
+
+                    published += 1
+
+                    logger.info(
+                        "Published content=%s telegram_message_id=%s",
+                        item.id,
+                        message_id
+                    )
+
+                except Exception as e:
+                    failed += 1
+
+                    logger.exception(
+                        "Publish failed content=%s error=%s",
+                        item.id,
+                        e
+                    )
+
+                    content_repo.update_publish_error(
+                        item.id,
+                        str(e)
+                    )
+
+            return {
+                "status": "ok",
+                "published": published,
+                "failed": failed
+            }
+
+        finally:
+            db.close()

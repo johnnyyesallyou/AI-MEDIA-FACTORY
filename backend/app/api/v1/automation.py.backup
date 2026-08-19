@@ -1,0 +1,64 @@
+﻿from fastapi import APIRouter
+from pydantic import BaseModel
+from typing import List, Optional
+
+from automation.automation_models import AutomationSettings
+from automation.service import automation_service
+
+router = APIRouter(prefix="/automation", tags=["automation"])
+
+
+class AutomationStartResponse(BaseModel):
+    status: str
+    enabled: bool
+
+
+class AutomationStopResponse(BaseModel):
+    status: str
+    enabled: bool
+
+
+class AutomationRunNowResponse(BaseModel):
+    status: str
+    details: Optional[str] = None
+    research: Optional[dict] = None
+    decision: Optional[dict] = None
+    writing: Optional[dict] = None
+    publish: Optional[dict] = None
+
+
+@router.get("/", response_model=AutomationSettings)
+async def get_automation_settings():
+    '''Получить текущие настройки автоматизации Sprint 8.1.'''
+    return automation_service.get_settings()
+
+
+@router.put("/", response_model=AutomationSettings)
+async def update_automation_settings(config: AutomationSettings):
+    '''Обновить настройки автоматизации и сохранить их в сервис.'''
+    return automation_service.update_settings(config)
+
+
+@router.post("/start", response_model=AutomationStartResponse)
+async def start_automation():
+    result = automation_service.start()
+    return AutomationStartResponse(status=result["status"], enabled=result["enabled"])
+
+
+@router.post("/stop", response_model=AutomationStopResponse)
+async def stop_automation():
+    result = automation_service.stop()
+    return AutomationStopResponse(status=result["status"], enabled=result["enabled"])
+
+
+@router.post("/run-now", response_model=AutomationRunNowResponse)
+async def run_automation_now():
+    result = automation_service.run_now()
+    return AutomationRunNowResponse(
+        status=result.get("status", "started"),
+        details=result.get("status"),
+        research=result.get("research"),
+        decision=result.get("decision"),
+        writing=result.get("writing"),
+        publish=result.get("publish"),
+    )
