@@ -23,8 +23,15 @@ def test_variations_contain_emoji_prefix():
     assert "emoji_prefix" in strategies
 
 
-def test_optimize_structure():
+def test_optimize_structure(monkeypatch):
+    """optimize() без БД: stub-им analyze_top_headlines (DB-зависимый)."""
+    monkeypatch.setattr(
+        HeadlineOptimizer,
+        "analyze_top_headlines",
+        lambda self, *args, **kwargs: [],
+    )
     r = HeadlineOptimizer().optimize("Новый AI агент для задач")
     assert "original" in r
     assert "suggestions" in r
     assert "variations" in r
+    assert r["top_examples"] == []
