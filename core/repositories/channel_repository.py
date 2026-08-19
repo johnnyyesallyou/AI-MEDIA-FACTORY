@@ -76,46 +76,41 @@ class ChannelRepository:
         self.db.refresh(channel)
         return channel
 
-# === КАСКАДНОЕ УДАЛЕНИЕ КАНАЛА ===
+    def delete_cascade(self, channel_id: str) -> bool:
+        """Schema-driven cascade delete: удаляет строки из ВСЕХ таблиц,
+        имеющих FK на channels, затем сам канал."""
+        from sqlalchemy import text
+        try:
+            channel = self.db.query(ChannelORM).filter(ChannelORM.id == channel_id).first()
+            if not channel:
+                return False
 
-def delete_cascade(self, channel_id: str) -> bool:
-    """Удаляет канал со всеми связанными записями (schedule, sources, etc.)"""
-    try:
-        channel = self.db.query(ChannelORM).filter(ChannelORM.id == channel_id).first()
-        if not channel:
+            if self.db.get_bind().dialect.name == "postgresql":
+                rows = self.db.execute(text("""
+                    SELECT DISTINCT child.relname AS tbl, a.attname AS col
+                    FROM pg_constraint c
+                    JOIN pg_class parent ON parent.oid = c.confrelid
+                    JOIN pg_class child ON child.oid = c.conrelid
+                    JOIN unnest(c.conkey) WITH ORDINALITY AS k(attnum, ord) ON TRUE
+                    JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = k.attnum
+                    WHERE parent.relname = 'channels' AND c.contype = 'f'
+                """)).fetchall()
+                for tbl, col in rows:
+                    self.db.execute(
+                        text('DELETE FROM "' + tbl + '" WHERE "' + col + '" = :cid'),
+                        {"cid": channel_id},
+                    )
+            else:
+                from core.models.channel_schedule_orm import ChannelScheduleORM
+                self.db.query(ChannelScheduleORM).filter(
+                    ChannelScheduleORM.channel_id == channel_id
+                ).delete()
+
+            self.db.delete(channel)
+            self.db.commit()
+            return True
+        except Exception:
+            self.db.rollback()
+            import traceback
+            traceback.print_exc()
             return False
-        
-        # Удаляем связанные записи
-        # 1. ChannelScheduleORM
-        self.db.query(ChannelScheduleORM).filter(ChannelScheduleORM.channel_id == channel_id).delete()
-        
-        # 2. KnowledgeSource (если есть таблица)
-        try:
-            from core.models.channel import KnowledgeSource
-            self.db.query(KnowledgeSource).filter(KnowledgeSource.channel_id == channel_id).delete()
-        except Exception:
-            pass  # Таблица может не существовать
-        
-        # 3. ContentORM (посты канала)
-        try:
-            from core.models.content_orm import ContentORM
-            self.db.query(ContentORM).filter(ContentORM.channel_id == channel_id).delete()
-        except Exception:
-            pass
-        
-        # 4. PostMetric (метрики)
-        try:
-            from core.models.analytics import PostMetric
-            self.db.query(PostMetric).filter(PostMetric.channel_id == channel_id).delete()
-        except Exception:
-            pass
-        
-        # 5. Сам канал
-        self.db.delete(channel)
-        self.db.commit()
-        
-        return True
-    except Exception as e:
-        self.db.rollback()
-        print(f"❌ Cascade delete failed: {e}")
-        return False

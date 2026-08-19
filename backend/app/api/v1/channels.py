@@ -370,14 +370,25 @@ async def enable_channel_automation(
     interval_minutes = request.get("interval_minutes", 120)
     
     # Создаём ChannelManager и включаем automation
-    manager = ChannelManager()
-    manager.enable_automation(channel_id, interval_minutes)
-    
-    return {
-        "status": "enabled",
-        "channel_id": channel_id,
-        "interval_minutes": interval_minutes
-    }
+    try:
+        manager = ChannelManager()
+        manager.enable_automation(channel_id, interval_minutes)
+        return {
+            "status": "enabled",
+            "channel_id": channel_id,
+            "interval_minutes": interval_minutes
+        }
+    except ValueError as e:
+        # Channel not connected
+        return {
+            "status": "pending_connection",
+            "channel_id": channel_id,
+            "interval_minutes": interval_minutes,
+            "reason": str(e),
+            "next_step": "Connect Telegram first via /channels/{id}/connect-telegram"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Automation error: {e}")
 
 @router.post("/{channel_id}/automation/disable")
 async def disable_channel_automation(
