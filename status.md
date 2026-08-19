@@ -1953,3 +1953,101 @@ Sprint 38 — Advanced Image Intelligence
 
 ### Следующий шаг
 Sprint 39 — Content Optimization
+
+## Sprint 38 — Advanced Image Intelligence (19 августа 2026)
+
+### Что создано
+- ✅ **UnsplashAdapter** (`engines/image/unsplash_adapter.py`)
+  - Search API: stock photos по запросу из headline
+  - Graceful degradation без UNSPLASH_ACCESS_KEY
+- ✅ **DALLEAdapter** (`engines/image/dalle_adapter.py`)
+  - DALL-E 3 генерация (1792x1024, natural style)
+  - Graceful degradation без OPENAI_API_KEY
+- ✅ **Fallback chain** в ImageAcquisitionPolicy:
+  \\\
+  og:image (real) → validate
+       ↓ нет
+  Unsplash (stock, если ключ)
+       ↓ нет
+  DALL-E (AI, если ключ)
+       ↓ нет
+  Pollinations (бесплатный AI)
+       ↓ нет
+  text post
+  \\\
+
+### Правила сохранены
+- Manga/Anime: только реальные обложки (fallback: none)
+- News: fallback chain только при fallback: "ai_generated"
+- Конфигурируемая цепочка: image_policy.fallback_chain
+
+### Тесты
+\\\
+[1] Unsplash available: False (без ключа)
+[2] Search without key: None (graceful)
+[3] Chain: unsplash(skip) → dalle(skip) → pollinations ✅
+[4] Real image priority ✅
+[5] Manga unchanged (NO fallback) ✅
+\\\
+
+### Файлы
+- engines/image/unsplash_adapter.py (новый)
+- engines/image/dalle_adapter.py (новый)
+- engines/publishing/image_acquisition.py (fallback chain)
+
+### Следующий шаг
+Sprint 39 — Content Optimization
+
+## Sprint 39 — Content Optimization (19 августа 2026)
+
+### Что создано
+- ✅ **HeadlineOptimizer** (`engines/content_optimization/headline_optimizer.py`)
+  - `analyze_top_headlines()` — анализ успешных заголовков
+  - `generate_variations()` — генерация вариаций
+  - `suggest_improvements()` — рекомендации по улучшению
+  - `optimize()` — полная оптимизация
+
+- ✅ **PostingTimeOptimizer** (`engines/content_optimization/posting_time_optimizer.py`)
+  - `analyze_engagement_by_hour()` — engagement по часам
+  - `get_best_posting_times()` — топ N лучших часов
+  - `suggest_posting_time()` — оптимальное время
+
+- ✅ **CLI команды**
+  - `optimize-headline` — оптимизация заголовка
+  - `best-posting-time` — оптимальное время публикации
+
+### CLI Usage
+\\\ash
+# Оптимизация заголовка
+python -m core.cli optimize-headline "Новый AI агент"
+
+# Оптимальное время публикации
+python -m core.cli best-posting-time --days 30
+\\\
+
+### Результаты тестов
+\\\
+[1] Headline Optimizer:
+  Original: Новый AI агент для автоматизации задач
+  Suggestions: 3 (emoji, length, question mark)
+  Variations: 4 (emoji_prefix, emoji_fire, shortened, bold_markdown)
+
+[2] Posting Time Optimizer:
+  Best time: 10:00
+  Reason: Лучший engagement в 10:00
+  Alternatives: [18:00, 20:00]
+
+[3] Top headlines analysis:
+  Found 5 top headlines
+  - Headline 1 (200 views)
+  - Headline 2 (150 views)
+\\\
+
+### Файлы
+- engines/content_optimization/headline_optimizer.py (новый)
+- engines/content_optimization/posting_time_optimizer.py (новый)
+- engines/content_optimization/__init__.py (новый)
+- core/cli.py (optimize-headline, best-posting-time)
+
+### Следующий шаг
+Sprint 40 — Production Deployment (Prometheus + Grafana)

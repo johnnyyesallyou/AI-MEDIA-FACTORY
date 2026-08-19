@@ -2221,3 +2221,43 @@ Files:
 - core/models/analytics.py (scope field)
 
 NEXT: Sprint 38 (Advanced Image Intelligence)
+
+==========================================================
+SPRINT 38 COMPLETED - 2026-08-19
+==========================================================
+
+ADVANCED IMAGE INTELLIGENCE:
+
+Created:
+- engines/image/unsplash_adapter.py
+- engines/image/dalle_adapter.py
+
+Fallback chain in ImageAcquisitionPolicy:
+  og:image (real) → validate
+       ↓
+  Unsplash (stock, if UNSPLASH_ACCESS_KEY)
+       ↓
+  DALL-E (AI, if OPENAI_API_KEY)
+       ↓
+  Pollinations (free AI)
+       ↓
+  text post
+
+Rules preserved:
+- Manga/Anime: real covers only (fallback: none)
+- News: fallback chain only if fallback: "ai_generated"
+- Configurable: image_policy.fallback_chain
+
+Test results:
+[1] Unsplash available: False (no key) ✅
+[2] Search without key: None (graceful) ✅
+[3] Chain falls through to pollinations ✅
+[4] Real image priority ✅
+[5] Manga unchanged ✅
+
+Files:
+- engines/image/unsplash_adapter.py (new)
+- engines/image/dalle_adapter.py (new)
+- engines/publishing/image_acquisition.py (fallback chain)
+
+NEXT: Sprint 39 (Content Optimization)
