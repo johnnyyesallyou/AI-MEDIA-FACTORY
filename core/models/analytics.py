@@ -61,6 +61,7 @@ class ABTest(Base):
     # Test configuration
     variants = Column(JSONB, nullable=False)  # [{id, name, config}]
     traffic_split = Column(JSONB, nullable=False)  # {variant_id: percentage}
+    scope = Column(JSONB, default=dict)  # {channel_ids: [...], content_type: 'news'}
     
     # Status
     status = Column(String(50), default="draft")  # draft, running, completed
