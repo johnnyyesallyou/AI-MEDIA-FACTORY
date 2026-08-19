@@ -2273,3 +2273,30 @@ Grafana остаётся техническим инструментом
 
 ### Следующий шаг
 Sprint 44 — Telegram Alerts
+
+## Sprint 44 — Telegram Alerts (ЗАВЕРШЁН: 2026-08-20)
+
+### Что создано
+- ✅ `core/alerts.py`: AlertEvaluator + NotificationService
+- ✅ Правила:
+  - component_down → CRITICAL
+  - component_degraded → WARNING
+  - high_error_rate (>0.5/sec) → CRITICAL
+  - job_failures (>5/hour) → WARNING
+- ✅ Cooldown 30 мин на alert key (не спамит)
+- ✅ Telegram send с inline-кнопками (Dashboard/Automation/Channels)
+- ✅ Graceful degradation: если токен не настроен → log (не crash)
+- ✅ Alerts loop в lifespan (каждые 60 сек)
+- ✅ CLI: `alerts test`, `alerts status`
+- ✅ 5 CI тестов (test_alerts.py)
+
+### Результат
+- `alerts status` → показывает 1 active alert (publishers degraded)
+- `alerts test` → logs test alert (graceful fallback)
+- Когда TELEGRAM_BOT_TOKEN + ALERTS_CHAT_ID настроены → приходит HTML сообщение с кнопками
+
+### Архитектура (по плану Phase 2)
+Monitoring → AlertEvaluator → NotificationService → Telegram (or log fallback)
+
+### Следующий шаг
+Sprint 45 — Autonomous Engagement Loop

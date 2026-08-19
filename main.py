@@ -15,6 +15,7 @@ from backend.app.api.v1.router import api_v1_router
 from backend.app.api.v1 import metrics, health as health_router, system_metrics
 from backend.automation.scheduler import automation_scheduler
 from core.alerts import start_alerts_loop
+from engines.content_optimization.feedback_loop import start_feedback_loop
 
 
 @asynccontextmanager
@@ -26,6 +27,9 @@ async def lifespan(app: FastAPI):
 
     # Sprint 44: alerts loop
     asyncio.create_task(start_alerts_loop())
+
+    # Sprint 45: feedback loop
+    asyncio.create_task(start_feedback_loop(interval_hours=6))
     print("?? Automation scheduler task created in background", flush=True)
     
     yield
