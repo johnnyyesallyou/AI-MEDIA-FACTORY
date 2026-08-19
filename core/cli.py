@@ -154,10 +154,12 @@ def main():
         else:  # stats
             loop = FeedbackLoop()
             stats = loop.get_feedback_stats()
-            print(f"Feedback loop stats:")
-            print(f"  Total posts: {stats['total_posts']}")
-            print(f"  Posts with engagement: {stats['posts_with_engagement']}")
+            print("Feedback loop stats:")
+            print(f"  Total metrics: {stats['total_metrics']}")
+            print(f"  Posts with views: {stats['posts_with_views']}")
             print(f"  Engagement rate: {stats['engagement_rate']:.2%}")
+            print(f"  Total views: {stats['total_views']}")
+            print(f"  Total likes: {stats['total_likes']}")
     
     elif args.command == "alerts":
         if args.action == "test":
