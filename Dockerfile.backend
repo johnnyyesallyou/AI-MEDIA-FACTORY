@@ -1,15 +1,16 @@
-﻿FROM python:3.10-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
-# Устанавливаем системные зависимости (включая git)
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+# Системные зависимости
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
 
 # Копируем requirements
 COPY requirements.txt .
 
-# Устанавливаем зависимости, добавляя индекс PyTorch для CUDA-версий
-RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121
+# Устанавливаем зависимости (без CUDA index)
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем код
 COPY . .
