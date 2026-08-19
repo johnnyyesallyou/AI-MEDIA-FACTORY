@@ -2253,3 +2253,23 @@ Total: 12% (legacy не покрыт — растёт в следующих сп
 
 ### Следующий шаг
 Sprint 43 — Unified Analytics Dashboard
+
+## Sprint 43 — Unified Analytics Dashboard (ЗАВЕРШЁН: 2026-08-20)
+
+### Backend
+- ✅ `GET /api/v1/metrics/system` — прокси Prometheus instant queries + health:
+  jobs_per_sec, posts_per_sec, error_rate, p95, queue, channels_active + компоненты
+
+### Frontend (Analytics.tsx)
+- ✅ Секция **BUSINESS**: просмотры, CTR, ER, рост подписчиков
+- ✅ Секция **SYSTEM**: jobs/sec, постов/sec, error rate, активные каналы
+- ✅ Grid компонентов: database/sources/publishers/automation/metrics (🟢🟡🔴)
+- ✅ Автообновление SYSTEM каждые 10 сек
+- ✅ metricsAPI в client.ts
+
+### Архитектура (по плану Phase 2)
+Dashboard → Backend /api/v1/metrics/* → Prometheus
+Grafana остаётся техническим инструментом
+
+### Следующий шаг
+Sprint 44 — Telegram Alerts

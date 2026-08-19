@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from backend.app.api.v1.router import api_v1_router
 from backend.app.api.v1 import metrics, health as health_router, system_metrics
 from backend.automation.scheduler import automation_scheduler
+from core.alerts import start_alerts_loop
 
 
 @asynccontextmanager
@@ -22,6 +23,9 @@ async def lifespan(app: FastAPI):
     
     # Sprint 15: ????????? automation scheduler ? ????
     asyncio.create_task(automation_scheduler.start())
+
+    # Sprint 44: alerts loop
+    asyncio.create_task(start_alerts_loop())
     print("?? Automation scheduler task created in background", flush=True)
     
     yield
