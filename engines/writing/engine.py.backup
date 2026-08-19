@@ -1,0 +1,110 @@
+import os
+import logging
+import requests
+from typing import Dict, Any, Optional
+
+from .models import ContentBrief
+from .prompt_manager import PromptManager
+from .styles.profiles import TELEGRAM_AI_EXPERT
+
+logger = logging.getLogger(__name__)
+
+
+class WritingEngine:
+    """
+    Writing Engine.
+    Генерация Telegram-контента через локальный Ollama.
+    """
+
+    def __init__(self, model: Optional[str] = None):
+        base_url = os.getenv(
+            "OLLAMA_URL",
+            "http://localhost:11434"
+        )
+
+        self.ollama_url = f"{base_url}/api/generate"
+        self.model = model or "qwen2.5-coder:3b"
+
+    def generate(
+        self,
+        brief: ContentBrief,
+        style_profile: dict = None
+    ) -> dict:
+
+        style_profile = style_profile or TELEGRAM_AI_EXPERT
+
+        prompt_manager = PromptManager(style_profile)
+        prompt = prompt_manager.build_prompt(brief)
+
+        logger.info("=" * 80)
+        logger.info("WritingEngine started")
+        logger.info(f"Ollama URL: {self.ollama_url}")
+        logger.info(f"Model: {self.model}")
+        logger.info(f"Prompt length: {len(prompt)}")
+        logger.info("=" * 80)
+
+        result = self._call_ollama(prompt)
+
+        if not result:
+            raise Exception("Ollama не вернула результат")
+
+        generated_text = result.get("response", "")
+
+        logger.info(f"Generated text length: {len(generated_text)}")
+
+        return {
+            "generated_text": generated_text,
+            "tokens_input": len(prompt.split()) // 4,
+            "tokens_output": len(generated_text.split()) // 4,
+            "model_used": self.model,
+        }
+
+    def _call_ollama(
+        self,
+        prompt: str
+    ) -> Dict[str, Any]:
+
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False,
+            "options": {
+                "temperature": 0.7,
+                "top_p": 0.9,
+                "num_predict": 1000,
+            },
+        }
+
+        logger.info("Sending request to Ollama...")
+
+        try:
+            session = requests.Session()
+
+            response = session.post(
+                self.ollama_url,
+                json=payload,
+                timeout=(10, 300)
+            )
+
+            logger.info(f"HTTP status: {response.status_code}")
+
+            logger.info(
+                f"Response preview:\n{response.text[:500]}"
+            )
+
+            response.raise_for_status()
+
+            data = response.json()
+
+            logger.info("Ollama JSON parsed successfully")
+
+            return data
+
+        except Exception as e:
+
+            logger.exception("Ollama request failed")
+
+            if hasattr(e, "response") and e.response is not None:
+                logger.error(e.response.text)
+
+            return None

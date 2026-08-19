@@ -1,0 +1,114 @@
+"""CLI Tools - Sprint 35.
+
+Command-line interface для управления automation.
+
+Usage:
+    python -m core.cli list-channels
+    python -m core.cli enable-automation <channel_id> [interval_minutes]
+    python -m core.cli disable-automation <channel_id>
+    python -m core.cli status
+"""
+import sys
+import json
+import argparse
+
+from core.channel_manager import ChannelManager
+from engines.performance_dashboard import PerformanceDashboard
+from engines.automated_insights import AutomatedInsights
+
+
+def main():
+    parser = argparse.ArgumentParser(description="AI Media Factory CLI")
+    subparsers = parser.add_subparsers(dest="command", help="Commands")
+    
+    # list-channels
+    subparsers.add_parser("list-channels", help="List all channels")
+    
+    # enable-automation
+    enable_parser = subparsers.add_parser("enable-automation", help="Enable automation for channel")
+    enable_parser.add_argument("channel_id", help="Channel ID")
+    enable_parser.add_argument("--interval", type=int, default=30, help="Interval in minutes")
+    
+    # disable-automation
+    disable_parser = subparsers.add_parser("disable-automation", help="Disable automation for channel")
+    disable_parser.add_argument("channel_id", help="Channel ID")
+    
+    # status
+    subparsers.add_parser("status", help="Show system status")
+    
+    # performance-report
+    report_parser = subparsers.add_parser("performance-report", help="Generate performance report")
+    report_parser.add_argument("--days", type=int, default=7, help="Period in days (default: 7)")
+    report_parser.add_argument("--channel", type=str, help="Filter by channel name")
+    report_parser.add_argument("--top", type=int, default=10, help="Number of top posts (default: 10)")
+    
+    # insights
+    insights_parser = subparsers.add_parser("insights", help="Generate automated insights and recommendations")
+    insights_parser.add_argument("--days", type=int, default=7, help="Period in days (default: 7)")
+    insights_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    
+    args = parser.parse_args()
+    
+    manager = ChannelManager()
+    
+    if args.command == "list-channels":
+        channels = manager.list_channels()
+        print(f"\nChannels ({len(channels)}):")
+        for ch in channels:
+            print(f"  [{ch['id'][:8]}] {ch['name']} ({ch['platform']})")
+            print(f"           connected={ch['is_connected']}")
+            if ch['scheduler']:
+                sched = ch['scheduler']
+                print(f"           automation: enabled={sched['enabled']}, interval={sched['interval_minutes']}m")
+                print(f"           last_run: {sched['last_run']}, errors: {sched['error_count']}")
+    
+    elif args.command == "enable-automation":
+        try:
+            manager.enable_automation(args.channel_id, args.interval)
+            print(f"✅ Automation enabled for {args.channel_id} (every {args.interval}m)")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            sys.exit(1)
+    
+    elif args.command == "disable-automation":
+        try:
+            manager.disable_automation(args.channel_id)
+            print(f"✅ Automation disabled for {args.channel_id}")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            sys.exit(1)
+    
+    elif args.command == "status":
+        status = manager.get_status()
+        print(json.dumps(status, indent=2, default=str))
+    
+    elif args.command == "performance-report":
+        dashboard = PerformanceDashboard()
+        
+        if args.channel:
+            # Детальный отчёт по каналу
+            details = dashboard.channel_details(args.channel, days=args.days)
+            print(json.dumps(details, indent=2, default=str))
+        else:
+            # Полный отчёт
+            report = dashboard.generate_report(days=args.days)
+            print(report)
+    
+    elif args.command == "insights":
+        insights = AutomatedInsights()
+        
+        if args.json:
+            # JSON формат
+            analysis = insights.analyze(days=args.days)
+            print(json.dumps(analysis, indent=2, default=str))
+        else:
+            # Текстовый формат
+            report = insights.generate_report(days=args.days)
+            print(report)
+    
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
