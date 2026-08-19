@@ -2300,3 +2300,46 @@ Monitoring → AlertEvaluator → NotificationService → Telegram (or log fallb
 
 ### Следующий шаг
 Sprint 45 — Autonomous Engagement Loop
+
+## Sprint 45 — Autonomous Engagement Loop (ЗАВЕРШЁН: 2026-08-20)
+
+### Замкнутый контур
+Research → Publishing → Engagement (PostMetric) → Analytics → Optimization → Research
+
+### Что создано
+- ✅ `engines/content_optimization/auto_apply.py`
+  - Headline optimizations: анализ паттернов из топ-постов (длина, эмодзи, вопросы, числа)
+  - Posting time: обновление ChannelScheduleORM на основе engagement по часам
+  - AB winners: автоматическое применение завершённых A/B тестов
+  - JOIN PostMetric ↔ ContentORM для доступа к headline и published_at
+
+- ✅ `engines/content_optimization/feedback_loop.py`
+  - FeedbackLoop: периодический цикл оптимизации (каждые 6 часов)
+  - get_feedback_stats(): total_metrics, posts_with_views, engagement_rate, total_views, total_likes
+
+- ✅ Feedback loop в lifespan (asyncio task)
+
+- ✅ CLI:
+  - `optimize apply --channel-id UUID` — применить оптимизации для канала
+  - `optimize stats` — статистика feedback loop
+
+- ✅ 4 CI теста (test_auto_apply.py)
+
+### Результат (live test с channel_id 2df20daf-...)
+- Headline insights: 4 паттерна извлечено
+- Posting time: schedule обновлён (топ-3 часа)
+- AB winners: 0 (нет завершённых тестов)
+- Total metrics: 47 записей в PostMetric
+
+### Архитектура (по плану Phase 2)
+Замкнутый контур: система учится на результатах публикаций и улучшает следующий research
+
+### Статус Phase 2
+✅ Sprint 41: Production Stabilization
+✅ Sprint 42: CI/CD + Automated Testing (25 passed)
+✅ Sprint 43: Unified Analytics Dashboard (BUSINESS + SYSTEM)
+✅ Sprint 44: Telegram Alerts (evaluator + notification service)
+✅ Sprint 45: Autonomous Engagement Loop (closed loop)
+
+### Следующий шаг (по плану)
+Sprint 46 — New Publishing Platforms (Dzen, YouTube, Threads)
