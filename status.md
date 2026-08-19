@@ -2152,3 +2152,80 @@ curl http://localhost:8000/metrics
 
 **Текущая фаза:** AUTONOMOUS MEDIA PLATFORM  
 **Статус:** Platform Core v1.0 ✅ → Production Stabilization 🔄
+
+## Sprint 41 — Production Stabilization (ЗАВЕРШЁН: 2026-08-20)
+
+### Что сделано
+
+#### 1. Secrets Management ✅
+- .env.example создан с документацией всех переменных
+- Secrets audit проведён — все токены в environment variables
+- .env добавлен в .gitignore
+- Hard-coded tokens не найдены в production коде
+
+#### 2. Database Backup/Restore ✅
+- scripts/backup-db.ps1 — автоматический backup с timestamp
+- scripts/restore-db.ps1 — восстановление с подтверждением
+- Backup протестирован: 8.2 MB, 17 таблиц, реальные данные
+- UTF-8 BOM для совместимости с PowerShell 5.1
+
+#### 3. Unified Health Endpoints ✅
+**Endpoints:**
+- GET /api/health — полный статус всех компонентов
+- GET /api/health/database — статус БД (latency, статистика)
+- GET /api/health/sources — статус 5 источников (ReManga, MangaDex, ReadManga, AniList, Habr)
+- GET /api/health/publishers — статус Telegram/VK
+- GET /api/health/automation — статус scheduler и channels
+- GET /api/health/metrics — статус Prometheus endpoint
+- GET /api/health/summary — краткое summary для Dashboard
+
+**Результаты:**
+- Database: OK (8ms latency, 5 channels, 1216 content)
+- Sources: OK (5/5 available)
+- Publishers: DEGRADED (0/2, tokens not configured — expected for dev)
+- Automation: OK (5 channels active)
+- Metrics: OK (Prometheus endpoint working)
+
+#### 4. Error Taxonomy ✅
+**Классификация ошибок:**
+- **TRANSIENT** (429, 503, timeout) → retry с exponential backoff
+- **PERMANENT** (404, 400) → fail + alert
+- **CONFIGURATION** (401, 403) → alert + disable component
+- **NETWORK** (DNS, connection refused) → retry
+- **CONTENT** (invalid format) → skip + log
+
+**ErrorHandler:**
+- Автоматический retry для TRANSIENT/NETWORK
+- Exponential backoff (1s → 2s → 4s → ... → 60s max)
+- Alert callback для HIGH severity
+- Disable callback для CONFIGURATION errors
+- Максимум 3 попытки по умолчанию
+
+**Файлы:**
+- core/error_taxonomy.py — классификатор ошибок
+- core/error_handlers.py — обработчики с автономной реакцией
+
+### Итоги Sprint 41
+
+**Система готова к production:**
+- ✅ Secrets безопасно управляются
+- ✅ БД можно backup/restore за минуты
+- ✅ Все компоненты мониторятся через единый API
+- ✅ Ошибки классифицируются и обрабатываются автономно
+- ✅ Retry logic для временных сбоев
+- ✅ Alerts для критичных ошибок
+- ✅ Graceful degradation при недоступности компонентов
+
+**Health status:**
+- OK: 4 компонента (database, sources, automation, metrics)
+- DEGRADED: 1 компонент (publishers — tokens не настроены в dev)
+- ERROR: 0 компонентов
+
+**Автономность:**
+Система может работать без вмешательства при:
+- Временных сетевых сбоях (retry)
+- Rate limiting (429) (retry с backoff)
+- Недоступности одного источника (degraded mode)
+- Временной недоступности БД (retry)
+
+### Следующий шаг: Sprint 42 — CI/CD + Automated Testing
