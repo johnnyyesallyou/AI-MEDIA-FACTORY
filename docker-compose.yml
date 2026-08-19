@@ -1,257 +1,141 @@
 ﻿services:
-
-  # ==========================
-  # PostgreSQL Database
-  # ==========================
   postgres:
     image: postgres:16-alpine
     container_name: amf_postgres
-
     environment:
       POSTGRES_DB: ai_media_factory
       POSTGRES_USER: amf_user
       POSTGRES_PASSWORD: amf_password_2026
-
     ports:
-      - "5432:5432"
-
+    - 5432:5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-
+    - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U amf_user -d ai_media_factory"
-        ]
+      - CMD-SHELL
+      - pg_isready -U amf_user -d ai_media_factory
       interval: 10s
       timeout: 5s
       retries: 5
-
     networks:
-      - amf_network
-
+    - amf_network
     restart: unless-stopped
-
-
-
-  # ==========================
-  # Redis
-  # ==========================
   redis:
     image: redis:7-alpine
     container_name: amf_redis
-
     ports:
-      - "6379:6379"
-
+    - 6379:6379
     volumes:
-      - redis_data:/data
-
+    - redis_data:/data
     healthcheck:
       test:
-        [
-          "CMD",
-          "redis-cli",
-          "ping"
-        ]
+      - CMD
+      - redis-cli
+      - ping
       interval: 10s
       timeout: 5s
       retries: 5
-
     networks:
-      - amf_network
-
+    - amf_network
     restart: unless-stopped
-
-
-
-  # ==========================
-  # Backend API
-  # ==========================
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
-
     container_name: amf_backend
-
     ports:
-      - "8000:8000"
-
-
+    - 8000:8000
     environment:
-
-      DATABASE_URL:
-        postgresql://amf_user:amf_password_2026@postgres:5432/ai_media_factory
-
-      REDIS_URL:
-        redis://redis:6379/0
-
-      SECRET_KEY:
-        change-this-secret-in-production
-
-      OLLAMA_URL:
-        http://host.docker.internal:11434
-
-      USE_AUTOMATION_V2: "true"
-
-
-      ENVIRONMENT:
-        development
-
-      TELEGRAPH_ACCESS_TOKEN:
-        82dc98d2b2b08932d80c5fe2b909256544d8fa55a3a04c581881ffcb0e91
-
-
+      DATABASE_URL: postgresql://amf_user:amf_password_2026@postgres:5432/ai_media_factory
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: change-this-secret-in-production
+      OLLAMA_URL: http://host.docker.internal:11434
+      USE_AUTOMATION_V2: 'true'
+      ENVIRONMENT: development
+      TELEGRAPH_ACCESS_TOKEN: 82dc98d2b2b08932d80c5fe2b909256544d8fa55a3a04c581881ffcb0e91
     extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-
-
+    - host.docker.internal:host-gateway
     depends_on:
-
       postgres:
         condition: service_healthy
-
       redis:
         condition: service_healthy
-
-
-
     volumes:
-
-      # Project root
-
-      - ./:/app
-
-      # API
-
-      - ./backend:/app/backend
-
-      # Core architecture
-      - ./core:/app/core
-
-      # AI Engines
-      - ./engines:/app/engines
-
-      # Prompt library
-      - ./prompts:/app/prompts
-
-      # Connectors
-      - ./connectors:/app/connectors
-
-      # Tests
-      - ./tests:/app/tests
-
-      # Scripts
-      - ./scripts:/app/scripts
-
-      # Documentation
-      - ./docs:/app/docs
-
-
+    - ./:/app
+    - ./backend:/app/backend
+    - ./core:/app/core
+    - ./engines:/app/engines
+    - ./prompts:/app/prompts
+    - ./connectors:/app/connectors
+    - ./tests:/app/tests
+    - ./scripts:/app/scripts
+    - ./docs:/app/docs
     networks:
-      - amf_network
-
-
-    restart:
-      unless-stopped
-
-
-
-  # ==========================
-  # Frontend
-  # ==========================
+    - amf_network
+    restart: unless-stopped
   frontend:
-
     build:
       context: ./frontend
       dockerfile: Dockerfile.frontend
-
-
-    container_name:
-      amf_frontend
-
-
+    container_name: amf_frontend
     ports:
-      - "3001:80"
-
-
+    - 3001:80
     depends_on:
-      - backend
-
-
+    - backend
     networks:
-      - amf_network
-
-
-    restart:
-      unless-stopped
-
-
-
-  # ==========================
-  # Nginx
-  # ==========================
+    - amf_network
+    restart: unless-stopped
   nginx:
-
-    image:
-      nginx:alpine
-
-
-    container_name:
-      amf_nginx
-
-
+    image: nginx:alpine
+    container_name: amf_nginx
     ports:
-      - "80:80"
-
-
+    - 80:80
     volumes:
-
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-
-
+    - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-
-      - backend
-      - frontend
-
-
+    - backend
+    - frontend
     networks:
-
-      - amf_network
-
-
-    restart:
-      unless-stopped
-
-
-
-# ==========================
-# Persistent volumes
-# ==========================
-
+    - amf_network
+    restart: unless-stopped
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: amf_prometheus
+    ports:
+    - 9090:9090
+    volumes:
+    - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - ./monitoring/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+    - prometheus_data:/prometheus
+    command:
+    - --config.file=/etc/prometheus/prometheus.yml
+    - --storage.tsdb.path=/prometheus
+    - --storage.tsdb.retention.time=15d
+    restart: unless-stopped
+    networks:
+    - amf_network
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: amf_grafana
+    ports:
+    - 3002:3000
+    environment:
+    - GF_SECURITY_ADMIN_PASSWORD=admin123
+    - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+    - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+    - amf_network
 volumes:
-  assets:
-  postgres_data:
-
-  redis_data:
-
-
-
-# ==========================
-# Network
-# ==========================
-
+  assets: null
+  postgres_data: null
+  redis_data: null
+  prometheus_data: {}
+  grafana_data: {}
 networks:
-
   amf_network:
-
-    driver:
-      bridge
-
-
-
+    driver: bridge
 

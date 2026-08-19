@@ -12,6 +12,7 @@ import uvicorn
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from backend.app.api.v1.router import api_v1_router
+from backend.app.api.v1 import metrics
 from backend.automation.scheduler import automation_scheduler
 
 
@@ -52,6 +53,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 templates = Jinja2Templates(directory="backend/templates")
 app.include_router(api_v1_router)
+app.include_router(metrics.router)
 
 # Sprint 11: Serving generated assets
 os.makedirs("/app/assets", exist_ok=True)
