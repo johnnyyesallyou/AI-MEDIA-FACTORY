@@ -16,6 +16,7 @@ from core.channel_manager import ChannelManager
 from engines.performance_dashboard import PerformanceDashboard
 from engines.automated_insights import AutomatedInsights
 from engines.ab_test_framework import ABTestFramework
+from core import alerts as alerts_module
 from engines.content_optimization import HeadlineOptimizer, PostingTimeOptimizer
 
 
@@ -58,6 +59,10 @@ def main():
     ab_parser.add_argument("--split", type=str, help="Traffic split JSON")
     ab_parser.add_argument("--scope", type=str, help="Scope JSON")
     ab_parser.add_argument("--metric", type=str, default="views", help="Winner metric")
+    
+    # alerts
+    alerts_parser = subparsers.add_parser("alerts", help="Alerting management")
+    alerts_parser.add_argument("action", choices=["test", "status"])
     
     # optimize-headline
     opt_hl = subparsers.add_parser("optimize-headline", help="Optimize headline")
@@ -127,6 +132,22 @@ def main():
             # Текстовый формат
             report = insights.generate_report(days=args.days)
             print(report)
+    
+    elif args.command == "alerts":
+        if args.action == "test":
+            a = alerts_module.Alert(
+                key="manual_test",
+                severity="warning",
+                title="Test alert",
+                body="Это тестовое уведомление системы алертов AI Media Factory.",
+            )
+            sent = alerts_module._notifier.send(a)
+            print("Sent to Telegram" if sent else "Logged only (Telegram not configured)")
+        else:
+            alerts_list = alerts_module._evaluator.evaluate()
+            print(f"Active alerts: {len(alerts_list)}")
+            for a in alerts_list:
+                print(f"  [{a.severity}] {a.title}")
     
     elif args.command == "ab-test":
         ab = ABTestFramework()
