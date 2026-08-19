@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov requests sqlalchemy fastapi pydantic beautifulsoup4
+          pip install pytest pytest-cov requests sqlalchemy psycopg2-binary fastapi pydantic beautifulsoup4
 
       - name: Run tests with coverage
         run: pytest tests/ci -v --cov=core --cov=engines --cov-report=term-missing
