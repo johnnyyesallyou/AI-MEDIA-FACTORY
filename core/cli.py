@@ -16,6 +16,8 @@ from core.channel_manager import ChannelManager
 from engines.performance_dashboard import PerformanceDashboard
 from engines.automated_insights import AutomatedInsights
 from engines.ab_test_framework import ABTestFramework
+from engines.content_optimization.auto_apply import OptimizationApplier
+from engines.content_optimization.feedback_loop import FeedbackLoop
 from core import alerts as alerts_module
 from engines.content_optimization import HeadlineOptimizer, PostingTimeOptimizer
 
@@ -63,6 +65,11 @@ def main():
     # alerts
     alerts_parser = subparsers.add_parser("alerts", help="Alerting management")
     alerts_parser.add_argument("action", choices=["test", "status"])
+    
+    # optimize
+    optimize_parser = subparsers.add_parser("optimize", help="Optimization management")
+    optimize_parser.add_argument("action", choices=["apply", "stats"])
+    optimize_parser.add_argument("--channel-id", type=int, help="Channel ID for optimization")
     
     # optimize-headline
     opt_hl = subparsers.add_parser("optimize-headline", help="Optimize headline")
@@ -132,6 +139,25 @@ def main():
             # Текстовый формат
             report = insights.generate_report(days=args.days)
             print(report)
+    
+    elif args.command == "optimize":
+        if args.action == "apply":
+            if not args.channel_id:
+                print("Error: --channel-id required")
+                return
+            applier = OptimizationApplier()
+            result = applier.run_full_optimization(args.channel_id)
+            print(f"Optimization results for channel {args.channel_id}:")
+            print(f"  Headline insights: {result['headline'].get('applied', 0)}")
+            print(f"  Posting time: {result['posting_time'].get('applied', False)}")
+            print(f"  AB winners: {result['ab_winners'].get('winners_applied', 0)}")
+        else:  # stats
+            loop = FeedbackLoop()
+            stats = loop.get_feedback_stats()
+            print(f"Feedback loop stats:")
+            print(f"  Total posts: {stats['total_posts']}")
+            print(f"  Posts with engagement: {stats['posts_with_engagement']}")
+            print(f"  Engagement rate: {stats['engagement_rate']:.2%}")
     
     elif args.command == "alerts":
         if args.action == "test":
