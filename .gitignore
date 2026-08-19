@@ -25,3 +25,5 @@ Thumbs.db
 
 # Docker volumes data
 postgres_data/
+# Database backups
+backups/
