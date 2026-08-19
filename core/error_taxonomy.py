@@ -84,7 +84,12 @@ class ErrorTaxonomy:
         # PERMANENT (fail)
         400: ErrorType.PERMANENT,      # Bad Request
         404: ErrorType.PERMANENT,      # Not Found
+        405: ErrorType.PERMANENT,
+        409: ErrorType.PERMANENT,
         410: ErrorType.PERMANENT,      # Gone
+        422: ErrorType.PERMANENT,
+        451: ErrorType.PERMANENT,
+        402: ErrorType.PERMANENT,      # Payment Required (anti-bot)
         
         # CONFIGURATION (alert + disable)
         401: ErrorType.CONFIGURATION,  # Unauthorized
@@ -113,6 +118,21 @@ class ErrorTaxonomy:
         if isinstance(error, requests.RequestException):
             return self._classify_request_exception(error, context)
         
+        # Fallback: любое исключение с .response (HTTP статус) классифицируем по статусу
+        response = getattr(error, "response", None)
+        if response is not None:
+            status_code = getattr(response, "status_code", 0) or 0
+            error_type = self.HTTP_ERROR_MAP.get(status_code, ErrorType.UNKNOWN)
+            return ClassifiedError(
+                error_type=error_type,
+                severity=ErrorSeverity.HIGH if error_type == ErrorType.CONFIGURATION else ErrorSeverity.MEDIUM,
+                message=f"HTTP {status_code}: {error}",
+                original_error=error,
+                action={"transient": "retry", "network": "retry", "permanent": "fail",
+                        "configuration": "alert_disable"}.get(error_type.value, "log"),
+                metadata={"status_code": status_code, "context": context},
+            )
+
         # Неизвестные ошибки
         return ClassifiedError(
             error_type=ErrorType.UNKNOWN,
