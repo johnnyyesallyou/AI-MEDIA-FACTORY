@@ -2051,3 +2051,69 @@ python -m core.cli best-posting-time --days 30
 
 ### Следующий шаг
 Sprint 40 — Production Deployment (Prometheus + Grafana)
+
+## Sprint 40 — Production Deployment (19 августа 2026)
+
+### Что создано
+- ✅ **Prometheus metrics endpoint** (`backend/app/api/v1/metrics.py`)
+  - Counter: `amf_jobs_total`, `amf_posts_published_total`, `amf_errors_total`
+  - Histogram: `amf_job_duration_seconds`
+  - Gauge: `amf_channels_active`, `amf_posts_in_queue`
+  - Endpoint: `GET /metrics` (Prometheus text format)
+
+- ✅ **Prometheus configuration**
+  - `monitoring/prometheus/prometheus.yml` — scrape config
+  - `monitoring/prometheus/alert_rules.yml` — alerting rules (HighErrorRate, JobFailure)
+
+- ✅ **Grafana provisioning**
+  - `monitoring/grafana/provisioning/datasources/` — Prometheus data source
+  - `monitoring/grafana/provisioning/dashboards/` — dashboard provider
+  - `monitoring/grafana/dashboards/overview.json` — overview dashboard
+    - Jobs per second (rate)
+    - Posts published per second
+    - Job duration p95 (histogram_quantile)
+    - System state (gauges)
+
+- ✅ **Docker compose обновление**
+  - Prometheus service (port 9090, volume prometheus_data)
+  - Grafana service (port 3001, volume grafana_data)
+  - Admin: admin / admin123
+
+### Access
+- Prometheus UI: http://localhost:9090
+- Grafana UI: http://localhost:3001 (admin / admin123)
+- Metrics endpoint: http://localhost:8000/metrics
+
+### Dashboard panels
+1. **Jobs per second** — rate of job executions by status
+2. **Posts published per second** — rate by platform + channel
+3. **Job duration p95** — 95th percentile latency
+4. **System state** — active channels + posts in queue
+
+### Alerts
+- **HighErrorRate** — rate > 0.5 errors/sec for 2 min
+- **JobFailure** — > 5 failures in 1 hour
+
+### CLI Usage
+\\\ash
+# Start monitoring stack
+docker compose up -d prometheus grafana
+
+# Access Grafana
+open http://localhost:3001
+
+# Check metrics
+curl http://localhost:8000/metrics
+\\\
+
+### Файлы
+- backend/app/api/v1/metrics.py (новый)
+- backend/app/main.py (registered /metrics router)
+- monitoring/prometheus/prometheus.yml (новый)
+- monitoring/prometheus/alert_rules.yml (новый)
+- monitoring/grafana/provisioning/ (новый)
+- monitoring/grafana/dashboards/overview.json (новый)
+- docker-compose.yml (prometheus + grafana services)
+
+### Следующий шаг
+🎉 Проект завершён! 40 спринтов: от manga parser до production monitoring

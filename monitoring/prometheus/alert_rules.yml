@@ -1,0 +1,20 @@
+groups:
+  - name: amf_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(amf_errors_total[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate in {{ $labels.component }}"
+          description: "Error rate is {{ $value }} errors/sec"
+      
+      - alert: JobFailure
+        expr: increase(amf_jobs_total{status="failed"}[1h]) > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Multiple job failures for {{ $labels.job_name }}"
+          description: "{{ $value }} failures in the last hour"
