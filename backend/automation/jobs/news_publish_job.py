@@ -29,6 +29,7 @@ from core.models.content_orm import ContentORM
 from core.models.channel_orm import ChannelORM
 from engines.research.models.news_article import NewsArticle
 from engines.channel_profiles import resolve_channel_profile
+from engines.ab_test_framework import ABTestFramework
 from engines.telegraph.publisher import TelegraphPublisher
 from engines.url_shortener import URLShortener
 from engines.publishing import (
@@ -46,6 +47,7 @@ class NewsPublishJob:
 
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.ab_framework = ABTestFramework()
 
     def run(self, channel: ChannelORM = None, limit: int = 20) -> Dict[str, Any]:
         self.logger.info(f"NewsPublishJob started (limit={limit})")
@@ -69,6 +71,14 @@ class NewsPublishJob:
                 f"Telegraph: {publishing_policy.get('telegraph_page')} | "
                 f"Image policy: {profile.get('image_policy', {}).get('preferred')}"
             )
+
+            # A/B test (если есть running тест для этого канала)
+            active_test = self.ab_framework.get_active_test(
+                channel_id=news_channel.id,
+                content_type=profile.get("content_type", "news"),
+            )
+            if active_test:
+                self.logger.info(f"Active A/B test: {active_test.name}")
 
             publisher = get_publisher_for_channel(news_channel)
             telegraph = TelegraphPublisher() if publishing_policy.get("telegraph_page") else None
@@ -108,6 +118,13 @@ class NewsPublishJob:
                     skipped_en += 1
                     continue
 
+                # A/B: назначение варианта
+                variant = None
+                if active_test:
+                    variant = self.ab_framework.assign_variant(active_test, item.id)
+                    self.ab_framework.record_exposure(str(active_test.id), str(item.id), variant["id"])
+                    self.logger.info(f"Post assigned to variant: {variant.get('name')}")
+
                 try:
                     result = self._publish_one(
                         db=db,
@@ -119,6 +136,7 @@ class NewsPublishJob:
                         item=item,
                         channel=news_channel,
                         profile=profile,
+                        variant=variant,
                     )
 
                     if result.get("status") == "success":
@@ -248,9 +266,18 @@ class NewsPublishJob:
         item: ContentORM,
         channel: ChannelORM,
         profile: dict,
+        variant: dict = None,
     ) -> Dict[str, Any]:
         publishing_policy = profile.get("publishing_policy", {})
-        formatting = profile.get("formatting_profile", {})
+        formatting = dict(profile.get("formatting_profile", {}))
+        
+        # A/B: применяем overrides из варианта
+        if variant and variant.get("config"):
+            cfg = variant["config"]
+            for key in ("emoji_header", "include_description", "max_hashtags", "unescape_html"):
+                if key in cfg:
+                    formatting[key] = cfg[key]
+        
         title_name = news_article.title
 
         # Telegraph (если разрешено)
@@ -288,6 +315,11 @@ class NewsPublishJob:
             self.logger.warning(f"Invalid image URL (wrong content-type): {image_url[:80]}")
             image_url = None  # Сбрасываем, будем публиковать как text
         
+        # A/B: вариант может отключать картинку
+        if variant and variant.get("config", {}).get("include_image") is False:
+            image_url = None
+            image_bytes = None
+
         # Для news можно публиковать без картинки (как text post)
         if not image_url:
             self.logger.info(f"Publishing as text post (no valid image)")

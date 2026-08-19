@@ -1787,3 +1787,125 @@ Automated Insights:
 
 ### Следующий шаг
 Sprint 37 — A/B Testing Framework (если нужно)
+
+## Sprint 37 — A/B Testing Framework (19 августа 2026)
+
+### Что создано
+- ✅ **ABTestFramework** (`engines/ab_test_framework.py`)
+  - `create_test()` — создание теста с variants + traffic_split + scope
+  - `start_test()` / `complete_test()` — lifecycle management
+  - `assign_variant()` — детерминированное назначение (hash-based)
+  - `record_exposure()` — запись exposure в ab_test_results
+  - `update_results()` — агрегация PostMetric в ab_test_results
+  - `analyze()` — Welch t-test + winner determination
+  - `list_tests()` — список всех тестов
+
+- ✅ **CLI команда** `ab-test`
+  - `create` — создать тест
+  - `list` — список тестов
+  - `start` / `complete` — управление lifecycle
+  - `analyze` — анализ с статистической значимостью
+
+- ✅ **Интеграция в NewsPublishJob**
+  - Автоматический поиск active_test для канала
+  - `assign_variant()` перед публикацией
+  - `record_exposure()` для трекинга
+  - Применение variant config к formatting
+
+### Архитектура
+\\\
+A/B Test Lifecycle:
+  create_test() → draft
+       ↓
+  start_test() → running
+       ↓
+  NewsPublishJob:
+    get_active_test(channel_id, content_type)
+         ↓
+    assign_variant(test, content_id)  [hash-based]
+         ↓
+    record_exposure(test_id, content_id, variant_id)
+         ↓
+    _publish_one(variant=variant)
+         ↓
+    apply variant.config to formatting
+         ↓
+  EngagementCollectionJob (periodic)
+       ↓
+  PostMetric records created
+       ↓
+  update_results(test_id) → aggregate PostMetric
+       ↓
+  analyze(test_id) → Welch t-test + p-value
+       ↓
+  complete_test(test_id) → winner fixed
+\\\
+
+### Статистический анализ
+**Welch t-test** для сравнения двух вариантов:
+- Per-content метрики (не aggregate)
+- t-statistic + p-value (normal approximation)
+- significant = p < 0.05 && n >= 2 per variant
+- winner = variant with higher mean (if significant)
+- improvement_pct = (winner_mean - loser_mean) / loser_mean * 100
+
+### CLI Usage
+\\\ash
+# Создать тест
+python -m core.cli ab-test create \\
+  --name "Emoji test" \\
+  --variants '[{"id":"a","name":"A","config":{"emoji":"📰"}},{"id":"b","name":"B","config":{"emoji":"🔥"}}]' \\
+  --split '{"a":50,"b":50}' \\
+  --scope '{"channel_ids":["channel-id-here"]}' \\
+  --metric views
+
+# Список тестов
+python -m core.cli ab-test list
+
+# Старт теста
+python -m core.cli ab-test start --id <test_id>
+
+# Анализ
+python -m core.cli ab-test analyze --id <test_id>
+
+# Завершение
+python -m core.cli ab-test complete --id <test_id>
+\\\
+
+### Variant Config Keys
+Можно override в formatting_profile:
+- `emoji_header` — emoji в заголовке
+- `include_description` — включать описание
+- `max_hashtags` — максимум хэштегов
+- `unescape_html` — unescape HTML entities
+- `include_image` — включать картинку (bool)
+
+### Результаты тестов
+\\\
+[1] Test created: f331fac4-...
+[2] Started: True
+[3] Assigning variants (deterministic):
+    content-0 → variant b (Emoji 🔥)
+    content-1 → variant a (Emoji 📰)
+    content-2 → variant a (Emoji 📰)
+    content-3 → variant b (Emoji 🔥)
+[4] Metrics seeded
+[5] Analyzing:
+    variants: {a: {n:2, mean:100}, b: {n:4, mean:200}}
+    t_statistic: -3.5
+    p_value: 0.02
+    significant: true
+    winner: b
+    improvement: 100.0%
+[6] Completed
+[7] CLI list: Emoji header test | completed
+\\\
+
+### Файлы
+- `engines/ab_test_framework.py` (новый)
+- `core/cli.py` (ab-test команды)
+- `backend/automation/jobs/news_publish_job.py` (интеграция)
+- `core/models/analytics.py` (scope field)
+
+### Следующий шаг
+Sprint 38 — Advanced Image Intelligence

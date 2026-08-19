@@ -2154,3 +2154,70 @@ Known limitations:
 - Test data: most views=0 due to private channels
 
 NEXT: Sprint 37 (A/B Testing Framework - if needed)
+
+==========================================================
+SPRINT 37 COMPLETED - 2026-08-19
+==========================================================
+
+A/B TESTING FRAMEWORK:
+
+Created:
+- engines/ab_test_framework.py
+
+Methods:
+- create_test(name, variants, traffic_split, scope) → test_id
+- start_test(test_id) / complete_test(test_id)
+- assign_variant(test, content_id) → variant (hash-based)
+- record_exposure(test_id, content_id, variant_id)
+- update_results(test_id) → aggregate PostMetric
+- analyze(test_id) → Welch t-test + winner
+- list_tests() → all tests
+
+Architecture:
+  create_test() → draft
+       ↓
+  start_test() → running
+       ↓
+  NewsPublishJob:
+    get_active_test() → find running test for channel
+         ↓
+    assign_variant() → deterministic hash
+         ↓
+    record_exposure() → track in ab_test_results
+         ↓
+    _publish_one(variant) → apply config overrides
+         ↓
+  EngagementCollectionJob (periodic)
+       ↓
+  PostMetric records
+       ↓
+  update_results() → aggregate
+       ↓
+  analyze() → Welch t-test
+       ↓
+  complete_test() → winner fixed
+
+Statistics:
+- Welch t-test (two-tailed, normal approx)
+- significant: p < 0.05 && n >= 2
+- winner: variant with higher mean
+- improvement_pct: (winner - loser) / loser * 100
+
+CLI:
+  python -m core.cli ab-test create --name "Test" --variants [...] --split {...}
+  python -m core.cli ab-test list
+  python -m core.cli ab-test start --id <id>
+  python -m core.cli ab-test analyze --id <id>
+  python -m core.cli ab-test complete --id <id>
+
+Variant config keys:
+- emoji_header, include_description, max_hashtags
+- unescape_html, include_image (bool)
+
+Files:
+- engines/ab_test_framework.py (new)
+- core/cli.py (ab-test commands)
+- backend/automation/jobs/news_publish_job.py (integration)
+- core/models/analytics.py (scope field)
+
+NEXT: Sprint 38 (Advanced Image Intelligence)
