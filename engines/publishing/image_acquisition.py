@@ -46,6 +46,22 @@ class ImageAcquisitionPolicy:
         return self._image_engine
 
     @property
+    def unsplash(self):
+        """Lazy init UnsplashAdapter."""
+        if not hasattr(self, "_unsplash"):
+            from engines.image.unsplash_adapter import UnsplashAdapter
+            self._unsplash = UnsplashAdapter()
+        return self._unsplash
+
+    @property
+    def dalle(self):
+        """Lazy init DALLEAdapter."""
+        if not hasattr(self, "_dalle"):
+            from engines.image.dalle_adapter import DALLEAdapter
+            self._dalle = DALLEAdapter()
+        return self._dalle
+
+    @property
     def validator(self):
         """Lazy init ImageValidator (Ollama)."""
         if self._validator is None:
@@ -78,14 +94,46 @@ class ImageAcquisitionPolicy:
         if real_url:
             return AcquisitionResult(url=real_url, source="real")
 
-        # 2. AI fallback — ТОЛЬКО для news и ТОЛЬКО если разрешено профилем
+        # 2. Fallback chain — ТОЛЬКО для news и ТОЛЬКО если разрешено профилем
         if content_type == "news" and fallback == "ai_generated":
-            return self._ai_fallback(content, image_policy)
+            return self._fallback_chain(content, image_policy)
 
         # 3. Нет картинки (manga/anime без cover → text post, НЕ AI!)
         self.logger.info(
             f"No image for {content_type} (fallback={fallback}) → text post"
         )
+        return AcquisitionResult(url=None, source="none")
+
+    def _fallback_chain(self, content, image_policy: dict) -> AcquisitionResult:
+        """
+        Fallback chain для news (Sprint 38):
+          1. Unsplash (stock photo по ключевым словам)
+          2. DALL-E (AI генерация, если есть OPENAI_API_KEY)
+          3. Pollinations (бесплатный AI, без ключа)
+
+        Источники без API ключей gracefully пропускаются.
+        """
+        chain = image_policy.get("fallback_chain", ["unsplash", "dalle", "pollinations"])
+        query = (content.headline or "").replace("📰", "").strip()[:80]
+
+        for source in chain:
+            try:
+                if source == "unsplash" and self.unsplash.available:
+                    url = self.unsplash.get_best_image(query)
+                    if url:
+                        return AcquisitionResult(url=url, source="unsplash")
+
+                elif source == "dalle" and self.dalle.available:
+                    url = self.dalle.generate(f"News illustration: {query}")
+                    if url:
+                        return AcquisitionResult(url=url, source="dalle")
+
+                elif source == "pollinations":
+                    return self._ai_fallback(content, image_policy)
+
+            except Exception as e:
+                self.logger.warning(f"Fallback source {source} failed: {e}")
+
         return AcquisitionResult(url=None, source="none")
 
     def _ai_fallback(self, content, image_policy: dict) -> AcquisitionResult:
