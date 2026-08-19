@@ -69,7 +69,7 @@ def main():
     # optimize
     optimize_parser = subparsers.add_parser("optimize", help="Optimization management")
     optimize_parser.add_argument("action", choices=["apply", "stats"])
-    optimize_parser.add_argument("--channel-id", type=int, help="Channel ID for optimization")
+    optimize_parser.add_argument("--channel-id", type=str, help="Channel ID (UUID) for optimization")
     
     # optimize-headline
     opt_hl = subparsers.add_parser("optimize-headline", help="Optimize headline")

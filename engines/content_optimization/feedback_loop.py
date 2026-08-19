@@ -1,13 +1,7 @@
 """Feedback Loop - Sprint 45.
 
 Замыкает контур: метрики → оптимизация → следующий research.
-
-Запускается периодически (каждые 6 часов):
-1. Собирает свежие метрики (PostMetric)
-2. Применяет оптимизации (auto_apply)
-3. Генерирует content rules
-4. Обновляет posting schedules
-5. Логирует результаты
+Запускается каждые 6 часов (interval_hours).
 """
 import asyncio
 import logging
@@ -31,8 +25,8 @@ class FeedbackLoop:
     def __init__(self):
         self.applier = OptimizationApplier()
     
-    def get_active_channels(self) -> List[int]:
-        """Возвращает список активных каналов."""
+    def get_active_channels(self) -> List[str]:
+        """Возвращает ID активных каналов (UUID)."""
         db = SessionLocal()
         try:
             channels = db.query(ChannelORM).all()
@@ -51,7 +45,6 @@ class FeedbackLoop:
             try:
                 result = self.applier.run_full_optimization(channel_id)
                 results[channel_id] = result
-                logger.info(f"Optimized channel {channel_id}")
             except Exception as e:
                 logger.error(f"Failed to optimize channel {channel_id}: {e}")
                 results[channel_id] = {"error": str(e)}
@@ -64,20 +57,23 @@ class FeedbackLoop:
         try:
             total_posts = db.query(func.count(PostMetric.id)).scalar() or 0
             posts_with_engagement = db.query(func.count(PostMetric.id)).filter(
-                PostMetric.views > 0
+                PostMetric.views_count > 0
             ).scalar() or 0
             
+            total_views = db.query(func.sum(PostMetric.views_count)).scalar() or 0
+            total_likes = db.query(func.sum(PostMetric.likes_count)).scalar() or 0
+            
             return {
-                "total_posts": total_posts,
-                "posts_with_engagement": posts_with_engagement,
+                "total_metrics": total_posts,
+                "posts_with_views": posts_with_engagement,
                 "engagement_rate": posts_with_engagement / total_posts if total_posts > 0 else 0,
+                "total_views": total_views,
+                "total_likes": total_likes,
                 "last_run": datetime.utcnow().isoformat(),
             }
         finally:
             db.close()
 
-
-# ---------- Background loop ----------
 
 _feedback_loop = FeedbackLoop()
 

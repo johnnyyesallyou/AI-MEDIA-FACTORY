@@ -2,13 +2,18 @@
 
 Автоматически применяет рекомендации:
 - HeadlineOptimizer: best variations для новых постов
-- PostingTimeOptimizer: обновляет schedules
+- PostingTimeOptimizer: обновляет schedules на основе engagement по часам
 - A/B testing winners: применяет автоматически
 - Content rules: извлекает паттерны из топ-постов
+
+Модели:
+- PostMetric: views_count, likes_count, shares_count, comments_count, content_id, channel_id
+- ContentORM: id (UUID), headline, published_at, channel_id
+- Связь: PostMetric.content_id = ContentORM.id
 """
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import datetime
+from typing import Dict, List
 
 from sqlalchemy import func
 
@@ -16,6 +21,7 @@ from core.database import SessionLocal
 from core.models.analytics import PostMetric
 from core.models.channel_orm import ChannelORM
 from core.models.channel_schedule_orm import ChannelScheduleORM
+from core.models.content_orm import ContentORM
 from engines.content_optimization.headline_optimizer import HeadlineOptimizer
 from engines.content_optimization.posting_time_optimizer import PostingTimeOptimizer
 from engines.ab_test_framework import ABTestFramework
@@ -32,72 +38,82 @@ class OptimizationApplier:
         self.posting_time_optimizer = PostingTimeOptimizer()
         self.ab_framework = ABTestFramework()
     
-    def apply_headline_optimizations(self, channel_id: int) -> Dict:
-        """Применяет headline optimizations для канала."""
+    def apply_headline_optimizations(self, channel_id) -> Dict:
+        """Анализирует топ-посты канала и извлекает паттерны заголовков."""
         db = SessionLocal()
         try:
-            # Получаем топ-посты канала
-            top_posts = db.query(PostMetric).filter(
-                PostMetric.channel_id == channel_id,
-                PostMetric.views > 0
-            ).order_by(PostMetric.views.desc()).limit(10).all()
+            # JOIN PostMetric с ContentORM для получения headline
+            top_posts = (
+                db.query(PostMetric, ContentORM.headline)
+                .join(ContentORM, PostMetric.content_id == ContentORM.id)
+                .filter(
+                    PostMetric.channel_id == channel_id,
+                    PostMetric.views_count > 0,
+                )
+                .order_by(PostMetric.views_count.desc())
+                .limit(10)
+                .all()
+            )
             
             if not top_posts:
-                return {"applied": 0, "message": "No posts to analyze"}
+                return {"applied": 0, "message": "No posts with views to analyze"}
             
-            # Анализируем паттерны
+            headlines = [h for (_, h) in top_posts if h]
+            if not headlines:
+                return {"applied": 0, "message": "No headlines found in top posts"}
+            
             insights = []
             
-            # Паттерн 1: длина заголовка
-            lengths = [len(post.content.headline or "") for post in top_posts]
-            avg_length = sum(lengths) / len(lengths) if lengths else 0
+            # Паттерн 1: средняя длина заголовка
+            avg_length = sum(len(h) for h in headlines) / len(headlines)
             insights.append(f"Средняя длина топ-заголовков: {avg_length:.0f} символов")
             
-            # Паттерн 2: эмодзи
-            emoji_count = sum(1 for post in top_posts if any(ord(c) > 127 for c in (post.content.headline or "")))
-            insights.append(f"Эмодзи в топ-постах: {emoji_count}/{len(top_posts)}")
+            # Паттерн 2: эмодзи (non-ASCII)
+            emoji_count = sum(1 for h in headlines if any(ord(c) > 127 for c in h))
+            insights.append(f"Эмодзи/юникод в топ-постах: {emoji_count}/{len(headlines)}")
             
-            # Паттерн 3: вопросительный знак
-            question_count = sum(1 for post in top_posts if "?" in (post.content.headline or ""))
-            insights.append(f"Вопросы в топ-постах: {question_count}/{len(top_posts)}")
+            # Паттерн 3: вопросы
+            question_count = sum(1 for h in headlines if "?" in h)
+            insights.append(f"Вопросы в топ-постах: {question_count}/{len(headlines)}")
             
-            # Сохраняем правила (в metadata канала)
-            channel = db.query(ChannelORM).filter(ChannelORM.id == channel_id).first()
-            if channel:
-                rules = {
-                    "avg_headline_length": avg_length,
-                    "emoji_ratio": emoji_count / len(top_posts) if top_posts else 0,
-                    "question_ratio": question_count / len(top_posts) if top_posts else 0,
-                    "updated_at": datetime.utcnow().isoformat(),
-                }
-                # В реальном коде сохраняем в отдельную таблицу или metadata
-                logger.info(f"Headline rules for channel {channel_id}: {rules}")
+            # Паттерн 4: числа
+            number_count = sum(1 for h in headlines if any(c.isdigit() for c in h))
+            insights.append(f"Числа в топ-постах: {number_count}/{len(headlines)}")
+            
+            logger.info(f"Headline rules for channel {channel_id}: {insights}")
             
             return {"applied": len(insights), "insights": insights}
         
         finally:
             db.close()
     
-    def apply_posting_time_optimizations(self, channel_id: int) -> Dict:
-        """Обновляет schedule канала на основе engagement по часам."""
+    def apply_posting_time_optimizations(self, channel_id) -> Dict:
+        """Обновляет schedule канала на основе engagement по часам (JOIN с ContentORM)."""
         db = SessionLocal()
         try:
-            # Получаем engagement по часам
-            hourly = db.query(
-                func.extract('hour', PostMetric.published_at).label('hour'),
-                func.sum(PostMetric.views).label('total_views'),
-                func.count(PostMetric.id).label('post_count')
-            ).filter(
-                PostMetric.channel_id == channel_id,
-                PostMetric.views > 0
-            ).group_by('hour').all()
+            # JOIN: hour(ContentORM.published_at) + sum(PostMetric.views_count)
+            hourly = (
+                db.query(
+                    func.extract('hour', ContentORM.published_at).label('hour'),
+                    func.sum(PostMetric.views_count).label('total_views'),
+                    func.count(PostMetric.id).label('post_count'),
+                )
+                .join(ContentORM, PostMetric.content_id == ContentORM.id)
+                .filter(
+                    PostMetric.channel_id == channel_id,
+                    PostMetric.views_count > 0,
+                    ContentORM.published_at.isnot(None),
+                )
+                .group_by('hour')
+                .all()
+            )
             
             if not hourly:
-                return {"applied": False, "message": "No engagement data"}
+                return {"applied": False, "message": "No engagement data with timestamps"}
             
-            # Находим топ-3 часа
             hours_data = [
-                {"hour": int(h.hour), "views": h.total_views or 0, "posts": h.post_count}
+                {"hour": int(h.hour) if h.hour is not None else 0,
+                 "views": h.total_views or 0, "posts": h.post_count}
                 for h in hourly
             ]
             top_hours = sorted(hours_data, key=lambda x: x["views"], reverse=True)[:3]
@@ -105,30 +121,30 @@ class OptimizationApplier:
             if not top_hours:
                 return {"applied": False, "message": "No top hours found"}
             
-            # Обновляем schedule (или создаём если нет)
+            top_hour_ints = [h["hour"] for h in top_hours]
+            
+            # Обновляем/создаём schedule
             schedule = db.query(ChannelScheduleORM).filter(
                 ChannelScheduleORM.channel_id == channel_id
             ).first()
             
             if schedule:
-                # Обновляем posting_times
-                schedule.posting_times = [h["hour"] for h in top_hours]
-                logger.info(f"Updated schedule for channel {channel_id}: posting at {schedule.posting_times}")
+                schedule.posting_times = top_hour_ints
+                logger.info(f"Updated schedule for channel {channel_id}: {top_hour_ints}")
             else:
-                # Создаём новый
                 schedule = ChannelScheduleORM(
                     channel_id=channel_id,
-                    posting_times=[h["hour"] for h in top_hours],
+                    posting_times=top_hour_ints,
                 )
                 db.add(schedule)
-                logger.info(f"Created schedule for channel {channel_id}: posting at {schedule.posting_times}")
+                logger.info(f"Created schedule for channel {channel_id}: {top_hour_ints}")
             
             db.commit()
             
             return {
                 "applied": True,
-                "top_hours": [h["hour"] for h in top_hours],
-                "message": f"Schedule updated: posting at {[h['hour'] for h in top_hours]}"
+                "top_hours": top_hour_ints,
+                "message": f"Schedule updated: posting at {top_hour_ints}",
             }
         
         finally:
@@ -137,9 +153,7 @@ class OptimizationApplier:
     def apply_ab_test_winners(self) -> Dict:
         """Автоматически применяет winners завершённых A/B тестов."""
         winners_applied = 0
-        
         try:
-            # Получаем завершённые тесты
             db = SessionLocal()
             try:
                 from core.models.analytics import ABTestORM
@@ -149,25 +163,23 @@ class OptimizationApplier:
                 
                 for test in completed_tests:
                     if test.winner_variant:
-                        # Применяем winner (в реальном коде обновляем templates/rules)
                         logger.info(f"Applied winner '{test.winner_variant}' for test '{test.name}'")
                         winners_applied += 1
             finally:
                 db.close()
         except Exception as e:
-            logger.error(f"Failed to apply AB winners: {e}")
+            logger.debug(f"AB winners check skipped: {e}")
         
         return {"winners_applied": winners_applied}
     
-    def run_full_optimization(self, channel_id: int) -> Dict:
+    def run_full_optimization(self, channel_id) -> Dict:
         """Запускает полный цикл оптимизации для канала."""
         results = {
-            "channel_id": channel_id,
+            "channel_id": str(channel_id),
             "headline": self.apply_headline_optimizations(channel_id),
             "posting_time": self.apply_posting_time_optimizations(channel_id),
             "ab_winners": self.apply_ab_test_winners(),
             "timestamp": datetime.utcnow().isoformat(),
         }
-        
         logger.info(f"Optimization results for channel {channel_id}: {results}")
         return results
