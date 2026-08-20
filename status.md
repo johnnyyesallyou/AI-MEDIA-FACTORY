@@ -2361,3 +2361,32 @@ Sprint 46 — New Publishing Platforms (Dzen, YouTube, Threads)
 
 ### Следующий шаг
 Sprint 46.2 — Channel Templates (пресеты 📰 News / 🍥 Anime / 📚 Manga)
+
+## Sprint 46.2 — Channel Templates (ЗАВЕРШЁН: 2026-08-20)
+
+### Что создано
+- ✅ `core/models/channel_templates.py` — 3 пресета (news/anime/manga)
+- ✅ `GET /channels/templates` — список шаблонов
+- ✅ `POST /channels/from-template?template_id=X` — создание канала одним кликом
+- ✅ `GET /channels/templates/{id}/preview` — предпросмотр шаблона
+- ✅ 5 CI тестов (test_templates.py)
+
+### Шаблоны
+| ID | Name | Sources | Schedule | Image Policy |
+|----|------|---------|----------|--------------|
+| news | News Channel | Habr RSS + VC.ru RSS | */2 hours (12/day) | ai_allowed |
+| anime | Anime Channel | AniList | */1 hour (24/day) | ai_forbidden |
+| manga | Manga Channel | ReManga + MangaDex + ReadManga | */2 hours (12/day) | ai_forbidden |
+
+### Результат E2E
+Все 5 шагов прошли: 200/201/200/200/204
+
+### Ключевые фичи
+1. **One-click channel creation**: POST /channels/from-template создаёт канал + источники + schedule в одной транзакции
+2. **Sources в JSON поле**: используется `repo.add_source()` → `channel.sources` (JSON), а не отдельная таблица
+3. **Schedule auto-creation**: ChannelScheduleORM создаётся автоматически с настройками из шаблона
+4. **Cascade delete**: удаление канала удаляет schedule + sources (через delete_cascade)
+5. **Image policy**: news=ai_allowed (DALL-E), anime/manga=ai_forbidden (только реальные обложки)
+
+### Следующий шаг
+Sprint 47 — Dashboard UI polish (Channel Management: кнопка "Create from template" в UI)
