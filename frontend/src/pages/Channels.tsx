@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { channelsAPI, automationAPI } from '../api/client';
+import { channelsAPI, automationAPI } from '../api/client, getTemplates, createFromTemplate';
 import { Plus, Radio, Globe, Type, Settings, Trash2, Edit2, MessageCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
 import ChannelManager from '../components/ChannelManager';
 
@@ -25,6 +25,8 @@ interface Channel {
 }
 
 const Channels: React.FC = () => {
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -89,6 +91,27 @@ const Channels: React.FC = () => {
   useEffect(() => {
     loadChannels();
   }, []);
+
+  
+  const loadTemplates = async () => {
+    try {
+      const response = await channelsAPI.getTemplates();
+      setTemplates(response.data);
+      setShowTemplateModal(true);
+    } catch (error) {
+      console.error('Failed to load templates:', error);
+    }
+  };
+
+  const createChannelFromTemplate = async (templateId: string) => {
+    try {
+      await channelsAPI.createFromTemplate(templateId);
+      setShowTemplateModal(false);
+      loadChannels(); // Refresh list
+    } catch (error) {
+      console.error('Failed to create channel:', error);
+    }
+  };
 
   const loadChannels = async () => {
     try {
@@ -818,3 +841,4 @@ const Channels: React.FC = () => {
 
 
 export default Channels;
+

@@ -1,12 +1,21 @@
 import pathlib
 
-# 1. client.ts — добавляем методы schedule в channelsAPI
-cp = pathlib.Path('./frontend/src/api/client.ts')
-c = cp.read_text(encoding='utf-8')
-if 'getSchedule' not in c:
-    c = c.replace(
-        '  listSources: (id: string) => apiClient.get(`/channels/${id}/sources`),\n};',
-        '  listSources: (id: string) => apiClient.get(`/channels/${id}/sources`),\n  getSchedule: (id: string) => apiClient.get(`/channels/${id}/schedule`),\n  updateSchedule: (id: string, data: any) => apiClient.put(`/channels/${id}/schedule`, data),\n};'
-    )
-    cp.write_text(c, encoding='utf-8')
-    print('OK client.ts: schedule methods added')
+p = pathlib.Path("/app/frontend/src/api/client.ts")
+c = p.read_text(encoding="utf-8")
+
+if "getTemplates" in c:
+    print("[i] channelsAPI.getTemplates already exists")
+else:
+    # Добавляем methods в channelsAPI
+    old = '''  get: (id: string) => apiClient.get(`/channels/${id}`),'''
+    new = '''  get: (id: string) => apiClient.get(`/channels/${id}`),
+  getTemplates: () => apiClient.get('/channels/templates'),
+  createFromTemplate: (templateId: string, customName?: string) => 
+    apiClient.post('/channels/from-template', null, { params: { template_id: templateId, custom_name: customName } }),'''
+    
+    if old in c:
+        c = c.replace(old, new, 1)
+        p.write_text(c, encoding="utf-8")
+        print("[OK] Added getTemplates + createFromTemplate to channelsAPI")
+    else:
+        print("[?] Pattern not found")
