@@ -74,3 +74,8 @@ def get_system_metrics():
             },
         },
     }
+
+@router.get("/debug/jobs")
+def debug_jobs():
+    from backend.automation.runtime.job_factory import JobFactory
+    return {"count": len(JobFactory._registry), "keys": sorted(JobFactory._registry.keys())}

@@ -93,31 +93,11 @@ const Channels: React.FC = () => {
   }, []);
 
   
-  const loadTemplates = async () => {
-    try {
-      const response = await channelsAPI.getTemplates();
-      setTemplates(response.data);
-      setShowTemplateModal(true);
-    } catch (error) {
-      console.error('Failed to load templates:', error);
-    }
-  };
-
-  const createChannelFromTemplate = async (templateId: string) => {
-    try {
-      await channelsAPI.createFromTemplate(templateId);
-      setShowTemplateModal(false);
-      loadChannels(); // Refresh list
-    } catch (error) {
-      console.error('Failed to create channel:', error);
-    }
-  };
-
   const loadChannels = async () => {
     try {
       const response = await channelsAPI.list();
       setChannels(response.data.channels || []);
-      // Загружаем расписания после загрузки каналов
+      // Р—Р°РіСЂСѓР¶Р°РµРј СЂР°СЃРїРёСЃР°РЅРёСЏ РїРѕСЃР»Рµ Р·Р°РіСЂСѓР·РєРё РєР°РЅР°Р»РѕРІ
       setTimeout(() => loadAllSchedules(response.data.channels || []), 500);
     } catch (error) {
       console.error('Error loading channels:', error);

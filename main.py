@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from backend.app.api.v1.router import api_v1_router
 from backend.app.api.v1 import metrics, health as health_router, system_metrics
 from backend.automation.scheduler import automation_scheduler
+from backend.automation.runtime.jobs_registry import register_all_jobs
 from core.alerts import start_alerts_loop
 from engines.content_optimization.feedback_loop import start_feedback_loop
 

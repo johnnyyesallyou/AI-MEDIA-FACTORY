@@ -2390,3 +2390,25 @@ Sprint 46.2 — Channel Templates (пресеты 📰 News / 🍥 Anime / 📚 
 
 ### Следующий шаг
 Sprint 47 — Dashboard UI polish (Channel Management: кнопка "Create from template" в UI)
+
+## Sprint 48 — Pipeline Fix: JobFactory Registry + Adapters (ЗАВЕРШЁН: 2026-08-20)
+
+### Что создано
+- ✅ `backend/automation/runtime/jobs_registry.py` — регистрация 20 job types при старте
+- ✅ `backend/automation/runtime/job_adapters.py` — 6 адаптеров legacy jobs к v2 contract:
+  - ResearchJobAdapter, DecisionJobAdapter, WritingJobAdapter, EvaluatorJobAdapter, ImageJobAdapter, PublishJobAdapter
+- ✅ Import в main.py lifespan
+- ✅ Debug endpoint /api/v1/metrics/debug/jobs
+
+### Проблема решена
+**До:** `Unknown node_type: research` — JobFactory registry был пуст в runtime
+**После:** `JobFactory registered 20 job types (with adapters)`
+
+### Техническая деталь
+Legacy jobs (automation_jobs.py) не наследовались от BaseJob и не имели async execute(context).
+WorkflowRuntime v2 ожидал contract `async execute(context: ExecutionContext) -> NodeResult`.
+Адаптеры оборачивают legacy `job.run(channel, context)` в v2 contract.
+
+### Что осталось
+- Баг scheduler.run_channel_automation ("Channel not found") — нужно починить в следующем mini-спринте
+- Прямой запуск pipeline через WorkflowRuntime работает
