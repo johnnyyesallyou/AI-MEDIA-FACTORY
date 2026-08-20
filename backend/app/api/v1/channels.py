@@ -131,7 +131,6 @@ async def create_channel_from_template(
         timezone=create_req.timezone,
         description=create_req.description,
         is_active=True,
-        template_id=template_id,
         sources=[],
     )
     db.add(channel)
@@ -173,6 +172,8 @@ async def create_channel_from_template(
         timezone=channel.timezone,
         description=channel.description,
         is_active=channel.is_active,
+        is_connected=channel.is_connected if channel.is_connected is not None else False,
+        sources=channel.sources if channel.sources is not None else [],
         created_at=channel.created_at,
         updated_at=channel.updated_at,
     )
