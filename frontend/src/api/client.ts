@@ -17,6 +17,8 @@ export const dashboardAPI = {
 export const channelsAPI = {
   list: () => apiClient.get('/channels/'),
   get: (id: string) => apiClient.get(`/channels/${id}`),
+  getTemplates: () => apiClient.get('/channels/templates'),
+  createFromTemplate: (templateId: string) => apiClient.post(`/channels/from-template?template_id=${templateId}`),
   create: (data: any) => apiClient.post('/channels/', data),
   update: (id: string, data: any) => apiClient.put(`/channels/${id}`, data),
   delete: (id: string) => apiClient.delete(`/channels/${id}`),
