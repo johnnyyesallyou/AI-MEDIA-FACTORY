@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { channelsAPI, automationAPI } from '../api/client, getTemplates, createFromTemplate';
+import { channelsAPI, automationAPI } from '../api/client';
 import { Plus, Radio, Globe, Type, Settings, Trash2, Edit2, MessageCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
 import ChannelManager from '../components/ChannelManager';
 
@@ -25,7 +25,7 @@ interface Channel {
 }
 
 const Channels: React.FC = () => {
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateCreating, setTemplateCreating] = useState<string | null>(null);
   const [templates, setTemplates] = useState<any[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,6 +123,29 @@ const Channels: React.FC = () => {
       console.error('Error loading channels:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTemplates = async () => {
+    if (templates.length > 0) return;
+    try {
+      const r = await channelsAPI.getTemplates();
+      setTemplates(r.data);
+    } catch (e) {
+      console.error('Failed to load templates:', e);
+    }
+  };
+
+  const handleCreateFromTemplate = async (templateId: string) => {
+    setTemplateCreating(templateId);
+    try {
+      await channelsAPI.createFromTemplate(templateId);
+      setShowCreateModal(false);
+      await loadChannels();
+    } catch (e) {
+      console.error('Failed to create from template:', e);
+    } finally {
+      setTemplateCreating(null);
     }
   };
 
@@ -291,7 +314,7 @@ const Channels: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-white">Channels</h1>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => { setShowCreateModal(true); loadTemplates(); }}
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <Plus size={20} className="mr-2" />
@@ -307,7 +330,7 @@ const Channels: React.FC = () => {
           <h3 className="text-xl font-semibold text-white mb-2">Каналов пока нет</h3>
           <p className="text-gray-400 mb-4">Создайте первый канал для начала работы</p>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => { setShowCreateModal(true); loadTemplates(); }}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Создать канал
@@ -453,8 +476,36 @@ const Channels: React.FC = () => {
       {/* Modal for creating channel */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md border border-gray-700">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-lg border border-gray-700">
             <h2 className="text-2xl font-bold text-white mb-6">Создать канал</h2>
+
+            {/* Sprint 47: быстрый старт из шаблона (улучшение существующей модалки) */}
+            <div className="mb-6">
+              <div className="text-sm text-gray-400 mb-2">Быстрый старт из шаблона:</div>
+              <div className="grid grid-cols-3 gap-2">
+                {templates.map((t: any) => (
+                  <button
+                    key={t.id}
+                    onClick={() => handleCreateFromTemplate(t.id)}
+                    disabled={templateCreating !== null}
+                    className="p-3 bg-gray-700/50 border border-gray-600 rounded-lg hover:border-blue-500 hover:bg-gray-700 transition-colors text-left disabled:opacity-50"
+                  >
+                    <div className="text-lg mb-1">{t.id === 'news' ? '📰' : t.id === 'anime' ? '🍥' : '📚'}</div>
+                    <div className="text-white text-sm font-medium">
+                      {t.id === 'news' ? 'Новости' : t.id === 'anime' ? 'Аниме' : 'Манга'}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {templateCreating === t.id ? 'Создание…' : '1 клик'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mt-4">
+                <div className="flex-1 h-px bg-gray-700"></div>
+                <span className="text-xs text-gray-500">или вручную</span>
+                <div className="flex-1 h-px bg-gray-700"></div>
+              </div>
+            </div>
 
             <div className="space-y-4">
               <div>
