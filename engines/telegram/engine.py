@@ -24,7 +24,7 @@ class TelegramEngine:
                 message_id=result["message_id"],
                 chat_id=result["chat_id"],
                 published_at=datetime.utcnow(),
-                text_length=result["text_length"]
+                text_length=result.get("text_length", len(text))
             )
         except Exception as e:
             logger.exception("Telegram publish failed")
@@ -39,7 +39,7 @@ class TelegramEngine:
                 message_id=result["message_id"],
                 chat_id=result["chat_id"],
                 published_at=datetime.utcnow(),
-                text_length=result["text_length"]
+                text_length=result.get("text_length", len(text))
             )
         except Exception as e:
             logger.exception("Telegram publish_photo failed")
