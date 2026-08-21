@@ -296,8 +296,10 @@ class WritingJob:
                 db.rollback()
                 logger.exception(f"Writing failed item={item.id} error={item_e}")
         
-        p_logger.finish("success", details=f"Processed {processed}, failed {failed}")
-        return {"status": "ok", "items_processed": processed, "failed": failed}
+        logger_status = "success" if failed == 0 else "partial" if processed > 0 else "failed"
+        p_logger.finish(logger_status, details=f"Processed {processed}, failed {failed}")
+        status = "ok" if failed == 0 else "partial" if processed > 0 else "failed"
+        return {"status": status, "items_processed": processed, "failed": failed}
 
 
 class EvaluatorJob:

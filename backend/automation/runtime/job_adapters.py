@@ -16,6 +16,15 @@ from backend.automation.jobs.automation_jobs import (
 
 logger = logging.getLogger(__name__)
 
+async def _maybe_await(r):
+    """Sprint 49: async legacy jobs (WritingJob/EvaluatorJob) должны await-иться."""
+    import inspect
+    if inspect.iscoroutine(r) or inspect.isawaitable(r):
+        return await r
+    return r
+
+
+
 
 class ResearchJobAdapter(BaseJob):
     """Адаптер для legacy ResearchJob."""
@@ -30,11 +39,11 @@ class ResearchJobAdapter(BaseJob):
             # - execute(channel)
             
             if hasattr(job, 'run'):
-                result = job.run(context.channel, context)
+                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
             elif hasattr(job, 'execute'):
-                result = job.execute(context.channel)
+                result = await _maybe_await(job.execute(context.channel))
             elif callable(job):
-                result = job(context.channel)
+                result = await _maybe_await(job(context.channel))  # noqa
             else:
                 raise AttributeError(f"LegacyResearchJob has no callable method")
             
@@ -58,9 +67,9 @@ class DecisionJobAdapter(BaseJob):
         try:
             job = LegacyDecisionJob()
             if hasattr(job, 'run'):
-                result = job.run(context.channel, context)
+                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
             elif callable(job):
-                result = job(context.channel)
+                result = await _maybe_await(job(context.channel))  # noqa
             else:
                 raise AttributeError("LegacyDecisionJob has no callable method")
             
@@ -77,9 +86,9 @@ class WritingJobAdapter(BaseJob):
         try:
             job = LegacyWritingJob()
             if hasattr(job, 'run'):
-                result = job.run(context.channel, context)
+                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
             elif callable(job):
-                result = job(context.channel)
+                result = await _maybe_await(job(context.channel))  # noqa
             else:
                 raise AttributeError("LegacyWritingJob has no callable method")
             
@@ -96,9 +105,9 @@ class EvaluatorJobAdapter(BaseJob):
         try:
             job = LegacyEvaluatorJob()
             if hasattr(job, 'run'):
-                result = job.run(context.channel, context)
+                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
             elif callable(job):
-                result = job(context.channel)
+                result = await _maybe_await(job(context.channel))  # noqa
             else:
                 raise AttributeError("LegacyEvaluatorJob has no callable method")
             
@@ -115,9 +124,9 @@ class ImageJobAdapter(BaseJob):
         try:
             job = LegacyImageJob()
             if hasattr(job, 'run'):
-                result = job.run(context.channel, context)
+                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
             elif callable(job):
-                result = job(context.channel)
+                result = await _maybe_await(job(context.channel))  # noqa
             else:
                 raise AttributeError("LegacyImageJob has no callable method")
             
@@ -134,9 +143,9 @@ class PublishJobAdapter(BaseJob):
         try:
             job = LegacyPublishJob()
             if hasattr(job, 'run'):
-                result = job.run(context.channel, context)
+                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
             elif callable(job):
-                result = job(context.channel)
+                result = await _maybe_await(job(context.channel))  # noqa
             else:
                 raise AttributeError("LegacyPublishJob has no callable method")
             
