@@ -21,7 +21,7 @@ class LLMEvaluatorEngine:
         <SOURCE_FACTS> + <POST> + <STYLE> → LLM Judge → EvaluationResult
     
     Отличия от v1 (заглушки):
-    - Реальная оценка через LLM (mistral-nemo:12b по умолчанию)
+    - Реальная оценка через LLM (gemma2:9b по умолчанию)
     - Дифференцированные scores (70-95 вместо константных 88)
     - Взвешенная формула overall
     - Детальный feedback от LLM для RevisionJob
@@ -32,9 +32,9 @@ class LLMEvaluatorEngine:
         base_url = os.getenv("OLLAMA_URL", "http://localhost:11434")
         self.ollama_url = f"{base_url}/api/generate"
         
-        # Используем лучшую из доступных моделей для оценки — mistral-nemo:12b
-        # Можно переопределить через ENV: EVALUATOR_MODEL=llama3.1:8b
-        default_eval_model = os.getenv("EVALUATOR_MODEL", "mistral-nemo:12b")
+        # Используем лучшую из доступных моделей для оценки — gemma2:9b
+        # Можно переопределить через ENV: EVALUATOR_MODEL=gemma2:9b
+        default_eval_model = os.getenv("EVALUATOR_MODEL", "gemma2:9b")
         self.model = model or model_router.get_model("evaluator") or default_eval_model
 
         self.system_prompt = """Ты — строгий и опытный главный редактор Telegram-канала про технологии и AI.

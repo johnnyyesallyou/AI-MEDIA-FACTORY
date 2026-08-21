@@ -609,6 +609,21 @@ class PublishJob:
                     db.commit()
                     published += 1
                     logger.info("✅ Published item=%s platform=%s message_id=%s", item.id, platform, result.message_id)
+                    
+                    # Sprint 50: создаём PostMetric для аналитики
+                    try:
+                        from core.models.analytics import PostMetric
+                        post_metric = PostMetric()
+                        post_metric.content_id = item.id
+                        post_metric.channel_id = channel.id if channel else None
+                        post_metric.platform = platform
+                        post_metric.published_at = result.published_at
+                        post_metric.external_id = str(result.message_id) if result.message_id else None
+                        db.add(post_metric)
+                        db.commit()
+                        logger.info("✅ PostMetric created for item=%s", item.id)
+                    except Exception as metric_e:
+                        logger.warning("Failed to create PostMetric for item=%s: %s", item.id, metric_e)
 
                 except Exception as e:
                     db.rollback()
