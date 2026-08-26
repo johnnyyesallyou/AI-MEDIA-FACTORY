@@ -2556,3 +2556,51 @@ Status: completed
 - Теги жанров
 - Ссылка на AniList
 
+
+## Sprint 51 Final — Telegraph Pages с Preview (ЗАВЕРШЁН: 2026-08-21)
+
+### Проблема
+Telegraph страницы создавались, но 	elegraph_url не сохранялся в БД → повторные публикации создавали дубликаты.
+
+### Решение
+- ✅ **manga_publish_job.py**: добавлено item.telegraph_url = telegraph_url + db.commit()
+- ✅ **channel_profiles.py**: включен 	elegraph_page: True в manga_releases profile
+- ✅ **preview_resolver.py**: использует URL slug из chapter_url (не MangaDex UUID)
+
+### Результат
+✅ Telegraph страницы создаются с:
+- Обложкой манги
+- Описанием
+- **Превью первых 5 страниц главы** (ReManga open mirrors)
+- Ссылками на источник
+
+✅ 	elegraph_url сохраняется в ContentORM → нет дубликатов
+
+### Техническая деталь
+1. **MangaPublishJob._publish_one()**:
+   - Проверяет publishing_policy.telegraph_page
+   - Извлекает URL slug из chapter_url (regex: emanga.org/manga/([^/]+))
+   - Вызывает esolve_preview_pages(slug, limit=5)
+   - Создаёт Telegraph страницу через 	elegraph.publish_manga_page()
+   - **Сохраняет** item.telegraph_url в БД
+
+2. **Preview Resolver**:
+   - Использует ReManga API: /api/titles/{slug}/ → irst_chapter
+   - Получает страницы: /api/titles/chapters/{chapter_id}/
+   - Фильтрует только open mirrors (без catbox)
+
+### Статус
+🎉 **Sprint 51 ЗАКРЫТ — Rich posts полностью работают!**
+
+**Manga канал** (@manga_new_chapters):
+- ✅ Обложка + RU/EN названия
+- ✅ Описание + жанры
+- ✅ Telegraph страница с preview pages
+- ✅ Кнопки: "Читать на Telegraph" + "Читать на сайте"
+- ✅ 	elegraph_url в БД (нет дубликатов)
+
+**Anime канал** (@Anime_news_ai):
+- ✅ Реальные key visual из AniList
+- ✅ RU описания (LLM перевод)
+- ✅ Теги жанров
+
