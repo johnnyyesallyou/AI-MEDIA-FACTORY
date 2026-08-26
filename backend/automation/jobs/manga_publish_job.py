@@ -348,9 +348,12 @@ class MangaPublishJob:
                     preview_pages=preview_pages,
                 )
                 telegraph_url = result["url"]
+                item.telegraph_url = telegraph_url  # Sprint 51: сохраняем в БД
                 self.logger.info(f"Telegraph: {telegraph_url}")
+                db.commit()  # Sprint 51: commit чтобы сохранить telegraph_url
             except Exception as e:
                 self.logger.warning(f"Telegraph failed: {e}")
+                telegraph_url = None
 
         # Short URL fallback
         chapter_url = meta.get("manga_chapter_url") or item.source_url
