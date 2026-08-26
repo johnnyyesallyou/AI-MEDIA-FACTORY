@@ -3,6 +3,7 @@
 Адаптеры для legacy jobs (automation_jobs.py) к v2 contract (BaseJob.execute).
 """
 import logging
+import inspect
 from typing import Any, Dict
 from backend.automation.runtime.contracts import BaseJob, ExecutionContext, NodeResult
 from backend.automation.jobs.automation_jobs import (
@@ -16,45 +17,22 @@ from backend.automation.jobs.automation_jobs import (
 
 logger = logging.getLogger(__name__)
 
-async def _maybe_await(r):
-    """Sprint 49: async legacy jobs (WritingJob/EvaluatorJob) должны await-иться."""
-    import inspect
-    if inspect.iscoroutine(r) or inspect.isawaitable(r):
-        return await r
-    return r
 
-
+async def _maybe_await(result):
+    """Sprint 49: async legacy jobs должны await-иться."""
+    if inspect.iscoroutine(result) or inspect.isawaitable(result):
+        return await result
+    return result
 
 
 class ResearchJobAdapter(BaseJob):
-    """Адаптер для legacy ResearchJob."""
     node_type = "research"
     
     async def execute(self, context: ExecutionContext) -> NodeResult:
         try:
             job = LegacyResearchJob()
-            # Legacy jobs могут иметь разные сигнатуры:
-            # - run(channel, context)
-            # - __call__(channel)
-            # - execute(channel)
-            
-            if hasattr(job, 'run'):
-                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
-            elif hasattr(job, 'execute'):
-                result = await _maybe_await(job.execute(context.channel))
-            elif callable(job):
-                result = await _maybe_await(job(context.channel))  # noqa
-            else:
-                raise AttributeError(f"LegacyResearchJob has no callable method")
-            
-            # Конвертируем результат в NodeResult
-            if isinstance(result, NodeResult):
-                return result
-            elif isinstance(result, dict):
-                return NodeResult.success(result)
-            else:
-                return NodeResult.success({"result": result})
-                
+            result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
+            return result if isinstance(result, NodeResult) else NodeResult.success(result if isinstance(result, dict) else {"result": result})
         except Exception as e:
             logger.error(f"ResearchJobAdapter failed: {e}", exc_info=True)
             return NodeResult.failed(str(e))
@@ -66,14 +44,8 @@ class DecisionJobAdapter(BaseJob):
     async def execute(self, context: ExecutionContext) -> NodeResult:
         try:
             job = LegacyDecisionJob()
-            if hasattr(job, 'run'):
-                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
-            elif callable(job):
-                result = await _maybe_await(job(context.channel))  # noqa
-            else:
-                raise AttributeError("LegacyDecisionJob has no callable method")
-            
-            return NodeResult.success(result) if isinstance(result, dict) else NodeResult.success({"result": result})
+            result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
+            return result if isinstance(result, NodeResult) else NodeResult.success(result if isinstance(result, dict) else {"result": result})
         except Exception as e:
             logger.error(f"DecisionJobAdapter failed: {e}", exc_info=True)
             return NodeResult.failed(str(e))
@@ -85,14 +57,8 @@ class WritingJobAdapter(BaseJob):
     async def execute(self, context: ExecutionContext) -> NodeResult:
         try:
             job = LegacyWritingJob()
-            if hasattr(job, 'run'):
-                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
-            elif callable(job):
-                result = await _maybe_await(job(context.channel))  # noqa
-            else:
-                raise AttributeError("LegacyWritingJob has no callable method")
-            
-            return NodeResult.success(result) if isinstance(result, dict) else NodeResult.success({"result": result})
+            result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
+            return result if isinstance(result, NodeResult) else NodeResult.success(result if isinstance(result, dict) else {"result": result})
         except Exception as e:
             logger.error(f"WritingJobAdapter failed: {e}", exc_info=True)
             return NodeResult.failed(str(e))
@@ -104,14 +70,8 @@ class EvaluatorJobAdapter(BaseJob):
     async def execute(self, context: ExecutionContext) -> NodeResult:
         try:
             job = LegacyEvaluatorJob()
-            if hasattr(job, 'run'):
-                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
-            elif callable(job):
-                result = await _maybe_await(job(context.channel))  # noqa
-            else:
-                raise AttributeError("LegacyEvaluatorJob has no callable method")
-            
-            return NodeResult.success(result) if isinstance(result, dict) else NodeResult.success({"result": result})
+            result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
+            return result if isinstance(result, NodeResult) else NodeResult.success(result if isinstance(result, dict) else {"result": result})
         except Exception as e:
             logger.error(f"EvaluatorJobAdapter failed: {e}", exc_info=True)
             return NodeResult.failed(str(e))
@@ -123,14 +83,8 @@ class ImageJobAdapter(BaseJob):
     async def execute(self, context: ExecutionContext) -> NodeResult:
         try:
             job = LegacyImageJob()
-            if hasattr(job, 'run'):
-                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
-            elif callable(job):
-                result = await _maybe_await(job(context.channel))  # noqa
-            else:
-                raise AttributeError("LegacyImageJob has no callable method")
-            
-            return NodeResult.success(result) if isinstance(result, dict) else NodeResult.success({"result": result})
+            result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
+            return result if isinstance(result, NodeResult) else NodeResult.success(result if isinstance(result, dict) else {"result": result})
         except Exception as e:
             logger.error(f"ImageJobAdapter failed: {e}", exc_info=True)
             return NodeResult.failed(str(e))
@@ -142,14 +96,8 @@ class PublishJobAdapter(BaseJob):
     async def execute(self, context: ExecutionContext) -> NodeResult:
         try:
             job = LegacyPublishJob()
-            if hasattr(job, 'run'):
-                result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
-            elif callable(job):
-                result = await _maybe_await(job(context.channel))  # noqa
-            else:
-                raise AttributeError("LegacyPublishJob has no callable method")
-            
-            return NodeResult.success(result) if isinstance(result, dict) else NodeResult.success({"result": result})
+            result = await _maybe_await(job.run(context.channel, execution_id=context.execution_id))
+            return result if isinstance(result, NodeResult) else NodeResult.success(result if isinstance(result, dict) else {"result": result})
         except Exception as e:
             logger.error(f"PublishJobAdapter failed: {e}", exc_info=True)
             return NodeResult.failed(str(e))

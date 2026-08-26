@@ -16,6 +16,7 @@ from .manager import automation_manager
 from .automation_manager_v2 import automation_manager_v2
 from .jobs import MonitoringJob
 from .jobs.manga_pipeline_job import MangaPipelineJob
+from .jobs.anime_pipeline_job import AnimePipelineJob
 
 logger = logging.getLogger(__name__)
 

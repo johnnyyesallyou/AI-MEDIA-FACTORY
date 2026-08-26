@@ -1,36 +1,23 @@
-import requests
+import sys
+sys.path.insert(0, '/app')
 
-sources = {
-    "ReManga": "https://remanga.org/api/titles/?ordering=-id&count=1",
-    "MangaDex": "https://api.mangadex.org/manga?limit=1",
-    "AniList": ("POST", "https://graphql.anilist.co", {"query": "{ Media(type: ANIME) { id } }"}),
-    "Habr": "https://habr.com/ru/rss/articles/?fl=ru",
-    "ReadManga": "https://readmanga.io",
-}
+from engines.cross_source_enricher import CrossSourceEnricher
+from core.database import SessionLocal
+from core.models.manga_knowledge import MangaTitle
 
-print("SOURCE CONNECTIVITY TEST (from container)")
-print("=" * 70)
+db = SessionLocal()
+title = db.query(MangaTitle).first()
 
-for name, url in sources.items():
-    print(f"\n[{name}]")
-    try:
-        if isinstance(url, tuple):
-            method, endpoint, payload = url
-            if method == "POST":
-                r = requests.post(endpoint, json=payload, timeout=5)
-        else:
-            r = requests.get(url, timeout=5)
-        
-        print(f"  Status: {r.status_code}")
-        print(f"  Content-Type: {r.headers.get('content-type', 'N/A')}")
-        print(f"  Length: {len(r.content)} bytes")
-        
-        if r.status_code in (200, 301, 302):
-            print(f"  ✓ Accessible")
-        else:
-            print(f"  ✗ Unexpected status")
-            
-    except Exception as e:
-        print(f"  ✗ {type(e).__name__}: {e}")
+enricher = CrossSourceEnricher()
+sources_data = enricher._build_sources_data(title)
 
-print("\n" + "=" * 70)
+print(f"Title: {title.canonical_title[:50]}")
+print(f"\nSources data keys: {list(sources_data.keys())}")
+
+for source, data in sources_data.items():
+    print(f"\n{source}:")
+    print(f"  description: {data.get('description', 'MISSING')[:100] if data.get('description') else 'MISSING'}")
+    print(f"  genres: {data.get('genres', 'MISSING')[:5] if data.get('genres') else 'MISSING'}")
+    print(f"  cover: {data.get('cover', 'MISSING')[:60] if data.get('cover') else 'MISSING'}")
+
+db.close()

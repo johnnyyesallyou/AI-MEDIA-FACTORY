@@ -156,7 +156,11 @@ class MangaResearchJob:
                 if sources_data != (title.sources_data or {}):
                     title.sources_data = sources_data
                 
-                desc, genres, cover = self.enricher.merge(sources_data)
+                # Sprint 51: используем enrich() вместо merge() (merge внутри enrich)
+                self.enricher.enrich(title)
+                desc = title.description
+                genres = title.genres
+                cover = title.cover_url
                 
                 if desc and not title.description:
                     title.description = desc
