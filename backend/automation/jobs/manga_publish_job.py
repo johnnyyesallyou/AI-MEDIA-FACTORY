@@ -323,9 +323,21 @@ class MangaPublishJob:
                 if item.source_url and "remanga.org" in item.source_url and manga_title.title_slug:
                     try:
                         from engines.preview_resolver import resolve_preview_pages
-                        preview_pages = resolve_preview_pages(manga_title.title_slug, limit=5)
+                        # Sprint 51: берём slug из URL главы (title_slug может быть MangaDex UUID)
+                        chapter_url_for_slug = meta.get("manga_chapter_url") or item.source_url or ""
+                        url_slug = None
+                        if "remanga.org" in chapter_url_for_slug:
+                            m = re.search(r"remanga\.org/manga/([^/]+)", chapter_url_for_slug)
+                            if m:
+                                url_slug = m.group(1)
+                        
+                        slug_to_use = url_slug or manga_title.title_slug
+                        self.logger.info(f"Preview: using slug={slug_to_use} (url_slug={url_slug}, title_slug={manga_title.title_slug})")
+                        preview_pages = resolve_preview_pages(slug_to_use, limit=5)
+                        self.logger.info(f"Preview pages fetched: {len(preview_pages) if preview_pages else 0}")
                     except Exception as e:
                         self.logger.warning(f"Preview fetch failed: {e}")
+                        preview_pages = None
 
                 result = telegraph.publish_manga_page(
                     title=f"{title_name} — глава {chapter_number}",
