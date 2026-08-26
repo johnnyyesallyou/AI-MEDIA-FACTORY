@@ -1,7 +1,4 @@
-"""Jobs Registry - Sprint 48.
-
-Регистрирует все Job классы (через адаптеры для legacy jobs).
-"""
+"""Jobs Registry - Sprint 48 + 51 cleanup."""
 import logging
 from backend.automation.runtime.job_factory import JobFactory
 from backend.automation.runtime.job_adapters import (
@@ -24,8 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def register_all_jobs():
-    """Регистрирует все Job классы в JobFactory."""
-    # Базовые типы через АДАПТЕРЫ (legacy -> v2 contract)
+    # Базовые типы через АДАПТЕРЫ
     JobFactory.register("research", ResearchJobAdapter)
     JobFactory.register("decision", DecisionJobAdapter)
     JobFactory.register("writing", WritingJobAdapter, aliases=["brief"])
@@ -33,7 +29,7 @@ def register_all_jobs():
     JobFactory.register("publish", PublishJobAdapter, aliases=["publisher"])
     JobFactory.register("image", ImageJobAdapter)
     
-    # Специализированные типы (надеюсь они уже v2-compatible)
+    # Специализированные — БЕЗ адаптеров (работают через legacy runner напрямую)
     JobFactory.register("news_research", NewsResearchJob)
     JobFactory.register("news_publish", NewsPublishJob)
     JobFactory.register("anime_research", AnimeResearchJob)
@@ -48,8 +44,8 @@ def register_all_jobs():
     JobFactory.register("smart_image", SmartImageAcquisitionJob)
     JobFactory.register("engagement_collection", EngagementCollectionJob)
     
-    logger.info(f"JobFactory registry loaded: {len(JobFactory._registry)} types (with adapters)")
-    print(f"✅ JobFactory registered {len(JobFactory._registry)} job types (with adapters)")
+    logger.info(f"JobFactory registry loaded: {len(JobFactory._registry)} types")
+    print(f"✅ JobFactory registered {len(JobFactory._registry)} job types")
 
 
 register_all_jobs()

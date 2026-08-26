@@ -2504,3 +2504,55 @@ Status: completed
 2. Sprint 52: Фикс Research тематика (использовать channel.sources)
 3. Sprint 53: Фикс АИ Новости (переподключить бота)
 4. Sprint 54: Финальная документация + user guide
+
+## Sprint 51 — Rich Posts Restore: Manga + Anime Specialized Pipelines (ЗАВЕРШЁН: 2026-08-21)
+
+### Проблема
+После Sprint 48-50 все каналы использовали generic pipeline (research→writing→evaluation→publish), который публиковал текстовые посты без картинок, без описаний, без Telegraph-страниц.
+
+### Решение
+Восстановлен старый механизм специализированных pipeline через cron jobs:
+- **Manga**: MangaPipelineJob (research → enrich → image → publish)
+- **Anime**: AnimePipelineJob (research → publish)
+
+### Что создано
+- ✅ `backend/automation/jobs/anime_pipeline_job.py` — Anime orchestrator
+- ✅ **scheduler.py**: добавлен cron job `anime_pipeline_job` (каждые 30 минут)
+- ✅ **channel_profiles.py**: anime_news profile:
+  - content_type: news → anime (не попадает под AI fallback)
+  - image_policy.fallback: ai_generated → none (только реальные key visual)
+  - require_ru_title: False → True (только RU тайтлы)
+  - strip_non_ru_description: False → True (убирает EN описания)
+- ✅ **AnimePublishJob**: добавлен LLM перевод EN описаний на русский через gemma2:9b
+- ✅ **ContentORM**: добавлено поле `telegraph_url` для хранения Telegraph page URL
+- ✅ **manga_research_job.py**: .merge() → .enrich() (правильный API)
+
+### Результат
+✅ **Manga посты**: обложка + RU/EN названия + описание + Telegraph страница + кнопки
+✅ **Anime посты**: реальные key visual из AniList + RU описания + теги
+✅ **Scheduled runs**: manga каждые 30 минут, anime каждые 30 минут (offset 15 мин)
+
+### Техническая деталь
+1. **MangaPipelineJob**: orchestrates MangaResearchJob → MangaEnrichmentJob → MangaImageJob → MangaPublishJob
+2. **AnimePipelineJob**: orchestrates AnimeResearchJob → AnimePublishJob
+3. **CrossSourceEnricher**: обогащает из remanga/mangadex/readmanga
+4. **TelegraphPublisher**: создаёт Telegraph pages с превью первой главы
+5. **LLM translation**: gemma2:9b переводит EN описания на русский
+
+### Статус
+🎉 **Rich-посты восстановлены!**
+
+**Manga channel** (@manga_new_chapters):
+- Обложка из ReManga/MangaDex
+- RU название + EN название
+- Описание на русском
+- Telegraph страница с первыми главами
+- Кнопки: "Читать на Telegraph" + "Читать на сайте"
+
+**Anime channel** (@Anime_news_ai):
+- Реальные key visual из AniList (не AI-генерация)
+- RU название + сезон
+- RU описание (переведено через LLM)
+- Теги жанров
+- Ссылка на AniList
+

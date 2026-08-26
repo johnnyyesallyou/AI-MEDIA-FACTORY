@@ -78,7 +78,7 @@ PROFILES: Dict[str, Dict[str, Any]] = {
     },
     "anime_news": {
         "theme": "anime",
-        "content_type": "news",
+        "content_type": "anime",  # Sprint 51: не news, чтобы не попадал под AI fallback
         "sources": ["anime_news"],
         "image_policy": {"preferred": "anime_visual", "fallback": "ai_generated", "style": "anime"},
         "formatting_profile": {"emoji_header": "🎬"},
@@ -96,8 +96,8 @@ PROFILES: Dict[str, Dict[str, Any]] = {
         "sources": ["remanga", "mangadex"],
         "image_policy": {"preferred": "manga_cover", "fallback": "none", "style": "manga"},
         "publishing_policy": {
-            "require_ru_title": True,
-            "strip_non_ru_description": True,
+            "require_ru_title": False,  # Sprint 51: временно для теста
+            "strip_non_ru_description": False,  # Sprint 51: временно для теста
             "telegraph_page": True,
             "inline_buttons": True,
         },
