@@ -95,6 +95,27 @@ AI Media Factory — это автономная фабрика управлен
 └─────────────────────────────────────────────────────────────────┘
                             │
                             ↓
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    FORMATTER LAYER (Sprint 54) ⭐                │
+│  engines/formatters/                                             │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │  get_formatter(content_type, topic) → BaseFormatter        │ │
+│  │                                                            │ │
+│  │  MangaFormatter          NewsFormatter      AnimeFormatter   │ │
+│  │  (chapter_line + RU/EN)  (source_line +     (season_line +  │ │
+│  │                          translate RU)      aliases.en/ja) │ │
+│  │                                                            │ │
+│  │  Shared utilities:                                         │ │
+│  │  - format_hashtag()   - smart_truncate()                   │ │
+│  │  - translate_to_russian() (Ollama gemma2:9b)               │ │
+│  │  - unescape()         - has_cyrillic()                     │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│  Formatter принимает Knowledge Object + FormatContext            │
+│  и возвращает Publication (унифицированная структура)            │
+└─────────────────────────────────────────────────────────────────┘
+                            │
+                            ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                    PUBLISHING LAYER                              │
 │  engines/publishing/                                             │
@@ -133,7 +154,8 @@ channel → profile (template) + overrides (content_profile JSONB)
       effective config (merged)
 \\\
 
-**Реализация:** \esolve_channel_profile()\ делает \_deep_merge(profile, overrides)\
+**Реализация:** \
+esolve_channel_profile()\ делает \_deep_merge(profile, overrides)\
 
 ### 2. SourceDefinition = dataclass (не ORM)
 
@@ -150,7 +172,8 @@ class SourceDefinition:
     capabilities: tuple
 \\\
 
-**Почему не ORM?** Потому что \emanga\, \nilist\, \habr\ — это не редактируемые пользователем объекты. Позже, если понадобится UI для custom RSS, можно добавить DB-модель.
+**Почему не ORM?** Потому что \
+emanga\, \nilist\, \habr\ — это не редактируемые пользователем объекты. Позже, если понадобится UI для custom RSS, можно добавить DB-модель.
 
 ### 3. AI отвечает за интеллектуальные операции, не за инфраструктуру
 
@@ -185,6 +208,22 @@ Knowledge Object → Formatter → Publication → Publisher
 \\\
 
 ---
+
+
+### 5. Content Formatter Layer (реализовано в Sprint 54)
+
+**Раньше:**
+MangaPublishJob._build_publication() → сам решает формат
+NewsPublishJob._build_publication() → сам решает формат
+
+**Сейчас:**
+Knowledge Object + FormatContext → Formatter → Publication → Publisher
+
+**Преимущества:**
+- Формат определяется `channel_profile`, а не job
+- Новые типы контента = новые formatter-ы
+- Shared utilities (translate, smart_truncate, format_hashtag)
+- Testable (formatter можно тестировать отдельно)
 
 ## Data Flow: создание и публикация поста
 

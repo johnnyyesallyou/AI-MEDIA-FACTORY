@@ -23,7 +23,7 @@
 
 ---
 
-### 🚧 Sprint 54 — Formatter Layer (СЛЕДУЮЩИЙ)
+### ✅ Sprint 54 — Formatter Layer (ЗАВЕРШЁН)
 
 **Проблема:** формат поста захардкожен внутри publish_job-ов
 
@@ -44,7 +44,7 @@
 
 ---
 
-### 📋 Sprint 55 — Channel Wizard + AI Suggestion
+### 🚧 Sprint 55 — Channel Wizard + AI Suggestion (СЛЕДУЮЩИЙ)
 
 **Что будет создано:**
 - POST \/wizard/suggest\ — AI предлагает config по названию
@@ -173,7 +173,8 @@ Telegram: [ Подключить ]
 | 52B | ✅ Done | - | - | News Pipeline |
 | 52C | ✅ Done | - | - | RU Translation |
 | **53** | ✅ **Done** | 2026-08-27 | 2026-08-27 | a57f56b |
-| **54** | 🚧 **In Progress** | 2026-08-27 | - | - |
+| **54** | ✅ **Done** | 2026-08-27 | 2026-08-27 | 36b350c |
+| **55** | 🚧 **In Progress** | 2026-08-27 | - | - |
 | 55 | 📋 Planned | - | - | - |
 | 56 | 📋 Planned | - | - | - |
 | 57 | 📋 Planned | - | - | - |
