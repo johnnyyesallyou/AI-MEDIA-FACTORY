@@ -18,7 +18,7 @@ from core.models.content_orm import ContentORM
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/channels", tags=["channels"])
+router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
 # ---------------------------------------------------------------------------
@@ -175,7 +175,7 @@ async def get_channel_status(channel_id: str, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/dashboard", response_model=DashboardResponse)
+@router.get("", response_model=DashboardResponse)
 async def get_dashboard(db: Session = Depends(get_db)):
     """
     Dashboard: все каналы с базовой статистикой.
