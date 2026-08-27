@@ -5,6 +5,7 @@ from core.models.workflow_orm import WorkflowORM
 from core.models.asset_orm import AssetORM  # Sprint 11
 from core.models.channel_template_orm import ChannelTemplateORM  # Sprint 52
 from core.models.channel_profile_orm import ChannelProfileORM  # Sprint 52
+from core.models.post_history_orm import PostHistoryORM, PostMetricsORM, ChannelLearningsORM  # Sprint 57
 
 __all__ = [
     "ChannelORM",
@@ -14,4 +15,7 @@ __all__ = [
     "AssetORM",  # Sprint 11
     "ChannelTemplateORM",  # Sprint 52
     "ChannelProfileORM",  # Sprint 52
+    "PostHistoryORM",
+    "PostMetricsORM",
+    "ChannelLearningsORM",  # Sprint 57
 ]
