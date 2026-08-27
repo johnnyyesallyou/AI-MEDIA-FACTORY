@@ -7,6 +7,7 @@ from .content import router as content_router
 from .ai import router as ai_router
 from .templates import profiles_router, templates_router
 from .sources import router as sources_router
+from .wizard import router as wizard_router
 from .automation import router as automation_router
 from .automation_v2 import router as automation_v2_router
 from .analytics import router as analytics_router
@@ -30,6 +31,7 @@ api_v1_router.include_router(content_router)
 api_v1_router.include_router(ai_router)
 api_v1_router.include_router(profiles_router)
 api_v1_router.include_router(sources_router)
+api_v1_router.include_router(wizard_router)
 api_v1_router.include_router(templates_router)
 api_v1_router.include_router(automation_router)
 api_v1_router.include_router(automation_v2_router)
