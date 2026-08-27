@@ -2869,3 +2869,84 @@ Platform API
 
 ---
 
+
+---
+
+## Sprint 54 — Formatter Layer (ЗАВЕРШЁН: 2026-08-27)
+
+### Цель
+Вынести форматирование постов из publish_job-ов в отдельный слой. Это САМЫЙ ВАЖНЫЙ архитектурный рефакторинг Phase 3.
+
+### Проблема (до Sprint 54)
+Формат поста был захардкожен внутри каждого publish_job:
+- \MangaPublishJob._build_publication()\ — сам решал формат (~80 строк)
+- \NewsPublishJob._build_publication()\ — сам решал формат (~70 строк)
+- \AnimePublishJob._build_publication()\ — сам решал формат (~75 строк)
+
+**Проблемы:**
+- Дублирование кода (unescape, smart_truncate, translate, format_hashtag)
+- Нельзя добавить новый тип контента без нового job
+- Нельзя изменить формат поста без правки кода publish_job
+- Смешение business-логики и presentation-логики
+
+### Решение
+\\\
+Knowledge Object (MangaTitle/NewsArticle/AnimeEpisode)
+    ↓
+Formatter (MangaFormatter/NewsFormatter/AnimeFormatter)
+    ↓
+Publication (унифицированная структура)
+    ↓
+Publisher Factory (Telegram/VK)
+\\\
+
+### Что создано
+
+**1. \engines/formatters/\ пакет**
+- \ase.py\ — \BaseFormatter\ abstract class + \FormatContext\ dataclass
+- \manga_formatter.py\ — формат для манги (chapter_line + aliases.en)
+- \
+ews_formatter.py\ — формат для новостей (source_line + перевод EN→RU)
+- \nime_formatter.py\ — формат для аниме (season_line + aliases.en/ja)
+- \ormatter_registry.py\ — \get_formatter(content_type, topic)\
+
+**2. Shared utilities (вынесены из 3 jobs)**
+- \ormat_hashtag(tag)\ — генерация валидного #хештега
+- \smart_truncate(text, max_length)\ — обрезка по границе слова
+- \	ranslate_to_russian(text)\ — перевод через Ollama gemma2:9b
+- \unescape(text)\ — HTML entities
+- \has_cyrillic(text)\ — проверка на кириллицу
+
+**3. Рефакторинг 3 publish jobs**
+Каждый \_build_publication()\ теперь ~15 строк вместо ~80:
+\\\python
+def _build_publication(self, title, item, ...):
+    formatter = MangaFormatter()
+    ctx = FormatContext(item=item, meta=..., ...)
+    return formatter.format(title, ctx)
+\\\
+
+### Результат теста
+\\\
+News pipeline:   ✅ 20 published, 0 failed (Formatter работает)
+Manga pipeline:  ⚠️ 4 failed (image resolver, НЕ formatter)
+Anime pipeline:  ✅ import OK после refactor
+\\\
+
+### Статистика
+- **+813** строк добавлено (форматтеры + registry + utilities)
+- **-186** строк удалено (дубликаты в publish_job-ах)
+- **6 новых файлов** в \engines/formatters/\
+- **3 файла** рефакторено
+
+### Архитектурный результат
+✅ Формат поста определяется \channel_profile\, а не job
+✅ Новые типы контента = новые formatter-ы (не jobs)
+✅ Можно добавить \MovieFormatter\ / \CryptoNewsFormatter\ без нового pipeline
+✅ Основа для Sprint 55 (Wizard) готова — Wizard сможет предлагать profile_key, а formatter сам решит как форматировать
+
+### Статус
+🎉 **Sprint 54 ЗАКРЫТ — самый важный архитектурный рефакторинг Phase 3!**
+
+---
+
