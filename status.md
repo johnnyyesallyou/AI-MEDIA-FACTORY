@@ -2639,3 +2639,43 @@ if chapters_list:
     chapter_id = chapters_list[-1].get("id")  # последняя глава
 
 logger.info(f"ReManga API status: {r.status_code}")  # Sprint 51: логирование
+
+## Sprint 51 Final v3 — Telegraph Upload + Preview Pages (ЗАВЕРШЁН: 2026-08-27)
+
+### Проблема
+- ReManga API возвращает preview pages URL (img.reimg.org)
+- НО эти URL возвращают **403 Forbidden** при прямом доступе
+- Telegraph API не может загрузить превью с внешних URL → Telegraph страница содержит только 1 image (обложка)
+
+### Решение
+1. **preview_resolver**: убрана _mirror_open проверка (ReManga API уже возвращает URL)
+2. **TelegraphPublisher.upload_images_to_telegraph()**: новый метод который:
+   - Скачивает картинку с ReManga (с Referer header → обходит 403)
+   - Загружает на Telegraph servers через https://telegra.ph/upload
+   - Возвращает https://telegra.ph/file/xxx.jpg URL (Telegraph-native)
+3. **build_manga_page_content**: загружает preview pages на Telegraph перед добавлением в content
+
+### Результат
+✅ Telegraph страницы теперь содержат:
+- **Обложку** (1 image, загруженную локально)
+- Описание + жанры
+- **📖 Превью первой главы: 5 страниц** (5 images, загруженные на Telegraph servers)
+- Ссылки на источник
+
+### Техническая деталь
+`python
+# TelegraphPublisher.upload_images_to_telegraph()
+resp = requests.get(url, headers={"Referer": "https://remanga.org/"}, stream=True)
+upload_resp = requests.post(
+    "https://telegra.ph/upload",
+    files={"file": ("image.jpg", resp.content, "image/jpeg")},
+    timeout=30,
+)
+telegraph_url = f"https://telegra.ph{data[0]['src']}"
+Статус
+🎉 Sprint 51 OKONCHATELNO ZAKRYT!
+Manga канал (@manga_new_chapters):
+✅ Telegraph страницы с превью первых 5 страниц главы
+✅ Все картинки загружены на Telegraph servers (нет 403)
+✅ telegraph_url сохраняется в БД
+✅ Кнопки: "Читать на Telegraph" + "Читать на сайте"

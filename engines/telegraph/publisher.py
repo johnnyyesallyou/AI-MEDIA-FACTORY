@@ -39,6 +39,49 @@ class TelegraphPublisher:
             access_token: Telegraph API access token (из .env или createAccount)
         """
         self.logger = logging.getLogger(self.__class__.__name__)
+
+    def upload_images_to_telegraph(self, urls: List[str]) -> List[str]:
+        """Загружает картинки на Telegraph servers и возвращает telegra.ph URLs."""
+        import requests
+        uploaded_urls = []
+        
+        for url in urls:
+            try:
+                # Скачиваем картинку
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "Referer": "https://remanga.org/"
+                }
+                resp = requests.get(url, headers=headers, timeout=15, stream=True)
+                
+                if resp.status_code != 200:
+                    self.logger.warning(f"Failed to download {url[:80]}: status={resp.status_code}")
+                    continue
+                
+                # Загружаем на Telegraph
+                upload_resp = requests.post(
+                    "https://telegra.ph/upload",
+                    files={"file": ("image.jpg", resp.content, "image/jpeg")},
+                    timeout=30,
+                )
+                
+                if upload_resp.status_code == 200:
+                    data = upload_resp.json()
+                    if isinstance(data, list) and data:
+                        telegraph_path = data[0].get("src", "")
+                        if telegraph_path:
+                            telegraph_url = f"https://telegra.ph{telegraph_path}"
+                            uploaded_urls.append(telegraph_url)
+                            self.logger.info(f"Uploaded to Telegraph: {telegraph_url}")
+                else:
+                    self.logger.warning(f"Telegraph upload failed: {upload_resp.status_code}")
+                    
+            except Exception as e:
+                self.logger.warning(f"Image upload failed for {url[:80]}: {e}")
+        
+        return uploaded_urls
+
+
         self.access_token = access_token or os.getenv("TELEGRAPH_ACCESS_TOKEN")
         
         if not self.access_token:
