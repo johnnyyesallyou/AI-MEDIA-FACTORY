@@ -3182,3 +3182,98 @@ POST /channels/{id}/pause
 
 ---
 
+
+---
+
+## Sprint 57 — Post History + Analytics + Learnings (ЗАВЕРШЁН)
+
+### Цель
+Создать систему отслеживания истории постов, сбора метрик и обучения на результатах. Это основа для Learning Loop.
+
+### Что создано
+
+**1. ORM модели (\core/models/post_history_orm.py\)**
+- \PostHistoryORM\ — история постов (text, image_url, video_url, media_type, message_id)
+- \PostMetricsORM\ — метрики постов (views, likes, shares, reposts, comments, engagement_rate)
+- \ChannelLearningsORM\ — паттерны что работает (pattern, score, evidence_count)
+
+**2. Channel Context (\engines/content_context.py\)**
+\\\python
+class ChannelContext:
+    def __init__(self, channel, db_session, include_history=10):
+        self._load_history()
+        self._load_learnings()
+    
+    def to_prompt_context(self) -> dict:
+        # platform, channel_name, theme, language, content_type, topic,
+        # recent_posts_summary, working_patterns, audience, style
+\\\
+Используется Writing Engine для учёта темы и паттернов канала.
+
+**3. Analytics Collector (\engines/analytics/collector.py\)**
+\\\python
+class AnalyticsCollector:
+    async def collect_metrics_for_channel(channel_id):
+        # Собирает метрики за последние 24 часа
+        # Сохраняет в PostMetricsORM
+    
+    async def update_learnings_for_channel(channel_id):
+        # Анализирует медиа типы (video vs image)
+        # Анализирует текстовые паттерны
+        # Обновляет ChannelLearningsORM
+\\\
+
+**4. Posts API (\ackend/app/api/v1/posts.py\)**
+- \GET /posts/history/{channel_id}\ — история постов
+- \GET /posts/metrics/{channel_id}\ — метрики за N дней
+- \GET /posts/learnings/{channel_id}\ — паттерны что работает
+
+### Learning Loop примеры
+
+\\\
+Pattern: "video_increases_engagement_by_30%"
+Score: 0.85
+Evidence: 15 posts
+
+Pattern: "how_to_format"
+Score: 0.72
+Evidence: 8 posts
+
+Pattern: "code_examples"
+Score: 0.68
+Evidence: 6 posts
+\\\
+
+### Тест результатов
+
+\\\
+GET /posts/history/manga-channel-001
+  ✅ Status: 200
+  ✅ Posts count: 0 (пока нет истории)
+
+GET /posts/metrics/manga-channel-001
+  ✅ Status: 200
+  ✅ Period: 7 days
+  ✅ Total posts: 0
+  ✅ Top patterns: []
+
+GET /posts/learnings/manga-channel-001
+  ✅ Status: 200
+  ✅ Learnings count: 0
+\\\
+
+### Следующие шаги (Phase 3-4)
+- **Video Manager** (Pexels + Runway ML) — отложено до Phase 4
+- **Post Generation Service** — генерация постов с контекстом
+- **Cron job для Analytics Collector** — собирать метрики каждый час
+- **Frontend Dashboard** — графики views, топ посты, engagement rate
+
+### Статус
+✅ Таблицы созданы
+✅ Channel Context работает
+✅ Analytics Collector готов
+✅ API endpoints доступны
+⚠️  Нет реальных данных (нужно начать публиковать через PostHistory)
+
+---
+
