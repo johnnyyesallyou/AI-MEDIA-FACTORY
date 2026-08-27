@@ -44,7 +44,7 @@
 
 ---
 
-### 🚧 Sprint 55 — Channel Wizard + AI Suggestion (СЛЕДУЮЩИЙ)
+### ✅ Sprint 55 — Channel Wizard + AI Suggestion (ЗАВЕРШЁН)
 
 **Что будет создано:**
 - POST \/wizard/suggest\ — AI предлагает config по названию
@@ -73,7 +73,7 @@ Telegram: [ Подключить ]
 
 ---
 
-### 📋 Sprint 56 — One-Click START + Dashboard
+### 🚧 Sprint 56 — One-Click START + Dashboard (СЛЕДУЮЩИЙ)
 
 **Что будет создано:**
 - POST \/channels/{id}/start\ — активирует cron job
@@ -174,7 +174,8 @@ Telegram: [ Подключить ]
 | 52C | ✅ Done | - | - | RU Translation |
 | **53** | ✅ **Done** | 2026-08-27 | 2026-08-27 | a57f56b |
 | **54** | ✅ **Done** | 2026-08-27 | 2026-08-27 | 36b350c |
-| **55** | 🚧 **In Progress** | 2026-08-27 | - | - |
+| **55** | ✅ **Done** | 2026-08-27 | 2026-08-27 | (wizard) |
+| **56** | 🚧 **In Progress** | 2026-08-27 | - | - |
 | 55 | 📋 Planned | - | - | - |
 | 56 | 📋 Planned | - | - | - |
 | 57 | 📋 Planned | - | - | - |
