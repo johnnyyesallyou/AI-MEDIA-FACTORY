@@ -40,6 +40,7 @@ class TelegraphPublisher:
         """
         self.logger = logging.getLogger(self.__class__.__name__)
 
+
     def upload_images_to_telegraph(self, urls: List[str]) -> List[str]:
         """Загружает картинки на Telegraph servers и возвращает telegra.ph URLs."""
         import requests
