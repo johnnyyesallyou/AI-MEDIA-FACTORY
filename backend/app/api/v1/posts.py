@@ -1,6 +1,7 @@
 """Posts API - Sprint 57.
 
 API для работы с историей постов и метриками.
+Используем существующую PostMetric из core.models.analytics (не PostMetricsORM!)
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -9,7 +10,8 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 
 from core.database import get_db
-from core.models.post_history_orm import PostHistoryORM, PostMetricsORM, ChannelLearningsORM
+from core.models.post_history_orm import PostHistoryORM, ChannelLearningsORM
+from core.models.analytics import PostMetric
 
 router = APIRouter(prefix="/posts", tags=["posts"])
 
@@ -28,19 +30,9 @@ class PostHistoryResponse(BaseModel):
     media_type: Optional[str]
     message_id: Optional[str]
     posted_at: Optional[datetime]
-    
+
     class Config:
         from_attributes = True
-
-
-class PostMetricsResponse(BaseModel):
-    views: int
-    likes: int
-    shares: int
-    reposts: int
-    comments: int
-    engagement_rate: float
-    collected_at: datetime
 
 
 class ChannelMetricsResponse(BaseModel):
@@ -62,7 +54,7 @@ class ChannelMetricsResponse(BaseModel):
 async def get_channel_post_history(
     channel_id: str,
     limit: int = 20,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Получить историю постов канала"""
     posts = db.query(PostHistoryORM)\
@@ -70,7 +62,7 @@ async def get_channel_post_history(
         .order_by(PostHistoryORM.posted_at.desc())\
         .limit(limit)\
         .all()
-    
+
     return posts
 
 
@@ -78,49 +70,54 @@ async def get_channel_post_history(
 async def get_channel_metrics(
     channel_id: str,
     days: int = 7,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """Получить метрики канала"""
+    """Получить агрегированные метрики канала за N дней"""
     start_date = datetime.utcnow() - timedelta(days=days)
-    
+
     posts = db.query(PostHistoryORM)\
         .filter_by(channel_id=channel_id)\
         .filter(PostHistoryORM.posted_at > start_date)\
         .all()
-    
+
     total_views = 0
     total_likes = 0
     post_count = 0
-    
+
     for post in posts:
-        latest_metric = db.query(PostMetricsORM)\
-            .filter_by(post_id=post.id)\
-            .order_by(PostMetricsORM.collected_at.desc())\
+        # Ищем последнюю метрику для этого поста (через content_id если есть)
+        content_id = post.content_id
+        if not content_id:
+            continue
+
+        latest_metric = db.query(PostMetric)\
+            .filter_by(content_id=content_id)\
+            .order_by(PostMetric.measured_at.desc())\
             .first()
-        
+
         if latest_metric:
-            total_views += latest_metric.views
-            total_likes += latest_metric.likes
+            total_views += latest_metric.views_count or 0
+            total_likes += latest_metric.likes_count or 0
             post_count += 1
-    
-    # Получить топ паттерны
+
+    # Топ паттерны из channel_learnings
     learnings = db.query(ChannelLearningsORM)\
         .filter_by(channel_id=channel_id)\
         .order_by(ChannelLearningsORM.score.desc())\
         .limit(5)\
         .all()
-    
-    top_patterns = [l.pattern for l in learnings if l.score > 0.6]
-    
+
+    top_patterns = [l.pattern for l in learnings if (l.score or 0) > 0.6]
+
     return ChannelMetricsResponse(
         channel_id=channel_id,
         period_days=days,
         total_posts=post_count,
         total_views=total_views,
         total_likes=total_likes,
-        avg_views_per_post=total_views / post_count if post_count else 0,
-        avg_likes_per_post=total_likes / post_count if post_count else 0,
-        top_patterns=top_patterns
+        avg_views_per_post=total_views / post_count if post_count else 0.0,
+        avg_likes_per_post=total_likes / post_count if post_count else 0.0,
+        top_patterns=top_patterns,
     )
 
 
@@ -128,7 +125,7 @@ async def get_channel_metrics(
 async def get_channel_learnings(
     channel_id: str,
     min_score: float = 0.5,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Получить learnings канала (что работает)"""
     learnings = db.query(ChannelLearningsORM)\
@@ -136,13 +133,13 @@ async def get_channel_learnings(
         .filter(ChannelLearningsORM.score >= min_score)\
         .order_by(ChannelLearningsORM.score.desc())\
         .all()
-    
+
     return [
         {
             "pattern": l.pattern,
             "score": l.score,
             "evidence_count": l.evidence_count,
-            "last_updated": l.last_updated.isoformat() if l.last_updated else None
+            "last_updated": l.last_updated.isoformat() if l.last_updated else None,
         }
         for l in learnings
     ]
