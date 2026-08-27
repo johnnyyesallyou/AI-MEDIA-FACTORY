@@ -38,6 +38,10 @@ class TelegraphPublisher:
         Args:
             access_token: Telegraph API access token (из .env или createAccount)
         """
+        self.access_token = access_token
+        if not self.access_token:
+            import os
+            self.access_token = os.getenv("TELEGRAPH_ACCESS_TOKEN")
         self.logger = logging.getLogger(self.__class__.__name__)
 
 
