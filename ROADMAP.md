@@ -101,7 +101,7 @@ Telegram: [ Подключить ]
 
 ---
 
-### 📋 Sprint 57 — History + Analytics
+### ✅ Sprint 57 — History + Analytics (ЗАВЕРШЁН)
 
 **Что будет создано:**
 - История постов с метриками
