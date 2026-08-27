@@ -30,6 +30,7 @@ from core.models.anime_knowledge import AnimeTitle, AnimeEpisode
 from engines.channel_profiles import resolve_channel_profile
 from engines.telegraph.publisher import TelegraphPublisher
 from engines.url_shortener import URLShortener
+from engines.formatters import AnimeFormatter, FormatContext
 from engines.publishing import (
     Publication, PublicationButton,
     PublicationImageResolver, get_publisher_for_channel,
@@ -247,76 +248,19 @@ class AnimePublishJob:
         formatting: dict,
         publishing_policy: dict,
     ) -> Publication:
-        meta = self._meta(item)
-        title_name = self._get_title_name(anime_title, item)
-
-        # unescape HTML entities
-        if formatting.get("unescape_html", True):
-            title_name = html_lib.unescape(title_name)
-
-        description = anime_title.description or ""
-        # Sprint 51: переводим EN описание на русский
-        if publishing_policy.get("strip_non_ru_description") and not re.search(r"[а-яА-ЯёЁ]", description):
-            translated = self._translate_to_russian(description)
-            description = translated  # если перевод не удался — будет пусто
-
-        genres = anime_title.genres or []
-        max_hashtags = formatting.get("max_hashtags", 10)
-
-        # Hashtags
-        hashtags = [self._format_hashtag(g) for g in genres[:max_hashtags]]
-        hashtags = [h for h in hashtags if h]
-
-        emoji = formatting.get("emoji_header", "🎬")
-        header = f"{emoji} {title_name}\n"
-        
-        # English/Japanese название
-        if anime_title.aliases:
-            if "en" in anime_title.aliases and anime_title.aliases["en"] != title_name:
-                header += f"🌐 {anime_title.aliases['en']}\n"
-            elif "ja" in anime_title.aliases:
-                header += f"🌐 {anime_title.aliases['ja']}\n"
-        header += "\n"
-
-        # Season info
-        season_line = ""
-        if anime_title.season and anime_title.season_year:
-            season_line = f"📅 {anime_title.season} {anime_title.season_year}\n"
-        if anime_title.status:
-            season_line += f"📺 {anime_title.status}\n"
-        if anime_title.episodes:
-            season_line += f"🎞️ {anime_title.episodes} episodes\n"
-
-        # Link
-        link_url = telegraph_url or short_url
-        link_line = f"🔗 Подробнее: {link_url}\n\n" if link_url else ""
-        hashtags_text = " ".join(hashtags) if hashtags else "#аниме"
-
-        # Description (smart truncate)
-        desc_text = ""
-        if description and formatting.get("include_description", True):
-            reserved = len(header) + len(season_line) + len(link_line) + len(hashtags_text) + 10
-            available = CAPTION_LIMIT - reserved
-            if available > 100:
-                desc_text = self._smart_truncate(description, available) + "\n\n"
-
-        text = header + season_line + desc_text + link_line + hashtags_text
-
-        # inline buttons
-        buttons: List[PublicationButton] = []
-        if publishing_policy.get("inline_buttons"):
-            if telegraph_url:
-                buttons.append(PublicationButton(text="📖 Читать на Telegraph", url=telegraph_url))
-            if short_url and short_url != telegraph_url:
-                buttons.append(PublicationButton(text="🔗 AniList", url=short_url))
-
-        return Publication(
-            text=text,
+        """Sprint 54: делегируем форматирование в AnimeFormatter."""
+        formatter = AnimeFormatter()
+        ctx = FormatContext(
+            item=item,
+            meta=self._meta(item),
+            related_items=related_items,
+            telegraph_url=telegraph_url,
+            short_url=short_url,
             image_url=image_url,
-            buttons=buttons,
-            source_url=item.source_url,
-            metadata={"anime_episode_id": item.anime_episode_id},
+            formatting=formatting,
+            publishing_policy=publishing_policy,
         )
+        return formatter.format(anime_title, ctx)
 
     def _smart_truncate(self, text: str, max_length: int) -> str:
         if len(text) <= max_length:

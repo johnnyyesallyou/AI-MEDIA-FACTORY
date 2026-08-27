@@ -32,6 +32,7 @@ from engines.channel_profiles import resolve_channel_profile
 from engines.ab_test_framework import ABTestFramework
 from engines.telegraph.publisher import TelegraphPublisher
 from engines.url_shortener import URLShortener
+from engines.formatters import NewsFormatter, FormatContext
 from engines.publishing import (
     Publication, PublicationButton,
     PublicationImageResolver, get_publisher_for_channel,
@@ -233,61 +234,19 @@ class NewsPublishJob:
         formatting: dict,
         publishing_policy: dict,
     ) -> Publication:
-        title_name = news_article.title
-        if formatting.get("unescape_html", True):
-            title_name = html_lib.unescape(title_name)
-        
-        # Sprint 52C: переводим заголовок если на EN
-        title_name = self._translate_to_russian(title_name, max_length=200) or title_name
-        
-        # Sprint 52C: переводим summary если на EN
-        summary = news_article.summary or ""
-        if summary:
-            summary = self._translate_to_russian(summary, max_length=500) or summary
-
-        tags = news_article.tags or []
-        max_hashtags = formatting.get("max_hashtags", 8)
-        hashtags = [self._format_hashtag(t) for t in tags[:max_hashtags]]
-        hashtags = [h for h in hashtags if h]
-
-        emoji = formatting.get("emoji_header", "📰")
-        header = f"{emoji} {title_name}\n\n"
-
-        # Source line
-        source_line = f"📍 Источник: {news_article.source_name.upper()}\n"
-        if news_article.author:
-            source_line += f"✍️ {news_article.author}\n"
-
-        # Link
-        link_url = telegraph_url or short_url or news_article.canonical_url
-        link_line = f"🔗 Читать: {link_url}\n\n"
-        hashtags_text = " ".join(hashtags) if hashtags else "#news"
-
-        # Description
-        desc_text = ""
-        if summary and formatting.get("include_description", True):
-            reserved = len(header) + len(source_line) + len(link_line) + len(hashtags_text) + 10
-            available = CAPTION_LIMIT - reserved
-            if available > 100:
-                desc_text = self._smart_truncate(summary, available) + "\n\n"
-
-        text = header + desc_text + source_line + link_line + hashtags_text
-
-        # Inline buttons
-        buttons: List[PublicationButton] = []
-        if publishing_policy.get("inline_buttons"):
-            if telegraph_url:
-                buttons.append(PublicationButton(text="📖 Читать полностью", url=telegraph_url))
-            if short_url and short_url != telegraph_url:
-                buttons.append(PublicationButton(text="🔗 Источник", url=short_url))
-
-        return Publication(
-            text=text,
+        """Sprint 54: делегируем форматирование в NewsFormatter."""
+        formatter = NewsFormatter()
+        ctx = FormatContext(
+            item=item,
+            meta=self._meta(item),
+            related_items=[],
+            telegraph_url=telegraph_url,
+            short_url=short_url,
             image_url=image_url,
-            buttons=buttons,
-            source_url=news_article.canonical_url,
-            metadata={"news_article_id": str(news_article.id)},
+            formatting=formatting,
+            publishing_policy=publishing_policy,
         )
+        return formatter.format(news_article, ctx)
 
     def _smart_truncate(self, text: str, max_length: int) -> str:
         if len(text) <= max_length:
