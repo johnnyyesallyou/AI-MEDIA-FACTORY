@@ -73,7 +73,7 @@ Telegram: [ Подключить ]
 
 ---
 
-### 🚧 Sprint 56 — One-Click START + Dashboard (СЛЕДУЮЩИЙ)
+### ✅ Sprint 56 — One-Click START + Dashboard (ЗАВЕРШЁН)
 
 **Что будет создано:**
 - POST \/channels/{id}/start\ — активирует cron job

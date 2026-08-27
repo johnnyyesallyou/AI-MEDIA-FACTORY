@@ -3125,3 +3125,60 @@ Step 6: List all channels
 
 ---
 
+
+---
+
+## Sprint 56 — One-Click START + Dashboard API (ЗАВЕРШЁН)
+
+### Цель
+Создать API для управления каналами: start/pause/status/dashboard. Это позволяет фронтенду показывать карточки каналов с кнопками управления.
+
+### Что создано
+
+**\ackend/app/api/v1/channel_control.py\**
+
+**1. POST \/channels/{id}/start\** — активировать канал
+- Устанавливает \is_connected=True\ + \is_active=True\
+- Активирует schedule
+- Возвращает: \{id, name, status, message}\
+
+**2. POST \/channels/{id}/pause\** — пауза
+- Устанавливает \is_connected=False\
+- Cron job не запускается для этого канала
+
+**3. GET \/channels/{id}/status\** — статус канала
+- Возвращает: is_connected, is_active, content_type, topic, profile_key, sources, schedule_cron, last_run, next_run, today_published, today_failed
+
+**4. GET \/channels/dashboard\** — dashboard всех каналов
+- Возвращает: total_channels, active_channels, список каналов с published_24h
+
+### Тест результатов
+
+\\\
+GET /channels/dashboard
+  ✅ Total: 4, Active: 3
+  ✅ Новости 📰: connected=True, published_24h=20
+  ✅ Манга: connected=True, published_24h=0
+  ✅ Anime: connected=True, published_24h=18
+
+POST /channels/{id}/start
+  ✅ Status: 200
+  ✅ Channel activated
+
+GET /channels/{id}/status
+  ✅ Connected: True
+  ✅ Today published: 20
+  ✅ Schedule: */30 * * * *
+
+POST /channels/{id}/pause
+  ✅ Channel paused
+\\\
+
+### Результат
+✅ Frontend может показывать карточки каналов
+✅ Кнопки START/PAUSE работают
+✅ Статистика за сегодня доступна
+✅ Основа для UI Dashboard готова
+
+---
+
