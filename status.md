@@ -2950,3 +2950,85 @@ Anime pipeline:  ✅ import OK после refactor
 
 ---
 
+
+---
+
+## Sprint 55 — Channel Wizard API (ЗАВЕРШЁН)
+
+### Цель
+Создать backend API для Channel Wizard — 3 endpoint-а которые позволяют создать новый канал с правильной конфигурацией за минимальное количество шагов.
+
+### Что создано
+
+**\ackend/app/api/v1/wizard.py\**
+
+**1. POST \/api/v1/wizard/suggest\** — AI предлагает конфигурацию
+- Принимает: \{name, description}\
+- Возвращает: \{content_type, topic, language, profile_key, sources, confidence, reasoning}\
+- Детерминированная логика по ключевым словам (манга/главы → manga, аниме/сериал → anime, новости/tech → news)
+- Использует \SourceRegistry\ для получения подходящих источников
+
+**2. POST \/api/v1/wizard/validate\** — валидирует конфиг
+- Принимает: WizardConfigRequest
+- Проверяет:
+  - \profile_key\ существует в \PROFILES\
+  - все \sources\ есть в \SourceRegistry\
+  - все sources поддерживают данный \content_type\
+- Возвращает: \{valid: bool, errors: [], warnings: []}\
+
+**3. POST \/channels/create-from-wizard\** — создаёт канал
+- Принимает: \{name, config, chat_id?, bot_token?, vk_*?}\
+- Создаёт \ChannelORM\ с правильным \content_profile\ JSONB:
+  \\\json
+  {
+    "profile_key": "manga_releases",
+    "content_type": "manga",
+    "topic": "new_chapters",
+    "language": "ru",
+    "sources": ["remanga", "mangadex", "readmanga"],
+    "job_type": "manga_pipeline",
+    "schedule": "*/30 * * * *"
+  }
+  \\\
+- Создаёт \ChannelScheduleORM\ с cron
+- Возвращает созданный канал
+
+### Тест результатов
+
+\\\
+POST /wizard/suggest (manga):
+  ✅ content_type: manga
+  ✅ topic: new_chapters
+  ✅ profile_key: manga_releases
+  ✅ sources: [remanga, mangadex, readmanga]
+  ✅ confidence: 0.9
+
+POST /wizard/suggest (anime):
+  ✅ content_type: anime
+  ✅ sources: [anilist]
+
+POST /wizard/suggest (news):
+  ✅ content_type: news, topic: technology
+  ✅ sources: [habr, vc]
+
+POST /wizard/suggest (unknown):
+  ✅ 400 с понятной ошибкой
+
+End-to-end (suggest → validate → create):
+  ✅ Канал создан в БД с правильной конфигурацией
+\\\
+
+### Архитектурные решения
+
+1. **AI НЕ источник истины** — \/wizard/suggest\ только ПРЕДЛАГАЕТ, \/wizard/validate\ проверяет
+2. **Backend валидирует всё** — profile_key, sources, content_type compatibility
+3. **content_profile JSONB** — хранит всю конфигурацию, \esolve_channel_profile()\ делает \_deep_merge\ с профилем из \PROFILES\
+4. **job_type auto-inferred** — manga → manga_pipeline, anime → anime_pipeline, news → news_pipeline
+
+### Результат
+✅ Пользователь создаёт канал за 3 API-вызова
+✅ Конфигурация валидируется перед созданием
+✅ Канал готов к использованию после One-Click START (Sprint 56)
+
+---
+
