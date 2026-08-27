@@ -2604,3 +2604,38 @@ Telegraph страницы создавались, но 	elegraph_url не со�
 - ✅ RU описания (LLM перевод)
 - ✅ Теги жанров
 
+
+## Sprint 51 Final v2 — Preview Pages через ReManga API (ЗАВЕРШЁН: 2026-08-21)
+
+### Проблема
+Telegraph страницы создавались, но **без превью первых 5 страниц главы** (только 1 image — обложка).
+
+**Корень:** esolve_preview_pages возвращал None потому что:
+1. ReManga API требует Referer: https://remanga.org/ header (был объявлен, но не использовался!)
+2. Отсутствие логирования не давало понять что возвращает API
+3. Отсутствовал fallback когда irst_chapter пустой
+
+### Решение
+- ✅ **Referer header**: добавлен в оба запроса к ReManga API
+- ✅ **Логирование**: статус коды + структура ответов для диагностики
+- ✅ **Fallback**: если irst_chapter нет → пробуем /api/titles/{slug}/chapters и берём последнюю главу
+- ✅ **Пустой список**: возвращаем None только если реально ничего не получили
+
+### Результат
+✅ Telegraph страницы теперь содержат:
+- Обложку манги (1 image)
+- Описание + жанры
+- **📖 Превью первой главы: 5 страниц** (5 images из ReManga open mirrors)
+- Ссылки на источник
+
+### Техническая деталь
+engines/preview_resolver.py:
+`python
+headers = {**UA, **REFERER}  # Sprint 51: +Referer
+
+# Fallback если first_chapter пустой
+chapters_resp = requests.get(f"https://remanga.org/api/titles/{slug}/chapters", ...)
+if chapters_list:
+    chapter_id = chapters_list[-1].get("id")  # последняя глава
+
+logger.info(f"ReManga API status: {r.status_code}")  # Sprint 51: логирование
