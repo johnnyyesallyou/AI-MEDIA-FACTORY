@@ -2679,3 +2679,193 @@ Manga канал (@manga_new_chapters):
 ✅ Все картинки загружены на Telegraph servers (нет 403)
 ✅ telegraph_url сохраняется в БД
 ✅ Кнопки: "Читать на Telegraph" + "Читать на сайте"
+
+---
+
+## Sprint 53 — SourceRegistry + Channel Config Foundation (ЗАВЕРШЁН: 2026-08-27)
+
+### Цель
+Создать foundation для Phase 3 (Productization):
+- Self-describing источники (SourceRegistry)
+- API для управления источниками
+- Миграция существующих каналов на новую схему
+- Правильная работа с JSONB полями (flag_modified)
+
+### Что создано
+
+**1. SourceRegistry (\engines/source_registry.py\)**
+- \\\python
+  @dataclass(frozen=True)
+  class SourceDefinition:
+      id: str
+      name: str
+      content_types: tuple  # ("manga", "anime", "news")
+      topics: tuple          # ("new_chapters", "news", "releases")
+      languages: tuple       # ("ru", "en")
+      adapter: str           # adapter class name
+      capabilities: tuple    # ("chapters", "covers", "descriptions")
+  \\\
+- 9 источников зарегистрированы:
+  - **Manga** (3): remanga, mangadex, readmanga
+  - **Anime** (2): anilist, myanimelist
+  - **News** (4): habr, vc, techcrunch, theverge
+- \\\python
+  SourceRegistry.get_sources_for(content_type, topic, language)
+  SourceRegistry.validate_sources(source_ids)
+  SourceRegistry.list_all()
+  \\\
+
+**2. API endpoints (\ackend/app/api/v1/sources.py\)**
+- \GET /api/v1/sources/\ — список всех источников
+- \GET /api/v1/sources/?content_type=manga&topic=new_chapters\ — фильтрация
+- \GET /api/v1/sources/{id}\ — детали конкретного источника
+- \POST /api/v1/sources/validate\ — валидация списка source IDs
+
+**3. Миграция 4 каналов**
+Использован \lag_modified(ch, "content_profile")\ для SQLAlchemy JSONB tracking.
+
+\\\
+Новости 📰:           profile_key=ai_news,       content_type=news,  topic=technology
+Anime news:           profile_key=anime_news,    content_type=anime, topic=news
+Манга — новые главы:  profile_key=manga_releases,content_type=manga, topic=new_chapters
+AI Media Factory (VK):profile_key=ai_news,       content_type=news,  topic=technology
+\\\
+
+**4. Исправлен Anime канал**
+- Убраны неправильные RSS источники (Google News, AnimeStar)
+- Установлены правильные: \["anilist", "myanimelist"]\
+
+### Архитектурные решения (важно!)
+
+1. **Profile ≠ источник истины**
+   - \profile_id\ = ссылка на шаблон
+   - \content_profile\ (JSONB) = эффективная конфигурация + overrides
+   - \esolve_channel_profile()\ делает \_deep_merge(profile, overrides)\
+
+2. **SourceDefinition = dataclass, не ORM**
+   - Источники — это capabilities системы, не пользовательские данные
+   - Если позже понадобится UI для custom RSS — тогда вводить DB-модель
+
+3. **job_type в content_profile = dispatcher**
+   - \manga_pipeline\ → MangaPipelineJob
+   - \nime_pipeline\ → AnimePipelineJob
+   - \
+ews_pipeline\ → NewsPipelineJob
+   - Через Sprint 54 (Formatter Layer) dispatcher будет смотреть на \content_type + topic\
+
+4. **Nullable поля для backward compatibility**
+   - Старые каналы продолжают работать
+   - Новые каналы через Wizard будут использовать полную схему
+
+### Результат
+✅ Foundation для Phase 3 создан
+✅ API работает (все 4 теста прошли)
+✅ 4 канала мигрированы на новую схему
+✅ Anime channel использует правильные источники
+
+### Что НЕ делали (намеренно)
+- ❌ Formatter Layer (это Sprint 54)
+- ❌ AI Wizard (это Sprint 55)
+- ❌ Frontend (это Sprint 56)
+- ❌ Video Manager (отложено до Phase 4)
+
+### Статус
+🎉 **Sprint 53 ЗАКРЫТ — foundation готов для Sprint 54!**
+
+---
+
+## Что дальше: Phase 3 — Channel Intelligence & Productization
+
+### Sprint 54 — Formatter Layer ⭐ (САМЫЙ ВАЖНЫЙ)
+
+**Проблема:**
+Сейчас формат поста захардкожен внутри каждого publish_job:
+- \MangaPublishJob._build_publication()\ — сам решает формат
+- \NewsPublishJob._build_publication()\ — сам решает формат
+- \AnimePublishJob._build_publication()\ — сам решает формат
+
+**Решение:**
+\\\
+Knowledge Object (MangaTitle/NewsArticle/AnimeEpisode)
+    ↓
+Formatter (MangaFormatter/NewsFormatter/AnimeFormatter)
+    ↓
+Publication (унифицированная структура)
+    ↓
+Publisher Factory (Telegram/VK)
+    ↓
+Platform API
+\\\
+
+**Что будет создано:**
+- \engines/formatters/base.py\ — \BaseFormatter\ interface
+- \engines/formatters/manga_formatter.py\ — формат манги
+- \engines/formatters/news_formatter.py\ — формат новостей
+- \engines/formatters/anime_formatter.py\ — формат аниме
+- \engines/formatters/formatter_registry.py\ — маппинг content_type → formatter
+- Рефакторинг publish_job-ов на использование formatter-ов
+
+**Результат:**
+- Формат поста определяется \channel_profile\, а не job-ом
+- Можно добавить новый тип контента без нового job
+- Основа для Sprint 55 (Wizard)
+
+### Sprint 55 — Channel Wizard + AI Suggestion
+- POST \/wizard/suggest\ — AI предлагает config по названию
+- POST \/wizard/validate\ — backend валидирует
+- Frontend: 5-7 step wizard (Название → Тип → Тема → Источники → Язык → Формат → Подключение)
+
+### Sprint 56 — One-Click START + Dashboard
+- POST \/channels/{id}/start\ — активирует cron job
+- POST \/channels/{id}/pause\
+- GET \/channels/{id}/status\ — last run, next run, stats
+- Frontend: карточки каналов с метриками
+
+### Sprint 57 — History + Analytics
+- История постов с метриками
+- "Что работает" на дашборде
+- Analytics Collector (cron каждый час)
+
+### Sprint 58 — Learning Loop
+- Post performance → Analytics → Learning → Recommendation
+- "Посты с коротким описанием получают +27% просмотров"
+- Система предлагает изменение → пользователь подтверждает
+
+### Sprint 59+ — Phase 4 (Expansion)
+- Video Manager (Pexels + Runway ML)
+- Dzen Publisher
+- YouTube
+- Новые источники
+
+---
+
+## Текущее состояние проекта (после Sprint 53)
+
+### ✅ Работает
+- 3 Telegram канала публикуют автоматически (manga/anime/news)
+- VK канал настроен (нужен vk_access_token)
+- Cron jobs каждые 30 минут
+- Publishing Layer (Telegram + VK)
+- Telegraph страницы с preview pages
+- LLM перевод (gemma2:9b)
+- SourceRegistry с 9 self-describing sources
+- API для управления источниками
+- 4 канала с правильной конфигурацией
+
+### ⚠️ Архитектурный долг (исправим в Sprint 54)
+- Формат поста захардкожен в publish_job-ах
+- Нет unified Formatter Layer
+- Нет Wizard для создания каналов
+- Нет One-Click START
+
+### ❌ Не реализовано (отложено)
+- Video Manager
+- Post History + Metrics (таблицы)
+- Analytics Collector
+- Learning Loop
+- Dzen Publisher
+- AI Channel Creator
+- Frontend Dashboard
+
+---
+
