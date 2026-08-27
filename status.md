@@ -3032,3 +3032,96 @@ End-to-end (suggest → validate → create):
 
 ---
 
+
+---
+
+## Sprint 55 — Channel Wizard API (ЗАВЕРШЁН)
+
+### Цель
+Создать backend API для Channel Wizard — 3 endpoint-а которые позволяют создать новый канал с правильной конфигурацией за минимальное количество шагов.
+
+### Что создано
+
+**\ackend/app/api/v1/wizard.py\**
+
+**1. POST \/api/v1/wizard/suggest\** — AI предлагает конфигурацию
+- Принимает: \{name, description}\
+- Возвращает: \{content_type, topic, language, profile_key, sources, confidence, reasoning}\
+- Детерминированная логика по ключевым словам (манга/главы → manga, аниме/сериал → anime, новости/tech → news)
+- Использует \SourceRegistry\ для получения подходящих источников
+
+**2. POST \/api/v1/wizard/validate\** — валидирует конфиг
+- Принимает: WizardConfigRequest
+- Проверяет:
+  - \profile_key\ существует в \PROFILES\
+  - все \sources\ есть в \SourceRegistry\
+  - все sources поддерживают данный \content_type\
+- Возвращает: \{valid: bool, errors: [], warnings: []}\
+
+**3. POST \/wizard/create-from-wizard\** — создаёт канал
+- Принимает: \{name, config, chat_id?, bot_token?, vk_*?}\
+- Создаёт \ChannelORM\ с правильным \content_profile\ JSONB:
+  \\\json
+  {
+    "profile_key": "manga_releases",
+    "content_type": "manga",
+    "topic": "new_chapters",
+    "language": "ru",
+    "sources": ["remanga", "mangadex", "readmanga"],
+    "job_type": "manga_pipeline",
+    "schedule": "*/30 * * * *"
+  }
+  \\\
+- Создаёт \ChannelScheduleORM\ с cron
+- Возвращает созданный канал
+
+### Тест результатов
+
+\\\
+Step 1: Suggest (manga)
+  ✅ Status: 200
+  ✅ content_type: manga, topic: new_chapters
+  ✅ profile_key: manga_releases
+  ✅ sources: [remanga, mangadex, readmanga]
+  ✅ confidence: 0.9
+
+Step 2: Validate config
+  ✅ Status: 200
+  ✅ valid: True, errors: [], warnings: []
+
+Step 3: Create channel
+  ✅ Status: 201
+  ✅ Created channel: d3f7d4e0-...
+  ✅ Name: Тестовый манга-канал
+  ✅ Profile: manga_releases
+
+Step 4: Verify in DB
+  ✅ Channel from DB found
+  ✅ Is active: True
+
+Step 5: Validate invalid config
+  ✅ Status: 200
+  ✅ valid: False
+  ✅ errors: ["Profile 'nonexistent_profile' not found", "Unknown sources: ['fake_source']"]
+
+Step 6: List all channels
+  ✅ Total: 5 channels (4 real + 1 test)
+\\\
+
+### Архитектурные решения
+
+1. **AI НЕ источник истины** — \/wizard/suggest\ только ПРЕДЛАГАЕТ, \/wizard/validate\ проверяет
+2. **Backend валидирует всё** — profile_key, sources, content_type compatibility
+3. **content_profile JSONB** — хранит всю конфигурацию, \esolve_channel_profile()\ делает \_deep_merge\ с профилем из \PROFILES\
+4. **job_type auto-inferred** — manga → manga_pipeline, anime → anime_pipeline, news → news_pipeline
+
+### Hotfix
+После первоначального коммита обнаружилось что \/wizard/suggest\ endpoint был потерян при перезаписи \wizard.py\ в шаге 55.04. Переписан файл полностью со всеми 3 endpoints.
+
+### Результат
+✅ Пользователь создаёт канал за 3 API-вызова (suggest → validate → create)
+✅ Конфигурация валидируется перед созданием
+✅ Канал готов к использованию после One-Click START (Sprint 56)
+
+---
+
