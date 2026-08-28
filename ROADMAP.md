@@ -113,7 +113,7 @@ Telegram: [ Подключить ]
 
 ---
 
-### 📋 Sprint 58 — Learning Loop UI
+### ✅ Sprint 58 — Learning Loop (ЗАВЕРШЁН) — Learning Loop UI
 
 **Что будет создано:**
 - Post performance → Analytics → Learning → Recommendation
