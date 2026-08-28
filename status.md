@@ -3277,3 +3277,99 @@ GET /posts/learnings/manga-channel-001
 
 ---
 
+
+---
+
+## Sprint 58 — Learning Loop: PostHistory → Metrics → Learnings (ЗАВЕРШЁН)
+
+### Цель
+Замкнуть цикл обучения: publish → post_history → analytics → learnings → context.
+
+### Что создано
+
+**1. \engines/post_history_recorder.py\** — единый helper
+\\\python
+def record_post_history(db, channel, item, publication, result):
+    # Записывает в PostHistoryORM после успешного publish
+    # Сохраняет: message_id, media_type, text, image_url, video_url
+    # Дедупликация по channel_id + message_id
+\\\
+
+**2. Patched 3 publish jobs** (regex patcher)
+- \manga_publish_job.py\ — line 334
+- \
+ews_publish_job.py\ — line 367
+- \nime_publish_job.py\ — line 350
+
+Все 3 вызывают \ecord_post_history()\ после успешного publish.
+
+**3. \engines/analytics/collector.py\** — сбор метрик
+- Использует существующую \PostMetric\ из \core.models.analytics\
+- Использует существующие \TelegramEngagementTracker\ + \VKEngagementTracker\
+- Анализирует media types (video vs image)
+- Анализирует text patterns (how_to, code_examples, long_form, emoji_hooks)
+- Сохраняет learnings в \ChannelLearningsORM\
+
+**4. Scheduler cron job (APScheduler)**
+\\\python
+# Sprint 58: Analytics Collector (every hour)
+self.scheduler.add_job(
+    func=lambda: asyncio.create_task(self.run_analytics_collection()),
+    trigger="interval",
+    hours=1,
+    id="analytics_collector_job",
+)
+\\\
+
+### Learning Loop — полный цикл
+\\\
+1. User: "Создай канал Манга"
+   ↓
+2. Wizard API: создаёт ChannelORM с content_profile
+   ↓
+3. Scheduler: каждые 30 мин запускает MangaPipelineJob
+   ↓
+4. Pipeline: research → enrich → formatter → publish
+   ↓
+5. Publish: Telegram API → message_id
+   ↓
+6. record_post_history() → PostHistoryORM (message_id, media, text)
+   ↓
+7. Analytics Collector (каждый час):
+   - TelegramEngagementTracker.get_message_metrics(message_id)
+   - Сохраняет в PostMetric (views, likes, shares)
+   - Анализирует паттерны
+   - Сохраняет в ChannelLearningsORM
+   ↓
+8. ChannelContext загружает learnings
+   ↓
+9. Следующий пост учитывает паттерны
+\\\
+
+### Scheduler jobs (7 total)
+1. monitoring_job (every 10 min)
+2. manga_pipeline_job (every 30 min)
+3. anime_pipeline_job (через DB schedules)
+4. news_pipeline_job (через DB schedules)
+5. **analytics_collector_job (every hour)** ← Sprint 58
+6. Channel workers (4 channels)
+
+### Hotfixes
+- Исправлен RuntimeWarning: использован \syncio.create_task()\ вместо \syncio.to_thread()\
+- Regex patcher заменил exact-match patch (устойчив к whitespace различиям)
+
+### Коммиты
+- \394feb0\ — Sprint 58: close learning loop
+- \31dcabf\ — hotfix: regex patcher для publish jobs
+- (final) — hotfix: analytics cron asyncio fix
+
+### Статус
+✅ Publish jobs записывают в PostHistory
+✅ Analytics Collector собирает метрики
+✅ Learnings сохраняются в БД
+✅ ChannelContext может использовать learnings
+✅ Cron job каждые 60 минут
+✅ 7 jobs в APScheduler
+
+---
+
