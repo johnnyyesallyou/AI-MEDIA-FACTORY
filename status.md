@@ -3516,3 +3516,159 @@ city night:
 
 ---
 
+
+---
+
+## Sprint 60 — Integration Sprint: Learning Loop + Post Generation (ЗАВЕРШЁН)
+
+### Цель
+Замкнуть вертикальный цикл: Channel → Context → Generate → Format → Media → Publish → Learn
+
+### Что создано
+
+**1. PromptBuilder (\engines/prompt_builder.py\)**
+- Строит промпты с учётом ChannelContext
+- \uild_news_prompt()\, \uild_manga_prompt()\, \uild_generic_prompt()\
+- Учитывает: theme, audience, language, working_patterns, recent_posts
+
+**2. LLMGenerator (\engines/llm_generator.py\)**
+- Интеграция с Ollama (gemma2:9b)
+- \generate(prompt, max_tokens, temperature)\
+
+**3. PostGenerationService (\engines/post_generation_service.py\)**
+Единый orchestration layer:
+\\\python
+async def generate_post(channel_id, content, content_type):
+    # 1. ChannelContext (learnings + history)
+    # 2. PromptBuilder (промпт с контекстом)
+    # 3. LLMGenerator (текст)
+    # 4. VideoManager (видео/картинка)
+    # 5. PostHistory (сохранение)
+    # Returns: PostHistoryORM
+\\\
+
+**4. API Endpoint (\ackend/app/api/v1/posts.py\)**
+\\\
+POST /api/v1/posts/generate/{channel_id}
+  Body: {topic, content_type, content?}
+  Returns: {id, text, media_type, image_url, video_url, ready_to_publish}
+\\\
+
+### Архитектурный результат
+
+**До Sprint 60:**
+\\\
+Channel → Pipeline (manga/news/anime) → Publish
+❌ Context не влиял на генерацию
+❌ Learnings не использовались
+❌ Видео не интегрировано
+\\\
+
+**После Sprint 60:**
+\\\
+Channel
+  ↓
+ChannelContext (learnings + history)
+  ↓
+PostGenerationService
+  ├── PromptBuilder (промпт с контекстом)
+  ├── LLMGenerator (текст с учётом patterns)
+  ├── VideoManager (Pixabay video)
+  └── PostHistory (сохранение)
+  ↓
+Publication → Publisher → PostHistory
+  ↓
+AnalyticsCollector (hourly)
+  ↓
+PostMetric → ChannelLearnings
+  ↓
+ChannelContext (обновлённый)
+  └───────────────↺
+\\\
+
+### Тест результатов
+
+**Sprint 60.1: ChannelContext → WritingEngine**
+\\\
+Channel: Новости 📰
+Context:
+  theme: новости про ИИ
+  audience: News readers
+  patterns: []
+  recent_posts: 3 поста загружены
+
+Generated post (262 chars):
+📰🔥⚡ Готовьтесь, мир! OpenAI подняла ставки с новым творением — GPT-5!
+✨ Эта модель обладает невиданными прежде способностями...
+\\\
+
+**Sprint 60.2: PostGenerationService**
+\\\
+✅ Пост создан и сохранён в БД!
+  ID: 7224c4c0-648d-47fa-a593-f886023c8af7
+  Media type: video
+  Text length: 290
+
+Текст поста:
+📰🔥⚡ Google снова поражает! 🤯
+Новым детищем компании стал Gemini 2.0...
+
+Video: https://cdn.pixabay.com/video/2020/04/01/34730-403408248_medium.mp4
+
+Всего постов в post_history для news канала: 21
+(20 реальных публикаций + 1 сгенерированный)
+\\\
+
+**Sprint 60.3: API Endpoint**
+\\\
+POST /api/v1/posts/generate/24df0f84-46c2-4df4-ab39-d76881b35438
+Status: 200
+  ID: ...
+  Media: video
+  Ready: True
+  Text: 📰🔥⚡ Tesla представила...
+\\\
+
+### Что НЕ делали (намеренно)
+
+- ❌ Не интегрировали с реальным publish pipeline (это Sprint 60.4)
+- ❌ Не добавили Media Policy (это Sprint 60.5)
+- ❌ Не делали полный E2E (это Sprint 60.6)
+- ❌ Не делали CI/regression tests (это Sprint 60.7)
+
+### Следующие шаги (Sprint 60.4-60.7)
+
+**60.4: Интеграция с publish pipeline**
+- Подключить PostGenerationService к news/manga/anime pipelines
+- Сгенерированные посты должны уходить в Telegram через Publisher
+- Проверить что \ecord_post_history\ работает с новыми постами
+
+**60.5: Media Policy**
+- Профиль канала определяет media policy (video/image/none)
+- \manga_releases\: cover (image)
+- \nime_news\: key_visual (image) или video (optional)
+- \	ech_news\: video (optional) или source_image
+- VideoManager использует policy из профиля
+
+**60.6: Полный E2E**
+- Generate → Format → Publish → PostHistory → Metrics → Learnings
+- Проверить что Learning Loop работает на реальных публикациях
+
+**60.7: CI/regression tests**
+- Unit tests для PostGenerationService
+- Integration tests для полного цикла
+- Regression tests чтобы не сломать существующие pipelines
+
+### Статус
+✅ Sprint 60.1: ChannelContext → WritingEngine
+✅ Sprint 60.2: PostGenerationService (orchestration)
+✅ Sprint 60.3: API endpoint \/posts/generate\
+⏳ Sprint 60.4-60.7: Planned (интеграция + tests)
+
+### Коммиты
+- \Sprint 60.1\: ChannelContext -> WritingEngine integration
+- \Sprint 60.2\: PostGenerationService + E2E proof
+- \Sprint 60.3\: API endpoint POST /posts/generate/{channel_id}
+
+---
+
