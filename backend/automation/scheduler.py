@@ -74,9 +74,52 @@ class AutomationScheduler:
         )
         logger.info("Added manga pipeline job (every 30 minutes)")
 
+        # Sprint 58: Analytics Collector (every hour)
+        self.scheduler.add_job(
+            func=self.run_analytics_collection,
+            trigger="interval",
+            hours=1,
+            id="analytics_collector_job",
+            name="Analytics Collector (post metrics + learnings)",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True
+        )
+        logger.info("Added analytics collector job (every hour)")
+
         self.scheduler.start()
         logger.info("Automation scheduler started with %d jobs", len(self.scheduler.get_jobs()))
         print(f"рџљЂ Automation scheduler started with {len(self.scheduler.get_jobs())} jobs", flush=True)
+
+
+    async def run_analytics_collection(self):
+        """Sprint 58: hourly analytics collection for active connected channels."""
+        db = SessionLocal()
+        try:
+            from engines.analytics import AnalyticsCollector
+
+            channels = (
+                db.query(ChannelORM)
+                .filter(
+                    ChannelORM.is_active == True,
+                    ChannelORM.is_connected == True,
+                )
+                .all()
+            )
+
+            collector = AnalyticsCollector(db)
+
+            logger.info("Analytics collection started for %d channels", len(channels))
+
+            for channel in channels:
+                try:
+                    await collector.collect_metrics_for_channel(channel.id)
+                except Exception as e:
+                    logger.exception("Analytics collection failed for channel=%s: %s", channel.id, e)
+
+            logger.info("Analytics collection finished")
+        finally:
+            db.close()
 
     async def stop(self):
         if self.scheduler:
