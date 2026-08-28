@@ -3373,3 +3373,81 @@ self.scheduler.add_job(
 
 ---
 
+
+---
+
+## Hotfix Sprint 59 — Fix Anime Publish + Restore News/Anime Crons (ЗАВЕРШЁН)
+
+### Проблема
+1. **Anime канал не публиковал посты** — все 7 постов падали с ошибкой:
+   \\\
+   AttributeError: 'AnimeTitle' object has no attribute 'title_ru'
+   \\\
+2. **News/Anime pipelines не запускались cron-ом** — scheduler показывал только 4 jobs вместо 6
+3. **Generic worker публиковал текстовые посты** — без картинок и off-topic контент
+
+### Корень проблем
+1. **AnimeFormatter (Sprint 54)** — обратился к полю \	itle_ru\, которого нет в модели \AnimeTitle\
+2. **Scheduler cron check** — использовал подстроку \
+ews_pipeline_job\, которая совпала с import строкой, а не с cron job ID
+3. **Sprint 52B** — cron-ы для anime/news так и не добавились из-за неправильного маркера
+
+### Решение
+
+**1. Переписан \engines/formatters/anime_formatter.py\**
+- Все атрибуты читаются через \getattr(anime_title, name, default)\
+- Безопасный fallback: meta → title_ru → title → headline
+- Совместим с любой моделью AnimeTitle
+
+**2. Добавлены cron-ы в \scheduler.py\**
+\\\python
+# Sprint 59-hotfix: Anime + News pipelines (every 30 minutes)
+self.scheduler.add_job(
+    func=lambda: asyncio.to_thread(AnimePipelineJob().run),
+    trigger="interval",
+    minutes=30,
+    id="anime_pipeline_job",
+)
+
+self.scheduler.add_job(
+    func=lambda: asyncio.to_thread(NewsPipelineJob().run),
+    trigger="interval",
+    minutes=30,
+    id="news_pipeline_job",
+)
+\\\
+- Проверка по \id="anime_pipeline_job"\ вместо подстроки
+- Scheduler теперь запускает 6 jobs
+
+**3. Отключены generic schedules для 3 специализированных каналов**
+- 24df0f84... (Новости)
+- 35a85a18... (Anime news)
+- manga-channel-001 (Манга)
+
+### Результат теста
+
+**До hotfix:**
+\\\
+Anime: published: 0, failed: 7 ❌
+News: generic worker → текстовые посты без картинок ❌
+Scheduler: 4 jobs ❌
+\\\
+
+**После hotfix:**
+\\\
+Anime: published: 7, failed: 0 ✅
+News: published: 20 (с картинками) ✅
+Scheduler: 6 jobs ✅
+\\\
+
+### Коммит
+- \857b15d\ — hotfix: fix AnimeFormatter title_ru crash + add anime/news crons
+
+### Статус
+✅ Anime канал публикует посты с key visual
+✅ News канал публикует посты с og:image
+✅ Scheduler корректно запускает все pipelines
+✅ Generic worker отключён для специализированных каналов
+
+---
+
