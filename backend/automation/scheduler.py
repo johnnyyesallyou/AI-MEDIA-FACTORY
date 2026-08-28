@@ -76,7 +76,7 @@ class AutomationScheduler:
 
         # Sprint 58: Analytics Collector (every hour)
         self.scheduler.add_job(
-            func=self.run_analytics_collection,
+            func=lambda: asyncio.create_task(self.run_analytics_collection()),
             trigger="interval",
             hours=1,
             id="analytics_collector_job",
