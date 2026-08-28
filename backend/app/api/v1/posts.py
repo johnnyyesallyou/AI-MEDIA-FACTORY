@@ -1,7 +1,6 @@
-"""Posts API - Sprint 57.
+"""Posts API - Sprint 60.
 
-API для работы с историей постов и метриками.
-Используем существующую PostMetric из core.models.analytics (не PostMetricsORM!)
+API для работы с историей постов и генерацией.
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -12,6 +11,7 @@ from pydantic import BaseModel
 from core.database import get_db
 from core.models.post_history_orm import PostHistoryORM, ChannelLearningsORM
 from core.models.analytics import PostMetric
+from engines.post_generation_service import PostGenerationService
 
 router = APIRouter(prefix="/posts", tags=["posts"])
 
@@ -19,6 +19,21 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 # ---------------------------------------------------------------------------
 # Schemas
 # ---------------------------------------------------------------------------
+
+class PostGenerateRequest(BaseModel):
+    topic: str
+    content: Optional[dict] = None
+    content_type: str = "news"
+
+
+class PostGenerateResponse(BaseModel):
+    id: str
+    text: str
+    media_type: str
+    image_url: Optional[str]
+    video_url: Optional[str]
+    ready_to_publish: bool
+
 
 class PostHistoryResponse(BaseModel):
     id: str
@@ -49,6 +64,51 @@ class ChannelMetricsResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
+@router.post("/generate/{channel_id}", response_model=PostGenerateResponse)
+async def generate_post_for_channel(
+    channel_id: str,
+    req: PostGenerateRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Генерировать пост для канала.
+    
+    Использует:
+    - ChannelContext (learnings + history)
+    - LLMGenerator (текст)
+    - VideoManager (видео/картинка)
+    - PostHistory (сохранение)
+    """
+    service = PostGenerationService(db)
+    
+    content = req.content or {
+        "title": req.topic,
+        "source_name": "Generated",
+        "summary": req.topic,
+    }
+    
+    try:
+        post = await service.generate_post(
+            channel_id=channel_id,
+            content=content,
+            content_type=req.content_type,
+        )
+        
+        if not post:
+            raise HTTPException(status_code=500, detail="Failed to generate post")
+        
+        return PostGenerateResponse(
+            id=post.id,
+            text=post.text,
+            media_type=post.media_type,
+            image_url=post.image_url,
+            video_url=post.video_url,
+            ready_to_publish=bool(post.text and (post.image_url or post.video_url)),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/history/{channel_id}", response_model=List[PostHistoryResponse])
 async def get_channel_post_history(
@@ -85,7 +145,6 @@ async def get_channel_metrics(
     post_count = 0
 
     for post in posts:
-        # Ищем последнюю метрику для этого поста (через content_id если есть)
         content_id = post.content_id
         if not content_id:
             continue
@@ -100,7 +159,6 @@ async def get_channel_metrics(
             total_likes += latest_metric.likes_count or 0
             post_count += 1
 
-    # Топ паттерны из channel_learnings
     learnings = db.query(ChannelLearningsORM)\
         .filter_by(channel_id=channel_id)\
         .order_by(ChannelLearningsORM.score.desc())\
