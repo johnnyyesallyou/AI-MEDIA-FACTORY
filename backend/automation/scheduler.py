@@ -87,6 +87,32 @@ class AutomationScheduler:
         )
         logger.info("Added analytics collector job (every hour)")
 
+
+        # Sprint 59-hotfix: Anime + News pipelines (every 30 minutes)
+        self.scheduler.add_job(
+            func=lambda: asyncio.to_thread(AnimePipelineJob().run),
+            trigger="interval",
+            minutes=30,
+            id="anime_pipeline_job",
+            name="Anime Pipeline (Research + Publish)",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True
+        )
+        logger.info("Added anime pipeline job (every 30 minutes)")
+
+        self.scheduler.add_job(
+            func=lambda: asyncio.to_thread(NewsPipelineJob().run),
+            trigger="interval",
+            minutes=30,
+            id="news_pipeline_job",
+            name="News Pipeline (Research + Publish)",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True
+        )
+        logger.info("Added news pipeline job (every 30 minutes)")
+
         self.scheduler.start()
         logger.info("Automation scheduler started with %d jobs", len(self.scheduler.get_jobs()))
         print(f"рџљЂ Automation scheduler started with {len(self.scheduler.get_jobs())} jobs", flush=True)

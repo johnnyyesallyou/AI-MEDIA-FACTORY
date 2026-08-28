@@ -1,22 +1,10 @@
-"""Anime Formatter - Sprint 54.
+"""Anime Formatter - Sprint 54 (fixed Sprint 59).
 
 Форматирует пост для новости/релиза аниме с переводом EN->RU.
-
-Формат поста:
-🎬 Название
-🌐 English / 日本語
-
-📅 Fall 2026
-📺 Ongoing
-🎞️ 12 episodes
-
-Описание (переведено если strip_non_ru)...
-
-🔗 Подробнее: ...
-
-#жанры #теги
+ВСЕ атрибуты читаются через getattr — совместимо с любой моделью AnimeTitle.
 """
-from typing import Any, List
+import json
+from typing import Any
 
 from engines.formatters.base import (
     BaseFormatter,
@@ -38,39 +26,45 @@ class AnimeFormatter(BaseFormatter):
         formatting = ctx.formatting
         publishing_policy = ctx.publishing_policy
 
-        # 1. Title name
+        def g(name, default=None):
+            return getattr(anime_title, name, default)
+
+        # 1. Title name (безопасно)
         title_name = self._get_title_name(anime_title, item)
         if formatting.get("unescape_html", True):
             title_name = unescape(title_name)
 
-        # 2. Description (перевод если strip_non_ru и текст не содержит кириллицу)
-        description = anime_title.description or ""
+        # 2. Description (перевод если strip_non_ru и нет кириллицы)
+        description = g("description") or ""
         if publishing_policy.get("strip_non_ru_description") and not has_cyrillic(description):
             description = translate_to_russian(description)
 
         # 3. Genres -> hashtags
-        genres = anime_title.genres or []
+        genres = g("genres") or []
         max_hashtags = formatting.get("max_hashtags", 10)
         hashtags = self.build_hashtags(genres, max_hashtags)
 
-        # 4. Header + aliases
+        # 4. Header + aliases (безопасно)
         emoji = formatting.get("emoji_header", "🎬")
         header = f"{emoji} {title_name}\n"
-        if anime_title.aliases:
-            if "en" in anime_title.aliases and anime_title.aliases["en"] != title_name:
-                header += f"🌐 {anime_title.aliases['en']}\n"
-            elif "ja" in anime_title.aliases:
-                header += f"🌐 {anime_title.aliases['ja']}\n"
+        aliases = g("aliases") or {}
+        if isinstance(aliases, dict):
+            if aliases.get("en") and aliases["en"] != title_name:
+                header += f"🌐 {aliases['en']}\n"
+            elif aliases.get("ja"):
+                header += f"🌐 {aliases['ja']}\n"
         header += "\n"
 
-        # 5. Season line
+        # 5. Season line (безопасно)
         season_line = ""
-        if anime_title.season and anime_title.season_year:
-            season_line = f"📅 {anime_title.season} {anime_title.season_year}\n"
-        if anime_title.status:
-            season_line += f"📺 {anime_title.status}\n"
-        if anime_title.episodes:
-            season_line += f"🎞️ {anime_title.episodes} episodes\n"
+        season = g("season")
+        season_year = g("season_year")
+        if season and season_year:
+            season_line = f"📅 {season} {season_year}\n"
+        if g("status"):
+            season_line += f"📺 {g('status')}\n"
+        if g("episodes"):
+            season_line += f"🎞️ {g('episodes')} episodes\n"
 
         # 6. Link line + hashtags
         link_url = ctx.telegraph_url or ctx.short_url
@@ -98,10 +92,23 @@ class AnimeFormatter(BaseFormatter):
             text=text,
             image_url=ctx.image_url,
             buttons=buttons,
-            source_url=item.source_url,
+            source_url=getattr(item, "source_url", None),
             metadata={"anime_episode_id": getattr(item, "anime_episode_id", None)},
         )
 
-    def _get_title_name(self, anime_title, item) -> str:
-        name = anime_title.title_ru or anime_title.title or ""
+    def _get_title_name(self, anime_title: Any, item: Any) -> str:
+        """Безопасное получение названия: meta -> title_ru -> title -> headline."""
+        meta = {}
+        try:
+            meta = json.loads(getattr(item, "source_text", None) or "{}")
+        except Exception:
+            meta = {}
+
+        name = (
+            meta.get("title_ru")
+            or meta.get("ru_title")
+            or getattr(anime_title, "title_ru", None)
+            or getattr(anime_title, "title", None)
+            or ""
+        )
         return name or (getattr(item, "headline", "") or "")
