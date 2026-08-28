@@ -361,6 +361,20 @@ class NewsPublishJob:
 
         if result.get("status") == "success":
             item.telegram_message_id = str(result.get("message_id", ""))
+
+            # Sprint 58: record publication in post_history for Learning Loop
+            try:
+                from engines.post_history_recorder import record_post_history
+                _channel = locals().get("channel") or locals().get("manga_channel") or locals().get("anime_channel") or locals().get("news_channel")
+                record_post_history(
+                    db=db,
+                    channel=_channel,
+                    item=item,
+                    publication=publication,
+                    result=result,
+                )
+            except Exception as history_e:
+                self.logger.warning(f"Failed to record post_history: {history_e}")
             db.commit()
 
         return result
