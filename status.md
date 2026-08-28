@@ -3451,3 +3451,68 @@ Scheduler: 6 jobs ✅
 
 ---
 
+
+---
+
+## Sprint 59 — Video Manager: Free Video Sources (ЗАВЕРШЁН)
+
+### Цель
+Создать VideoManager для поиска бесплатного видео по теме поста.
+
+### Архитектурные решения
+
+**Отказ от платных/требовательных решений:**
+- ❌ Runway ML (платный, -15/месяц)
+- ❌ Локальная AI-генерация (RTX 3050 Ti 4GB VRAM < 8GB минимум для AnimateDiff/Wan)
+- ❌ Pexels (ошибка регистрации, опционально)
+
+**Выбрано:**
+- ✅ Pixabay API (бесплатно, 100 req/min)
+- ✅ Fallback chain: Pexels → Pixabay → image post
+
+### Что создано
+
+**\engines/video_manager/engine.py\**
+\\\python
+class VideoManager:
+    def get_video(topic, style="auto") -> Optional[dict]:
+        # Fallback: Pexels -> Pixabay -> None
+    
+    def search_pexels(topic) -> Optional[dict]
+    def search_pixabay(topic) -> Optional[dict]
+\\\
+
+**Инфраструктура:**
+- Добавлен \env_file: .env\ в \docker-compose.yml\
+- \.env\ добавлен в \.gitignore\
+- \PIXABAY_API_KEY=57317765-...\ в \.env\
+
+### Тест результатов
+
+\\\
+Pixabay key set: True
+
+technology:
+  source:   pixabay
+  duration: 15s
+  url:      https://cdn.pixabay.com/video/2024/06/06/215500_medium.mp4
+
+nature landscape:
+  source:   pixabay
+  duration: 28s
+  url:      https://cdn.pixabay.com/video/2023/12/09/192649-892970391_medium.mp4
+
+city night:
+  source:   pixabay
+  duration: 12s
+  url:      https://cdn.pixabay.com/video/2024/05/18/212404_medium.mp4
+\\\
+
+### Статус
+✅ VideoManager создан
+✅ Pixabay API работает (3/3 темы нашли видео)
+✅ .env безопасен (gitignored)
+✅ docker-compose.yml пробрасывает env vars
+
+---
+
