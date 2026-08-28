@@ -53,6 +53,8 @@ services:
       USE_AUTOMATION_V2: 'true'
       ENVIRONMENT: development
       TELEGRAPH_ACCESS_TOKEN: 82dc98d2b2b08932d80c5fe2b909256544d8fa55a3a04c581881ffcb0e91
+    env_file:
+      - .env
     extra_hosts:
     - host.docker.internal:host-gateway
     depends_on:
