@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { channelsAPI, automationAPI, channelControlAPI } from '../api/client';
-import { Plus, Radio, Globe, Type, Settings, Trash2, Edit2, MessageCircle, CheckCircle, XCircle, Clock, Play, Pause } from 'lucide-react';
+import { Plus, Radio, Globe, Type, Settings, Trash2, Edit2, MessageCircle, CheckCircle, XCircle, Clock, Play, Pause, BarChart3 } from 'lucide-react';
 import ChannelManager from '../components/ChannelManager';
 
 interface Channel {
@@ -447,7 +447,14 @@ const loadAllSchedules = async (chs: any[]) => {
                       📰
                     </button>
                   )}
-                  <button
+                  <a
+                href={`/channels/${channel.id}/analytics`}
+                className="p-2 rounded-lg bg-purple-500 bg-opacity-20 text-purple-400 hover:bg-opacity-30 transition-colors"
+                title="Аналитика канала"
+              >
+                <BarChart3 size={18} />
+              </a>
+              <button
                 onClick={() => { setManagerChannel({id: channel.id, name: channel.name}); setShowManagerModal(true); }}
                 className="p-2 rounded-lg bg-purple-500 bg-opacity-20 text-purple-400 hover:bg-opacity-30 transition-colors"
                 title="Настройки канала"
