@@ -148,50 +148,52 @@ async def get_channel_metrics(
     db: Session = Depends(get_db),
 ):
     """Получить агрегированные метрики канала за N дней"""
+    from datetime import datetime, timedelta
+    
     start_date = datetime.utcnow() - timedelta(days=days)
-
+    
+    # 1. Получаем все PostHistory для канала за период
     posts = db.query(PostHistoryORM)\
-        .filter_by(channel_id=channel_id)\
+        .filter(PostHistoryORM.channel_id == channel_id)\
         .filter(PostHistoryORM.posted_at > start_date)\
         .all()
-
+    
+    post_count = len(posts)
     total_views = 0
     total_likes = 0
-    post_count = 0
-
+    
+    # 2. Для каждого поста ищем последнюю метрику по content_id или message_id
     for post in posts:
-        content_id = post.content_id
-        if not content_id:
-            continue
-
-        latest_metric = db.query(PostMetric)\
-            .filter_by(content_id=content_id)\
-            .order_by(PostMetric.measured_at.desc())\
-            .first()
-
-        if latest_metric:
-            total_views += latest_metric.views_count or 0
-            total_likes += latest_metric.likes_count or 0
-            post_count += 1
-
+        # Ищем метрику по content_id
+        if post.content_id:
+            metric = db.query(PostMetric)\
+                .filter(PostMetric.content_id == post.content_id)\
+                .order_by(PostMetric.measured_at.desc())\
+                .first()
+            
+            if metric:
+                total_views += metric.views_count or 0
+                total_likes += metric.likes_count or 0
+    
+    # 3. Получаем топ-паттерны
     learnings = db.query(ChannelLearningsORM)\
-        .filter_by(channel_id=channel_id)\
+        .filter(ChannelLearningsORM.channel_id == channel_id)\
         .order_by(ChannelLearningsORM.score.desc())\
         .limit(5)\
         .all()
-
-    top_patterns = [l.pattern for l in learnings if (l.score or 0) > 0.6]
-
-    return ChannelMetricsResponse(
-        channel_id=channel_id,
-        period_days=days,
-        total_posts=post_count,
-        total_views=total_views,
-        total_likes=total_likes,
-        avg_views_per_post=total_views / post_count if post_count else 0.0,
-        avg_likes_per_post=total_likes / post_count if post_count else 0.0,
-        top_patterns=top_patterns,
-    )
+    
+    top_patterns = [l.pattern for l in learnings if (l.score or 0) > 0.3]
+    
+    return {
+        "channel_id": channel_id,
+        "period_days": days,
+        "total_posts": post_count,
+        "total_views": total_views,
+        "total_likes": total_likes,
+        "avg_views_per_post": total_views / post_count if post_count > 0 else 0.0,
+        "avg_likes_per_post": total_likes / post_count if post_count > 0 else 0.0,
+        "top_patterns": top_patterns,
+    }
 
 
 @router.get("/learnings/{channel_id}")
