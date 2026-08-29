@@ -2,7 +2,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { 
   LayoutDashboard, Radio, FileText, Bot, Settings, 
-  BarChart3, Brain, FolderOpen, Link2, ScrollText, 
+  BarChart3, Brain, FolderOpen, Link2, ScrollText, Wand2, 
   Users, Cog, Menu, X 
 , Workflow } from 'lucide-react';
 import { DollarSign, Sparkles, FlaskConical } from 'lucide-react';
@@ -10,6 +10,7 @@ import { DollarSign, Sparkles, FlaskConical } from 'lucide-react';
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/channels', label: 'Channels', icon: Radio },
+  { path: '/wizard', label: 'Create Channel', icon: Wand2 },
   { path: '/content', label: 'Content', icon: FileText },
   { path: '/ai', label: 'AI Models', icon: Bot },
   { path: '/automation', label: 'Automation', icon: Settings },

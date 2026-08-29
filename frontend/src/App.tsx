@@ -16,6 +16,7 @@ import CostMonitor from './pages/CostMonitor';
 import AIRecommendations from './pages/AIRecommendations';
 import Sandbox from './pages/Sandbox';
 import Workflows from './pages/Workflows';
+import ChannelWizard from './pages/ChannelWizard';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="channels" element={<Channels />} />
+          <Route path="wizard" element={<ChannelWizard />} />
           <Route path="content" element={<Content />} />
           <Route path="ai" element={<AIModels />} />
           <Route path="automation" element={<Automation />} />

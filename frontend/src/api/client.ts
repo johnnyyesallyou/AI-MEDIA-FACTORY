@@ -144,6 +144,36 @@ export const settingsAPI = {
   triggerBackup: () => apiClient.post('/settings/backup'),
 };
 
+
+// Wizard API (Sprint 55/61)
+export const wizardAPI = {
+  suggest: (data: any) => apiClient.post('/wizard/suggest', data),
+  validate: (config: any) => apiClient.post('/wizard/validate', config),
+  create: (data: any) => apiClient.post('/channels/create-from-wizard', data),
+};
+
+// Posts API (Sprint 57-60)
+export const postsAPI = {
+  generate: (channelId: string, data: any) => apiClient.post(`/posts/generate/${channelId}`, data),
+  getHistory: (channelId: string, limit: number = 20) => apiClient.get(`/posts/history/${channelId}`, { params: { limit } }),
+  getMetrics: (channelId: string, days: number = 7) => apiClient.get(`/posts/metrics/${channelId}`, { params: { days } }),
+  getLearnings: (channelId: string, minScore: number = 0.5) => apiClient.get(`/posts/learnings/${channelId}`, { params: { min_score: minScore } }),
+};
+
+// Sources API (Sprint 53)
+export const sourcesAPI = {
+  list: (contentType?: string) => apiClient.get('/sources/', { params: contentType ? { content_type: contentType } : {} }),
+  get: (id: string) => apiClient.get(`/sources/${id}`),
+  validate: (data: any) => apiClient.post('/sources/validate', data),
+};
+
+// Channel Control API (Sprint 56)
+export const channelControlAPI = {
+  start: (channelId: string) => apiClient.post(`/channels/${channelId}/start`),
+  pause: (channelId: string) => apiClient.post(`/channels/${channelId}/pause`),
+  status: (channelId: string) => apiClient.get(`/channels/${channelId}/status`),
+};
+
 export default apiClient;
 
 
