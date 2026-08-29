@@ -11,6 +11,7 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/channels', label: 'Channels', icon: Radio },
   { path: '/wizard', label: 'Create Channel', icon: Wand2 },
+  { path: '/generate', label: 'Post Generator', icon: Sparkles },
   { path: '/content', label: 'Content', icon: FileText },
   { path: '/ai', label: 'AI Models', icon: Bot },
   { path: '/automation', label: 'Automation', icon: Settings },
