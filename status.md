@@ -3899,3 +3899,43 @@ All passed!
 
 ---
 
+
+---
+
+## Sprint 62 — Analytics Dashboard (ЗАВЕРШЁН)
+
+### Цель
+Сделать результаты публикаций видимыми: что опубликовано, какой контент работает,
+что система выучила.
+
+### 62.1 — Analytics API Audit + fixes
+- Проведён аудит всех endpoints (/posts/history|metrics|learnings, /dashboard)
+- Найден и исправлен баг: /posts/metrics возвращал total_posts=0
+  (фильтр по content_id без учёта постов без content_id)
+- Исправлен record_post_history: теперь ищет draft_text/description/headline
+- Backfill: 6 старых PostHistory записей заполнены из ContentORM (0/35 NULL text)
+- Выяснено: PostMetric views/likes = 0, т.к. TelegramEngagementTracker
+  требует админ-прав на канале (out of scope)
+
+### 62.2 — Channel Analytics Page
+- pages/ChannelAnalytics.tsx: /channels/:id/analytics
+- Блоки:
+  - Overview cards (Total Posts, Video, Image, Last Post)
+  - Media Distribution (Recharts pie chart)
+  - What Works (Learning Loop patterns)
+  - Recent Posts table (date, media badge, text, message_id)
+- Иконка Analytics (BarChart3) в карточках каналов
+- Проверено на Anime news: 7 постов, 100% image, реальные данные
+
+### Известные ограничения
+- Views/likes = 0 (Telegram API требует админ-прав бота)
+- Learning Loop patterns появятся когда будут engagement-метрики
+- UI честно показывает "No patterns detected yet"
+
+### Коммиты
+- ef46733 — Sprint 62.1: Analytics API audit + fix /posts/metrics
+- (Sprint 62.1 fix) — record_post_history + backfill
+- (Sprint 62.2) — Channel Analytics page
+
+---
+
