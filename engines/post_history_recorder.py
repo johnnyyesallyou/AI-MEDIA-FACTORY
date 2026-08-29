@@ -39,14 +39,14 @@ def _get_attr(obj: Any, *names: str, default=None):
 def _get_publication_text(publication: Any, item: Any = None) -> Optional[str]:
     return (
         _get_attr(publication, "text", "caption", "content")
-        or _get_attr(item, "text", "title", "name")
+        or _get_attr(item, "text", "draft_text", "description", "title", "name", "headline")
     )
 
 
 def _get_image_url(publication: Any, item: Any = None) -> Optional[str]:
     return (
-        _get_attr(publication, "image_url", "cover_url", "thumbnail_url")
-        or _get_attr(item, "image_url", "cover_url", "thumbnail_url")
+        _get_attr(publication, "image_url", "cover_url", "thumbnail_url", "cover")
+        or _get_attr(item, "image_url", "cover_url", "thumbnail_url", "cover")
     )
 
 
