@@ -154,6 +154,55 @@ class TelegramPublisher:
             logger.error(f"publish_photo error: {e}")
             return self.publish(text, inline_buttons)
 
+
+    def publish_video(
+        self,
+        text: str,
+        video_url: str,
+        inline_buttons: Optional[List[Dict[str, str]]] = None
+    ) -> dict:
+        """
+        Публикует пост с видео и inline-кнопками.
+        
+        Sprint 60.4: добавлен для поддержки VideoManager.
+        """
+        clean_text = _strip_markdown(text)
+        if len(clean_text) > 1024:
+            clean_text = clean_text[:1021] + "..."
+
+        payload = {
+            "chat_id": self.chat_id,
+            "caption": clean_text,
+        }
+
+        # Inline keyboard
+        keyboard = self._build_inline_keyboard(inline_buttons or [])
+        if keyboard:
+            import json
+            payload["reply_markup"] = json.dumps(keyboard, ensure_ascii=False)
+
+        try:
+            # Telegram sendVideo
+            payload["video"] = video_url
+            data = self._send_with_retry("sendVideo", payload)
+
+            if data and data.get("ok"):
+                message_id = data["result"]["message_id"]
+                logger.info(f"Video sent: message_id={message_id}")
+                return {
+                    "status": "success",
+                    "message_id": message_id,
+                    "chat_id": self.chat_id,
+                    "text_length": len(clean_text)
+                }
+            else:
+                logger.warning("sendVideo failed, fallback to text")
+                return self.publish(text, inline_buttons)
+
+        except Exception as e:
+            logger.warning(f"sendVideo failed: {e}, fallback to text")
+            return self.publish(text, inline_buttons)
+
     def publish(self, text: str, inline_buttons: Optional[List[Dict[str, str]]] = None) -> dict:
         """Отправляет текстовое сообщение с опциональными inline-кнопками."""
         clean_text = _strip_markdown(text)
