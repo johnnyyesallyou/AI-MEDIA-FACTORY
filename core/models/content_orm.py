@@ -56,6 +56,7 @@ class ContentORM(Base):
 
     asset_id = Column(String, ForeignKey("assets.id"), nullable=True)  # Sprint 11
     image_url = Column(String(500), nullable=True)
+    video_url = Column(String(2000), nullable=True)  # Sprint 60.4: video support
     telegraph_url = Column(String(500), nullable=True)  # Sprint 51: Telegraph page URL  # Sprint 11
     image_prompt = Column(Text, nullable=True)  # Sprint 11
     # Telegram publishing metadata
