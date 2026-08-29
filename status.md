@@ -3851,3 +3851,51 @@ All passed!
 
 ---
 
+
+---
+
+## Sprint 61 — Frontend: Channel Wizard + Post Generator + Channel Control (ЗАВЕРШЁН)
+
+### Цель
+Перенести возможности Sprint 53-60 в UI зрелой админки (единый фронтенд на :3001).
+
+### Принцип интеграции
+НЕ заменять существующую админку, а РАСШИРЯТЬ её:
+- восстановлены оригинальные App.tsx / client.ts после случайной перезаписи
+- новые страницы добавлены как отдельные routes в существующий роутер
+- новые API-методы добавлены в существующий client.ts
+
+### Что добавлено в UI
+
+**1. Create Channel (/wizard)** — pages/ChannelWizard.tsx
+- 4 шага: Input → Suggest → Validate → Done
+- использует wizardAPI (suggest/validate/create-from-wizard)
+
+**2. Post Generator (/generate)** — pages/PostGenerator.tsx
+- выбор канала + topic + content_type
+- Generate → preview (text + media) → Publish в Telegram/VK
+- использует postsAPI.generate + postsAPI.publish
+
+**3. Channels: Start/Pause** — иконки Play/Pause в карточках
+- channelControlAPI.start/pause (Sprint 56 endpoints)
+
+### Backend-добавления Sprint 61
+- POST /api/v1/posts/publish/{content_id} — публикация сгенерированного поста
+- GET /api/v1/posts/drafts/{channel_id} — список черновиков
+- фикс /posts/generate: draft_text + вычисляемый media_type
+- ready_to_publish = bool(text) (VK text-only посты)
+
+### Тест-результаты
+- Post Generator: пост с медиа опубликован в Telegram (message_id=447) ✅
+- Channels: Play/Pause работают, статусы меняются ✅
+- Wizard: suggest/validate/create E2E через API ✅
+- Wizard UI: ошибка на "Мемные коты" = ожидаемое ограничение
+  (детерминированный suggest знает только манга/аниме/новости;
+   новые content types = отдельная работа: профиль + источники + formatter)
+
+### Известные ограничения
+- Wizard-suggest детерминированный (без LLM) — новые тематики требуют новых профилей
+- Docker-мусор вычищен; open-webui оставлен (healthy, полезен для ручных LLM-тестов)
+
+---
+
