@@ -1,11 +1,17 @@
-"""Post Generation Service - Sprint 60.4 (refactored).
-
-Единый orchestration layer для генерации постов.
+"""Post Generation Service - Sprint 60.5 (с Media Policy).
 
 Архитектура:
-  Generate → ContentORM (status='generated', draft_text)
-  Publish  → ContentORM (status='published', telegram_message_id) + PostHistoryORM
-  Failed   → ContentORM (status='failed', publish_error)
+  Channel Profile
+    ↓
+  Media Policy (определяет video/image/none)
+    ↓
+  Generate (LLM + VideoManager)
+    ↓
+  ContentORM (status='generated')
+    ↓
+  Publish
+    ↓
+  ContentORM (status='published') + PostHistoryORM
 """
 import logging
 import uuid
@@ -19,12 +25,13 @@ from engines.content_context import ChannelContext
 from engines.prompt_builder import PromptBuilder
 from engines.llm_generator import LLMGenerator
 from engines.video_manager.engine import VideoManager
+from engines.media_policy import get_media_policy
 
 logger = logging.getLogger(__name__)
 
 
 class PostGenerationService:
-    """Генерация постов с учётом контекста канала."""
+    """Генерация постов с учётом контекста канала и media policy."""
 
     def __init__(self, db_session: SessionLocal):
         self.db = db_session
@@ -38,7 +45,7 @@ class PostGenerationService:
         content_type: str = "news"
     ) -> Optional[ContentORM]:
         """
-        Генерирует пост для канала.
+        Генерирует пост для канала с учётом Media Policy.
         
         Returns:
             ContentORM со status='generated' или None
@@ -49,11 +56,18 @@ class PostGenerationService:
             logger.error(f"Channel {channel_id} not found")
             return None
 
-        # 2. Создать контекст
+        # 2. Получить Media Policy из профиля
+        content_profile = channel.content_profile or {}
+        profile_key = content_profile.get("profile_key", "general")
+        media_policy = get_media_policy(profile_key)
+        
+        logger.info(f"Media policy for {channel.name}: primary={media_policy.primary}, source={media_policy.source}")
+
+        # 3. Создать контекст
         context = ChannelContext(channel, self.db)
         builder = PromptBuilder(context)
 
-        # 3. Построить промпт
+        # 4. Построить промпт
         if content_type == "news":
             prompt = builder.build_news_prompt(content)
         elif content_type == "manga":
@@ -66,7 +80,7 @@ class PostGenerationService:
 
         logger.info(f"Built prompt ({len(prompt)} chars) for channel={channel.name}")
 
-        # 4. Сгенерировать текст
+        # 5. Сгенерировать текст
         text = self.llm.generate(prompt, max_tokens=500)
         if not text:
             logger.error("LLM generation failed")
@@ -74,40 +88,42 @@ class PostGenerationService:
 
         logger.info(f"Generated text ({len(text)} chars)")
 
-        # 5. Получить медиа (видео или картинка)
-        media = self.video_manager.get_video(
-            content.get("title", content.get("topic", "general")),
-            timeout=20
-        )
-
+        # 6. Получить медиа согласно Media Policy
         video_url = None
         image_url = None
 
-        if media and media.get("type") == "video":
-            video_url = media.get("url")
-            logger.info(f"Video found: {media.get('source')}")
-        else:
-            # Fallback на image_url из content
+        if media_policy.should_fetch_video():
+            # Пробуем получить видео
+            topic = content.get("title", content.get("topic", "general"))
+            media = self.video_manager.get_video(topic, timeout=20)
+            
+            if media and media.get("type") == "video":
+                video_url = media.get("url")
+                logger.info(f"Video found via {media.get('source')}")
+            elif media_policy.fallback == "image":
+                # Fallback на картинку
+                image_url = content.get("image_url") or content.get("cover_url")
+                logger.info(f"Video not found, using image fallback")
+        
+        elif media_policy.should_fetch_image():
+            # Только картинка
             image_url = content.get("image_url") or content.get("cover_url")
+            logger.info(f"Using image from source: {media_policy.source}")
 
-        # 6. Создать ContentORM со status='generated'
+        # 7. Создать ContentORM со status='generated'
         generated_content = ContentORM(
             id=str(uuid.uuid4()),
             channel_id=channel_id,
             source_url=content.get("source_url", f"generated://{channel_id}/{uuid.uuid4()}"),
             headline=content.get("title", "Generated post"),
             source_text=content.get("summary", ""),
-            status="generated",  # ← КЛЮЧЕВОЕ: generated, не published
+            status="generated",
             draft_text=text,
             image_url=image_url,
-            video_url=video_url if hasattr(ContentORM, 'video_url') else None,
+            video_url=video_url,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
-
-        # Добавляем video_url если колонка существует
-        if hasattr(generated_content, 'video_url'):
-            generated_content.video_url = video_url
 
         self.db.add(generated_content)
         self.db.commit()
@@ -127,6 +143,6 @@ class PostGenerationService:
             "status": content.status,
             "text": content.draft_text,
             "image_url": content.image_url,
-            "video_url": getattr(content, 'video_url', None),
-            "ready_to_publish": bool(content.draft_text and (content.image_url or getattr(content, 'video_url', None))),
+            "video_url": content.video_url,
+            "ready_to_publish": bool(content.draft_text and (content.image_url or content.video_url)),
         }
