@@ -3672,3 +3672,182 @@ Status: 200
 
 ---
 
+
+---
+
+## Sprint 60 — Integration Sprint: Learning Loop + Post Generation (ЗАВЕРШЁН)
+
+### Цель
+Замкнуть вертикальный цикл: Channel → Context → Generate → Media → Publish → PostHistory → Learnings
+
+### Архитектура после Sprint 60
+
+\\\
+CHANNEL
+   │
+   ▼
+Channel Profile (ai_news, manga_releases, anime_news, ...)
+   │
+   ├──► Sources (SourceRegistry)
+   │      └──► Research
+   │
+   └──► Media Policy
+          │
+          ▼
+       PostGenerationService
+          ├── ChannelContext (learnings + history)
+          ├── PromptBuilder (промпт с контекстом)
+          ├── LLMGenerator (gemma2:9b через Ollama)
+          └── VideoManager (Pixabay API)
+          │
+          ▼
+       ContentORM (status='generated')
+          │
+          ▼
+       PublishService
+          └── TelegramPublisher (sendMessage/sendPhoto/sendVideo)
+          │
+          ▼
+       ContentORM (status='published')
+          + telegram_message_id
+          │
+          ▼
+       PostHistoryORM (для analytics)
+          │
+          ▼
+       AnalyticsCollector (hourly cron)
+          ├── TelegramEngagementTracker
+          └── VKEngagementTracker
+          │
+          ▼
+       PostMetric → ChannelLearningsORM
+          │
+          └──────► ChannelContext (обновлённый)
+\\\
+
+### Ключевые компоненты
+
+**1. PromptBuilder (\engines/prompt_builder.py\)**
+- Строит LLM-промпт с учётом ChannelContext
+- Учитывает: theme, audience, working_patterns, recent_posts
+- Методы: \uild_news_prompt()\, \uild_manga_prompt()\, \uild_generic_prompt()\
+
+**2. PostGenerationService (\engines/post_generation_service.py\)**
+- Orchestration: Context → LLM → Media → ContentORM (generated)
+- Использует Media Policy из профиля канала
+- Возвращает \ContentORM\ со status='generated'
+
+**3. Media Policy (\engines/media_policy.py\)**
+- Профиль определяет видео/картинка/none
+- 5 предустановленных политик:
+  - \manga_releases\: image only (cover)
+  - \nime_news\: image + video_fallback
+  - \	ech_news\: video primary (Pixabay)
+  - \i_news\: video primary (Pixabay)
+  - \general\: video primary
+
+**4. PublishService (\engines/publish_service.py\)**
+- Публикует \ContentORM (generated)\ через \TelegramPublisher\
+- Обновляет статус на 'published' + telegram_message_id
+- Записывает в \PostHistoryORM\ для analytics
+
+**5. TelegramPublisher.sendVideo (\engines/telegram/publisher.py\)**
+- Добавлен метод \publish_video()\
+- Использует Telegram API \sendVideo\
+- Fallback на text при ошибке
+
+### Тест результаты
+
+**Sprint 60.1: ChannelContext → WritingEngine** ✅
+\\\
+Generated post (262 chars):
+📰🔥⚡ Готовьтесь, мир! OpenAI подняла ставки с новым творением — GPT-5!
+\\\
+
+**Sprint 60.2: PostGenerationService** ✅
+\\\
+Generated: video=YES, image=NO
+Text: 📰🔥⚡ Google снова поражает! 🤯 (290 chars)
+Saved to PostHistory: 21 posts total
+\\\
+
+**Sprint 60.3: API Endpoint** ✅
+\\\
+POST /api/v1/posts/generate/{channel_id}
+Status: 200, returns {id, text, media_type, image_url, video_url}
+\\\
+
+**Sprint 60.4: Real Publish Integration** ✅
+\\\
+Generate → ContentORM(generated) → Publish → ContentORM(published)
+Telegram message_id: 443
+Full cycle passed!
+\\\
+
+**Sprint 60.5: Media Policy** ✅
+\\\
+manga_releases: image only (video=False)
+anime_news: image + video_fallback
+tech_news/ai_news: video primary
+\\\
+
+**Sprint 60.6: Full E2E (News + Manga)** ✅
+\\\
+NEWS:
+  Generate (LLM + Pixabay video)
+  → Publish (Telegram sendVideo, message_id=444)
+  → PostHistory (media_type=video)
+  ✅ PASSED
+
+MANGA:
+  Generate (LLM + cover image, NO video)
+  → Publish (message_id=288)
+  → PostHistory (media_type=image)
+  ✅ PASSED
+\\\
+
+**Sprint 60.7: Integration Tests** ✅
+\\\
+tests/test_sprint60_integration.py
+- TestMediaPolicy (5 tests)
+- TestPostGenerationService (3 tests)
+- TestRegression (7 tests)
+All passed!
+\\\
+
+### Коммиты Sprint 60
+
+1. \Sprint 60.1\ — ChannelContext -> WritingEngine integration
+2. \Sprint 60.2\ — PostGenerationService + E2E proof
+3. \Sprint 60.3\ — API endpoint POST /posts/generate/{channel_id}
+4. \Sprint 60.4\ — Real publish integration (generate -> publish -> PostHistory)
+5. \Sprint 60.5\ — Media Policy (profile determines video/image)
+6. \Sprint 60.6\ — Full E2E tests on real channels (News + Manga)
+7. \Sprint 60.7\ — Integration tests + final documentation
+
+### Архитектурный переход
+
+**ОТ:** Коллекция специализированных пайплайнов (MangaPipeline, NewsPipeline, AnimePipeline)  
+**К:** Платформа автоматического ведения каналов с Learning Loop
+
+**До:** Каналы работали, но не учились.  
+**После:** Каналы учатся на собственных публикациях.
+
+### Что дальше
+
+После Sprint 60 фундамент готов:
+- ✅ 3 рабочих профиля (manga/anime/news)
+- ✅ 9 источников
+- ✅ 2 платформы (Telegram/VK)
+- ✅ Formatter Layer
+- ✅ Learning Loop замкнут
+- ✅ PostGenerationService с Media Policy
+- ✅ Scheduler + cron jobs
+- ✅ Wizard API
+
+**Sprint 61:** Frontend Channel Wizard + Dashboard
+**Sprint 62:** Channel Analytics UI
+**Sprint 63:** AI Channel Creator (full UX)
+
+---
+
