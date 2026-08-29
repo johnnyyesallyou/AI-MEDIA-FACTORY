@@ -149,12 +149,13 @@ export const settingsAPI = {
 export const wizardAPI = {
   suggest: (data: any) => apiClient.post('/wizard/suggest', data),
   validate: (config: any) => apiClient.post('/wizard/validate', config),
-  create: (data: any) => apiClient.post('/channels/create-from-wizard', data),
+  create: (data: any) => apiClient.post('/wizard/create-from-wizard', data),
 };
 
 // Posts API (Sprint 57-60)
 export const postsAPI = {
   generate: (channelId: string, data: any) => apiClient.post(`/posts/generate/${channelId}`, data),
+  publish: (contentId: string) => apiClient.post(`/posts/publish/${contentId}`),
   getHistory: (channelId: string, limit: number = 20) => apiClient.get(`/posts/history/${channelId}`, { params: { limit } }),
   getMetrics: (channelId: string, days: number = 7) => apiClient.get(`/posts/metrics/${channelId}`, { params: { days } }),
   getLearnings: (channelId: string, minScore: number = 0.5) => apiClient.get(`/posts/learnings/${channelId}`, { params: { min_score: minScore } }),

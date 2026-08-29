@@ -17,6 +17,7 @@ import AIRecommendations from './pages/AIRecommendations';
 import Sandbox from './pages/Sandbox';
 import Workflows from './pages/Workflows';
 import ChannelWizard from './pages/ChannelWizard';
+import PostGenerator from './pages/PostGenerator';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="channels" element={<Channels />} />
           <Route path="wizard" element={<ChannelWizard />} />
+          <Route path="generate" element={<PostGenerator />} />
           <Route path="content" element={<Content />} />
           <Route path="ai" element={<AIModels />} />
           <Route path="automation" element={<Automation />} />

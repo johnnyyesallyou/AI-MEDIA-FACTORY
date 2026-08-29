@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { channelsAPI, automationAPI } from '../api/client';
-import { Plus, Radio, Globe, Type, Settings, Trash2, Edit2, MessageCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { channelsAPI, automationAPI, channelControlAPI } from '../api/client';
+import { Plus, Radio, Globe, Type, Settings, Trash2, Edit2, MessageCircle, CheckCircle, XCircle, Clock, Play, Pause } from 'lucide-react';
 import ChannelManager from '../components/ChannelManager';
 
 interface Channel {
@@ -66,7 +66,28 @@ const Channels: React.FC = () => {
   });
 
 
-  const loadAllSchedules = async (chs: any[]) => {
+  
+  const handleStart = async (channelId: string) => {
+    try {
+      await channelControlAPI.start(channelId);
+      alert('Channel started successfully!');
+      loadChannels();
+    } catch (err: any) {
+      alert('Failed to start channel: ' + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  const handlePause = async (channelId: string) => {
+    try {
+      await channelControlAPI.pause(channelId);
+      alert('Channel paused successfully!');
+      loadChannels();
+    } catch (err: any) {
+      alert('Failed to pause channel: ' + (err.response?.data?.detail || err.message));
+    }
+  };
+
+const loadAllSchedules = async (chs: any[]) => {
     try {
       const status = await automationAPI.getSchedulerStatus();
       const schedules: {[key: string]: any} = {};
@@ -433,6 +454,23 @@ const Channels: React.FC = () => {
               >
                 <Settings size={18} />
               </button>
+              {channel.is_connected ? (
+                <button
+                  onClick={() => handlePause(channel.id)}
+                  className="p-2 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded"
+                  title="Пауза автопубликации"
+                >
+                  <Pause size={18} />
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleStart(channel.id)}
+                  className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-700 rounded"
+                  title="Запуск автопубликации"
+                >
+                  <Play size={18} />
+                </button>
+              )}
               <button
                     onClick={() => openScheduleModal(channel.id)}
                     className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-700 rounded"

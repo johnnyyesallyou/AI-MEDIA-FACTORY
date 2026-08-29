@@ -109,7 +109,7 @@ async def generate_post_for_channel(
         else:
             media_type = "none"
 
-        ready_to_publish = bool(text and (video_url or image_url))
+        ready_to_publish = bool(text)
 
         return {
             "id": post.id,
