@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from core.database import get_db
 from core.models.post_history_orm import PostHistoryORM, ChannelLearningsORM
+from core.models.content_orm import ContentORM
 from core.models.analytics import PostMetric
 from engines.post_generation_service import PostGenerationService
 
@@ -73,39 +74,53 @@ async def generate_post_for_channel(
 ):
     """
     Генерировать пост для канала.
-    
-    Использует:
-    - ChannelContext (learnings + history)
-    - LLMGenerator (текст)
-    - VideoManager (видео/картинка)
-    - PostHistory (сохранение)
+
+    Возвращает ContentORM в виде PostGenerateResponse.
+    media_type вычисляется из video_url/image_url.
     """
     service = PostGenerationService(db)
-    
+
     content = req.content or {
         "title": req.topic,
         "source_name": "Generated",
         "summary": req.topic,
     }
-    
+
     try:
         post = await service.generate_post(
             channel_id=channel_id,
             content=content,
             content_type=req.content_type,
         )
-        
+
         if not post:
             raise HTTPException(status_code=500, detail="Failed to generate post")
-        
-        return PostGenerateResponse(
-            id=post.id,
-            text=post.text,
-            media_type=post.media_type,
-            image_url=post.image_url,
-            video_url=post.video_url,
-            ready_to_publish=bool(post.text and (post.image_url or post.video_url)),
-        )
+
+        # Безопасно достаём поля (ContentORM может не иметь всех атрибутов)
+        text = getattr(post, "draft_text", None) or getattr(post, "text", "") or ""
+        video_url = getattr(post, "video_url", None)
+        image_url = getattr(post, "image_url", None)
+
+        # Вычисляем media_type
+        if video_url:
+            media_type = "video"
+        elif image_url:
+            media_type = "image"
+        else:
+            media_type = "none"
+
+        ready_to_publish = bool(text and (video_url or image_url))
+
+        return {
+            "id": post.id,
+            "text": text,
+            "media_type": media_type,
+            "image_url": image_url,
+            "video_url": video_url,
+            "ready_to_publish": ready_to_publish,
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -200,4 +215,55 @@ async def get_channel_learnings(
             "last_updated": l.last_updated.isoformat() if l.last_updated else None,
         }
         for l in learnings
+    ]
+
+@router.post("/publish/{content_id}")
+async def publish_generated_post(content_id: str, db: Session = Depends(get_db)):
+    """
+    Опубликовать сгенерированный пост (ContentORM status='generated').
+    Sprint 61: ручной publish из UI.
+    """
+    from engines.publish_service import PublishService
+
+    service = PublishService(db)
+    published = await service.publish_generated_post(content_id)
+
+    if not published:
+        raise HTTPException(
+            status_code=400,
+            detail="Failed to publish (post not found, wrong status, or platform error)",
+        )
+
+    return {
+        "id": published.id,
+        "status": published.status,
+        "message_id": published.telegram_message_id,
+        "published_at": published.published_at.isoformat() if published.published_at else None,
+    }
+
+
+@router.get("/drafts/{channel_id}")
+async def list_drafts(channel_id: str, limit: int = 10, db: Session = Depends(get_db)):
+    """Список сгенерированных, но не опубликованных постов."""
+    drafts = (
+        db.query(ContentORM)
+        .filter(
+            ContentORM.channel_id == channel_id,
+            ContentORM.status == "generated",
+        )
+        .order_by(ContentORM.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "id": d.id,
+            "headline": d.headline,
+            "text": d.draft_text,
+            "image_url": d.image_url,
+            "video_url": getattr(d, "video_url", None),
+            "created_at": d.created_at.isoformat() if d.created_at else None,
+        }
+        for d in drafts
     ]
