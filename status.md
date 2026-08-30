@@ -3939,3 +3939,46 @@ All passed!
 
 ---
 
+
+---
+
+## Sprint 63 — Content Review & Approval Workflow (ЗАВЕРШЁН)
+
+### Цель
+Контроль человека между AI и публикацией: draft → review → approve/reject → publish.
+
+### 63.1-63.2: Audit + единая машина статусов
+- Официальные статусы (ContentStatus): research/draft/review/needs_revision/
+  approved/scheduled/published/rejected (+ generated как legacy)
+- PostGenerationService теперь создаёт status='draft'
+- PublishService принимает draft|approved|generated
+- Переходы с восстановлением: approve/reject/edit принимают approved и failed
+
+### 63.3: Backend endpoints
+- POST /posts/{id}/approve, /reject (reason), PATCH /posts/{id} (edit)
+- GET /posts/drafts (вся очередь), фильтр: draft|generated|review|
+  needs_revision|approved|failed
+
+### 63.4: Review Queue UI (/review)
+- Очередь draft-ов с именами каналов, бейджами статусов, media preview
+- Edit (inline textarea) → Save
+- Approve & Publish → Telegram
+- Reject → карточка исчезает
+- E2E: reject удаляет, approve&publish публикует с нормальной кириллицей
+
+### 63.5: publishing_mode (3 режима автономности)
+- content_profile.publishing_mode: auto | approval_required | manual
+- API: GET/POST /dashboard/{id}/publishing-mode
+- Publish jobs (news/manga/anime): если mode != auto → research-посты
+  конвертируются в draft (в review queue), автопубликация пропускается
+- auto = поведение без изменений (старый pipeline не сломан)
+
+### Итог: продукт получил три режима
+| Режим             | Поведение                                  |
+|-------------------|--------------------------------------------|
+| auto              | AI публикует сам                           |
+| approval_required | AI предлагает, человек утверждает в /review|
+| manual            | человек генерирует и публикует вручную     |
+
+---
+
