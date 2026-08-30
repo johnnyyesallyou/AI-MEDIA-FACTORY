@@ -7,7 +7,7 @@
     ↓
   Generate (LLM + VideoManager)
     ↓
-  ContentORM (status='generated')
+  ContentORM (status='draft')
     ↓
   Publish
     ↓
@@ -48,7 +48,7 @@ class PostGenerationService:
         Генерирует пост для канала с учётом Media Policy.
         
         Returns:
-            ContentORM со status='generated' или None
+            ContentORM со status='draft' или None
         """
         # 1. Получить канал
         channel = self.db.query(ChannelORM).filter_by(id=channel_id).first()
@@ -110,14 +110,14 @@ class PostGenerationService:
             image_url = content.get("image_url") or content.get("cover_url")
             logger.info(f"Using image from source: {media_policy.source}")
 
-        # 7. Создать ContentORM со status='generated'
+        # 7. Создать ContentORM со status='draft'
         generated_content = ContentORM(
             id=str(uuid.uuid4()),
             channel_id=channel_id,
             source_url=content.get("source_url", f"generated://{channel_id}/{uuid.uuid4()}"),
             headline=content.get("title", "Generated post"),
             source_text=content.get("summary", ""),
-            status="generated",
+            status="draft",
             draft_text=text,
             image_url=image_url,
             video_url=video_url,
@@ -130,7 +130,7 @@ class PostGenerationService:
         self.db.refresh(generated_content)
 
         logger.info(
-            f"Post generated: id={generated_content.id}, status=generated, "
+            f"Post generated: id={generated_content.id}, status=draft, "
             f"video={'YES' if video_url else 'NO'}, image={'YES' if image_url else 'NO'}"
         )
 
