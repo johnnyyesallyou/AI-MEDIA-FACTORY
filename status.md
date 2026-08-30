@@ -4027,3 +4027,39 @@ All passed!
 
 ---
 
+
+---
+
+## Sprint 63 — Content Review & Approval Workflow (ЗАВЕРШЁН)
+
+### 63.1-63.2: Audit + единая машина статусов
+- Официальные статусы: research/draft/review/needs_revision/approved/
+  scheduled/published/rejected/failed (+ generated как legacy)
+- PostGenerationService создаёт status='draft'
+- PublishService принимает draft|approved|generated
+- Переходы с восстановлением: approve/reject/edit принимают approved/failed
+
+### 63.3: Backend endpoints
+- POST /posts/{id}/approve, /reject, PATCH /posts/{id} (edit)
+- GET /posts/drafts (вся очередь)
+
+### 63.4: Review Queue UI (/review)
+- Очередь с Edit/Approve & Publish/Reject
+- E2E: post опубликован с нормальной кириллицей
+
+### 63.5: publishing_mode (3 режима автономности)
+- content_profile.publishing_mode: auto | approval_required | manual
+- API: GET/POST /dashboard/{id}/publishing-mode
+- **News publish job**: если mode != auto → research-посты конвертируются
+  в draft (Review Queue), автопубликация пропускается
+- E2E: research → approval_required → job → draft (moved_to_review: 1)
+
+### Три режима автономности
+| Режим             | Поведение                                  |
+|-------------------|--------------------------------------------|
+| auto              | AI публикует сам                           |
+| approval_required | AI предлагает, человек утверждает в /review|
+| manual            | человек генерирует и публикует вручную     |
+
+---
+
