@@ -12,6 +12,7 @@ const navItems = [
   { path: '/channels', label: 'Channels', icon: Radio },
   { path: '/wizard', label: 'Create Channel', icon: Wand2 },
   { path: '/generate', label: 'Post Generator', icon: Sparkles },
+  { path: '/review', label: 'Review Queue', icon: ClipboardCheck },
   { path: '/content', label: 'Content', icon: FileText },
   { path: '/ai', label: 'AI Models', icon: Bot },
   { path: '/automation', label: 'Automation', icon: Settings },

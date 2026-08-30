@@ -156,6 +156,10 @@ export const wizardAPI = {
 export const postsAPI = {
   generate: (channelId: string, data: any) => apiClient.post(`/posts/generate/${channelId}`, data),
   publish: (contentId: string) => apiClient.post(`/posts/publish/${contentId}`),
+  approve: (contentId: string) => apiClient.post(`/posts/${contentId}/approve`),
+  reject: (contentId: string, reason?: string) => apiClient.post(`/posts/${contentId}/reject`, null, { params: reason ? { reason } : {} }),
+  edit: (contentId: string, data: any) => apiClient.patch(`/posts/${contentId}`, data),
+  listAllDrafts: (limit: number = 50) => apiClient.get('/posts/drafts', { params: { limit } }),
   getHistory: (channelId: string, limit: number = 20) => apiClient.get(`/posts/history/${channelId}`, { params: { limit } }),
   getMetrics: (channelId: string, days: number = 7) => apiClient.get(`/posts/metrics/${channelId}`, { params: { days } }),
   getLearnings: (channelId: string, minScore: number = 0.5) => apiClient.get(`/posts/learnings/${channelId}`, { params: { min_score: minScore } }),
