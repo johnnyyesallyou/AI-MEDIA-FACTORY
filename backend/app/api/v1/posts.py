@@ -251,7 +251,7 @@ async def list_drafts(channel_id: str, limit: int = 10, db: Session = Depends(ge
         db.query(ContentORM)
         .filter(
             ContentORM.channel_id == channel_id,
-            ContentORM.status == "generated",
+            ContentORM.status.in_(["draft", "generated", "review", "needs_revision", "approved", "failed"]),
         )
         .order_by(ContentORM.created_at.desc())
         .limit(limit)
@@ -278,7 +278,7 @@ async def approve_post(content_id: str, db: Session = Depends(get_db)):
     if not content:
         raise HTTPException(status_code=404, detail="Content not found")
     
-    if content.status not in ["draft", "generated", "review", "needs_revision"]:
+    if content.status not in ["draft", "generated", "review", "needs_revision", "approved", "failed"]:
         raise HTTPException(
             status_code=400,
             detail=f"Content must be in 'draft/generated/review/needs_revision' status, current: '{content.status}'"
@@ -303,7 +303,7 @@ async def reject_post(content_id: str, reason: str = None, db: Session = Depends
     if not content:
         raise HTTPException(status_code=404, detail="Content not found")
     
-    if content.status not in ["draft", "generated", "review", "needs_revision"]:
+    if content.status not in ["draft", "generated", "review", "needs_revision", "approved", "failed"]:
         raise HTTPException(
             status_code=400,
             detail=f"Content must be in 'draft/generated/review/needs_revision' status, current: '{content.status}'"
@@ -329,7 +329,7 @@ async def edit_post(content_id: str, data: dict, db: Session = Depends(get_db)):
     if not content:
         raise HTTPException(status_code=404, detail="Content not found")
     
-    if content.status not in ["draft", "generated", "review", "needs_revision"]:
+    if content.status not in ["draft", "generated", "review", "needs_revision", "approved", "failed"]:
         raise HTTPException(
             status_code=400,
             detail=f"Can only edit draft/generated/review/needs_revision, current: '{content.status}'"
@@ -363,7 +363,7 @@ async def list_all_drafts(limit: int = 50, db: Session = Depends(get_db)):
     drafts = (
         db.query(ContentORM)
         .filter(
-            ContentORM.status.in_(["draft", "generated", "review", "needs_revision"])
+            ContentORM.status.in_(["draft", "generated", "review", "needs_revision", "approved", "failed"])
         )
         .order_by(ContentORM.created_at.desc())
         .limit(limit)

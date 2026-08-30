@@ -18,6 +18,8 @@ const STATUS_STYLES: Record<string, string> = {
   generated: 'bg-blue-900/40 text-blue-300',
   review: 'bg-yellow-900/40 text-yellow-300',
   needs_revision: 'bg-orange-900/40 text-orange-300',
+  approved: 'bg-green-900/40 text-green-300',
+  failed: 'bg-red-900/40 text-red-300',
 };
 
 export default function ReviewQueue() {
