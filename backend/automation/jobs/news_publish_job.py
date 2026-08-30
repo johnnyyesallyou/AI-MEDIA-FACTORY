@@ -63,20 +63,21 @@ class NewsPublishJob:
             if not news_channel:
                 return {"status": "failed", "error": "News channel not connected"}
 
-                try:
-                    mode = (news_channel.content_profile or {}).get("publishing_mode", "auto")
-                except Exception:
-                    mode = "auto"
-                if mode != "auto":
-                    try:
-                        moved = db.query(ContentORM).filter(ContentORM.channel_id == news_channel.id, ContentORM.status == "research").update({"status": "draft"})
-                        db.commit()
-                    except Exception:
-                        moved = 0
-                    self.logger.info(f"publishing_mode={mode}: {moved} items -> review queue, auto-publish skipped")
-                    return {"status": "ok", "published": 0, "moved_to_review": moved, "publishing_mode": mode}
-
             profile = resolve_channel_profile(news_channel)
+            # Sprint 63.5: publishing_mode check
+            try:
+                mode = (news_channel.content_profile or {}).get("publishing_mode", "auto")
+            except Exception:
+                mode = "auto"
+            if mode != "auto":
+                moved = db.query(ContentORM).filter(
+                    ContentORM.channel_id == news_channel.id,
+                    ContentORM.status == "research"
+                ).update({"status": "draft"})
+                db.commit()
+                self.logger.info(f"publishing_mode={mode}: moved {moved} research items to draft (review queue)")
+                return {"status": "ok", "published": 0, "moved_to_review": moved, "publishing_mode": mode}
+
             publishing_policy = profile.get("publishing_policy", {})
             formatting = profile.get("formatting_profile", {})
 
