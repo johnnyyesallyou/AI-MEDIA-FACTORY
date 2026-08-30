@@ -99,6 +99,19 @@ class AnimePublishJob:
             if not anime_channel:
                 return {"status": "failed", "error": "Anime channel not connected"}
 
+                try:
+                    mode = (anime_channel.content_profile or {}).get("publishing_mode", "auto")
+                except Exception:
+                    mode = "auto"
+                if mode != "auto":
+                    try:
+                        moved = db.query(ContentORM).filter(ContentORM.channel_id == anime_channel.id, ContentORM.status == "research").update({"status": "draft"})
+                        db.commit()
+                    except Exception:
+                        moved = 0
+                    self.logger.info(f"publishing_mode={mode}: {moved} items -> review queue, auto-publish skipped")
+                    return {"status": "ok", "published": 0, "moved_to_review": moved, "publishing_mode": mode}
+
             profile = resolve_channel_profile(anime_channel)
             publishing_policy = profile.get("publishing_policy", {})
             formatting = profile.get("formatting_profile", {})

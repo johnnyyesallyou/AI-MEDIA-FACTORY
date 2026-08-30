@@ -213,3 +213,31 @@ async def get_dashboard(db: Session = Depends(get_db)):
         active_channels=active_count,
         channels=channel_list,
     )
+
+@router.post("/{channel_id}/publishing-mode")
+async def set_publishing_mode(channel_id: str, mode: str, db: Session = Depends(get_db)):
+    """
+    Установить режим публикации канала.
+    auto | approval_required | manual
+    """
+    if mode not in ["auto", "approval_required", "manual"]:
+        raise HTTPException(status_code=400, detail="mode must be auto|approval_required|manual")
+
+    channel = db.query(ChannelORM).filter(ChannelORM.id == channel_id).first()
+    if not channel:
+        raise HTTPException(status_code=404, detail="Channel not found")
+
+    profile = dict(channel.content_profile or {})
+    profile["publishing_mode"] = mode
+    channel.content_profile = profile
+    db.commit()
+
+    return {"id": channel_id, "publishing_mode": mode}
+
+
+@router.get("/{channel_id}/publishing-mode")
+async def get_publishing_mode(channel_id: str, db: Session = Depends(get_db)):
+    channel = db.query(ChannelORM).filter(ChannelORM.id == channel_id).first()
+    if not channel:
+        raise HTTPException(status_code=404, detail="Channel not found")
+    return {"id": channel_id, "publishing_mode": (channel.content_profile or {}).get("publishing_mode", "auto")}
