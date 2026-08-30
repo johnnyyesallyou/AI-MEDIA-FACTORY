@@ -51,8 +51,8 @@ class PublishService:
             logger.error(f"Content {content_id} not found")
             return None
 
-        if content.status != "generated":
-            logger.error(f"Content {content_id} status is {content.status}, not 'generated'")
+        if content.status not in ["draft", "approved", "generated"]:
+            logger.error(f"Content {content_id} status is {content.status}, not 'draft/approved/generated'")
             return None
 
         # 2. Получить канал

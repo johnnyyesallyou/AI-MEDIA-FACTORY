@@ -269,3 +269,118 @@ async def list_drafts(channel_id: str, limit: int = 10, db: Session = Depends(ge
         }
         for d in drafts
     ]
+
+
+@router.post("/{content_id}/approve")
+async def approve_post(content_id: str, db: Session = Depends(get_db)):
+    """Approve draft: переводит в status='approved'."""
+    content = db.query(ContentORM).filter(ContentORM.id == content_id).first()
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    if content.status not in ["draft", "generated", "review", "needs_revision"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Content must be in 'draft/generated/review/needs_revision' status, current: '{content.status}'"
+        )
+    
+    content.status = "approved"
+    content.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(content)
+    
+    return {
+        "id": content.id,
+        "status": content.status,
+        "approved_at": content.updated_at.isoformat(),
+    }
+
+
+@router.post("/{content_id}/reject")
+async def reject_post(content_id: str, reason: str = None, db: Session = Depends(get_db)):
+    """Reject draft: переводит в status='rejected'."""
+    content = db.query(ContentORM).filter(ContentORM.id == content_id).first()
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    if content.status not in ["draft", "generated", "review", "needs_revision"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Content must be in 'draft/generated/review/needs_revision' status, current: '{content.status}'"
+        )
+    
+    content.status = "rejected"
+    content.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(content)
+    
+    return {
+        "id": content.id,
+        "status": content.status,
+        "reason": reason,
+        "rejected_at": content.updated_at.isoformat(),
+    }
+
+
+@router.patch("/{content_id}")
+async def edit_post(content_id: str, data: dict, db: Session = Depends(get_db)):
+    """Edit draft: обновить text/image_url/video_url."""
+    content = db.query(ContentORM).filter(ContentORM.id == content_id).first()
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    if content.status not in ["draft", "generated", "review", "needs_revision"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Can only edit draft/generated/review/needs_revision, current: '{content.status}'"
+        )
+    
+    # Обновляем разрешённые поля
+    if "text" in data:
+        content.draft_text = data["text"]
+    if "image_url" in data:
+        content.image_url = data["image_url"]
+    if "video_url" in data and hasattr(content, "video_url"):
+        content.video_url = data["video_url"]
+    
+    content.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(content)
+    
+    return {
+        "id": content.id,
+        "status": content.status,
+        "text": content.draft_text,
+        "image_url": content.image_url,
+        "video_url": getattr(content, "video_url", None),
+        "updated_at": content.updated_at.isoformat(),
+    }
+
+
+@router.get("/drafts")
+async def list_all_drafts(limit: int = 50, db: Session = Depends(get_db)):
+    """Список ВСЕХ draft posts (для Review Queue)."""
+    drafts = (
+        db.query(ContentORM)
+        .filter(
+            ContentORM.status.in_(["draft", "generated", "review", "needs_revision"])
+        )
+        .order_by(ContentORM.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    
+    return [
+        {
+            "id": d.id,
+            "channel_id": d.channel_id,
+            "headline": d.headline,
+            "text": d.draft_text,
+            "image_url": d.image_url,
+            "video_url": getattr(d, "video_url", None),
+            "status": d.status,
+            "created_at": d.created_at.isoformat() if d.created_at else None,
+        }
+        for d in drafts
+    ]
+
