@@ -5,7 +5,7 @@ import {
   BarChart3, Brain, FolderOpen, Link2, ScrollText, Wand2, 
   Users, Cog, Menu, X 
 , Workflow } from 'lucide-react';
-import { DollarSign, Sparkles, FlaskConical } from 'lucide-react';
+import { DollarSign, Sparkles, FlaskConical, ClipboardCheck } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
