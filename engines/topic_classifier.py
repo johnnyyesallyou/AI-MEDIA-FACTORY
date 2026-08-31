@@ -18,27 +18,40 @@ DOMAIN_SYNONYMS: Dict[str, List[str]] = {
     
     # AI
     "artificial_intelligence": [
-        "искусственный интеллект", "ии", "ai", "artificial intelligence",
-        "нейросети", "нейросеть", "neural network", "machine learning",
-        "машинное обучение", "ml", "deep learning", "llm", "gpt",
-        "chatgpt", "openai", "anthropic", "claude"
+        "искусственный интеллект", "искусственного интеллекта",
+        "искусственному интеллекту", "artificial intelligence",
+        "нейросети", "нейросеть", "нейросетей", "нейросетями", "neural network",
+        "machine learning", "машинное обучение", "машинного обучения",
+        "deep learning", "глубокое обучение",
+        "ии ", " ai ", "ml ", "llm", "gpt",
+        "chatgpt", "openai", "anthropic", "claude",
+        "языковая модель", "языковые модели", "language model"
     ],
     
     # Automotive
     "automotive": [
-        "автомобили", "авто", "cars", "car", "automotive",
-        "машина", "машины", "автопром", "tesla", "тесла",
-        "электромобили", "electric cars", "bmw", "mercedes",
-        "audi", "toyota", "тест-драйв", "test drive",
+        "автомобили", "автомобилей", "автомобилю", "automotive",
+        "авто ", "авто,", "авто.", "cars", "car ", "automotive",
+        "машина", "машины", "машин", "машинами",
+        "автопром", "автопрома",
+        "tesla", "тесла", "электромобили", "электромобилей", "electric cars",
+        "bmw", "mercedes", "audi", "toyota", "lada", "ваз",
+        "тест-драйв", "test drive",
         "авто новости", "car news", "automotive news"
     ],
     
     # Science
     "science": [
-        "наука", "science", "научный", "scientific",
-        "биология", "biology", "физика", "physics",
-        "химия", "chemistry", "космос", "space", "астрономия", "astronomy",
-        "исследования", "research", "открытия", "discoveries"
+        "наука", "науке", "науки", "наук", "наукой", "science",
+        "научный", "научная", "научные", "научных", "scientific",
+        "биология", "биологии", "биологию", "биологией", "биологический", "biology",
+        "физика", "физике", "физики", "physics",
+        "химия", "химии", "химии", "chemistry",
+        "космос", "космоса", "space",
+        "астрономия", "астрономии", "astronomy",
+        "исследования", "исследование", "research",
+        "открытия", "открытие", "открытий", "discoveries",
+        "ученые", "учёные", "scientists"
     ],
     
     # Gaming
@@ -52,10 +65,14 @@ DOMAIN_SYNONYMS: Dict[str, List[str]] = {
     
     # Business
     "business": [
-        "бизнес", "business", "предпринимательство", "entrepreneurship",
-        "финансы", "finance", "экономика", "economics",
-        "стартапы", "startups", "инвестиции", "investments",
-        "рынок", "market", "компании", "companies"
+        "бизнес", "бизнеса", "бизнесу", "business",
+        "предпринимательство", "предпринимательства", "entrepreneurship",
+        "финансы", "финансов", "finance",
+        "экономика", "экономики", "экономике", "economics",
+        "стартапы", "стартапов", "стартапам", "startups", "startup",
+        "инвестиции", "инвестиций", "investments",
+        "рынок", "рынка", "рынке", "market",
+        "компании", "компаний", "компаниями", "companies"
     ],
     
     # Crypto
@@ -136,14 +153,14 @@ def classify_intent(description: str, name: str = "") -> ChannelIntent:
     best_domain = max(domain_scores, key=domain_scores.get)
     best_score = domain_scores[best_domain]
     
-    # Confidence: учитываем уникальность matches
-    # Если много общих слов (news, информация) - снижаем confidence
+    # Confidence: predictable mapping based on score
+    confidence_map = {1: 0.5, 2: 0.7, 3: 0.85}
+    confidence = confidence_map.get(best_score, 1.0)
+    
+    # Штраф за ambiguity (несколько domains с одинаковым score)
     unique_keywords = sum(1 for domain in domain_scores if domain_scores[domain] == best_score)
     if unique_keywords > 1:
-        # Несколько domains с одинаковым score - снижаем confidence
-        confidence = min(best_score / 4.0, 0.7)
-    else:
-        confidence = min(best_score / 2.0, 1.0)
+        confidence *= 0.8
     
     # Topic scoring (for best domain)
     topic_scores = {}
