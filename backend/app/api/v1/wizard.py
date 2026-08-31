@@ -16,6 +16,8 @@ from core.models.channel_orm import ChannelORM
 from core.models.channel_schedule_orm import ChannelScheduleORM
 from engines.source_registry import SourceRegistry
 from engines.channel_profiles import PROFILES
+from engines.capability_matcher import suggest_strategy
+from core.models.wizard_intelligence import ChannelIntent, ChannelStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,12 @@ class WizardSuggestResponse(BaseModel):
     sources: List[str]
     confidence: float = Field(ge=0.0, le=1.0)
     reasoning: str
+    # Sprint 65.2: Smart Wizard fields
+    domain: Optional[str] = None
+    subtopics: List[str] = Field(default_factory=list)
+    audience: Optional[str] = None
+    publishing_frequency: Optional[str] = None
+    publishing_mode: Optional[str] = None
 
 
 class WizardConfigRequest(BaseModel):
@@ -85,84 +93,48 @@ class CreateFromWizardResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post("/suggest", response_model=WizardSuggestResponse)
-async def suggest_channel_config(req: WizardSuggestRequest):
-    """Предложить конфигурацию канала на основе названия (детерминированно)."""
-    name_lower = req.name.lower()
-    desc_lower = (req.description or "").lower()
-    combined = f"{name_lower} {desc_lower}"
+async def suggest_config(request: WizardSuggestRequest):
+    """Sprint 65.2: Smart Wizard — ChannelIntent -> ChannelStrategy.
 
-    config = _analyze_name(combined)
-    if not config:
-        raise HTTPException(
-            status_code=400,
-            detail="Не удалось определить тип канала. Укажите 'манга', 'аниме' или 'новости' в названии.",
+    Работает для ЛЮБЫХ тематик (fallback: general_news),
+    legacy-семейства (manga/anime) используют существующие профили.
+    """
+    intent, strategy = suggest_strategy(request.description or "", request.name)
+
+    if intent.domain in ("manga", "anime"):
+        # Legacy families: существующие профили + источники
+        candidates = (
+            ["manga", "manga_releases"] if intent.domain == "manga"
+            else ["anime", "anime_news"]
         )
+        profile_key = next((k for k in candidates if k in PROFILES), strategy.profile_key)
+        sources = [s.id for s in SourceRegistry.get_sources_for(content_type=intent.domain)] or strategy.sources
+        content_type = intent.domain
+    else:
+        profile_key = strategy.profile_key
+        sources = strategy.sources
+        content_type = "news"
 
-    sources = SourceRegistry.get_sources_for(
-        content_type=config["content_type"],
-        topic=config["topic"],
-        language=config["language"],
-    )
-    source_ids = [s.id for s in sources]
+    if not sources:
+        raise HTTPException(status_code=400, detail="No sources available for this channel type")
 
-    if not source_ids:
-        sources = SourceRegistry.get_sources_for(content_type=config["content_type"])
-        source_ids = [s.id for s in sources]
+    reasoning = f"{intent.reasoning}. Strategy: {'; '.join(strategy.reasoning[:2])}"
 
     return WizardSuggestResponse(
-        content_type=config["content_type"],
-        topic=config["topic"],
-        language=config["language"],
-        profile_key=config["profile_key"],
-        sources=source_ids,
-        confidence=config["confidence"],
-        reasoning=config["reasoning"],
+        content_type=content_type,
+        topic=intent.topic,
+        language=intent.language,
+        profile_key=profile_key,
+        sources=sources,
+        confidence=intent.confidence,
+        reasoning=reasoning,
+        domain=intent.domain,
+        subtopics=intent.subtopics,
+        audience=intent.audience,
+        publishing_frequency=strategy.publishing_frequency,
+        publishing_mode=strategy.publishing_mode,
     )
 
-
-def _analyze_name(text: str) -> Optional[dict]:
-    """Анализирует текст и возвращает конфигурацию."""
-    # Manga
-    if any(kw in text for kw in ["манга", "manga", "главы", "chapters", "тайтл"]):
-        return {
-            "content_type": "manga",
-            "topic": "new_chapters",
-            "language": "ru",
-            "profile_key": "manga_releases",
-            "confidence": 0.9,
-            "reasoning": "Обнаружены ключевые слова: манга/главы",
-        }
-    # Anime
-    if any(kw in text for kw in ["аниме", "anime", "сериал", "series", "эпизод"]):
-        return {
-            "content_type": "anime",
-            "topic": "news",
-            "language": "ru",
-            "profile_key": "anime_news",
-            "confidence": 0.9,
-            "reasoning": "Обнаружены ключевые слова: аниме/сериал",
-        }
-    # News
-    if any(kw in text for kw in ["новости", "news", "технологии", "tech", "ai", "ии"]):
-        topic = "technology"
-        if any(kw in text for kw in ["бизнес", "business", "стартап"]):
-            topic = "business"
-        elif any(kw in text for kw in ["игры", "games", "gaming"]):
-            topic = "gaming"
-        return {
-            "content_type": "news",
-            "topic": topic,
-            "language": "ru",
-            "profile_key": "ai_news",
-            "confidence": 0.85,
-            "reasoning": f"Обнаружены ключевые слова: новости/tech, тема: {topic}",
-        }
-    return None
-
-
-# ---------------------------------------------------------------------------
-# 2. VALIDATE
-# ---------------------------------------------------------------------------
 
 @router.post("/validate", response_model=WizardValidateResponse)
 async def validate_wizard_config(req: WizardConfigRequest):
