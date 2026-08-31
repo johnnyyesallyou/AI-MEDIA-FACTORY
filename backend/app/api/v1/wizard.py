@@ -210,8 +210,11 @@ async def create_channel_from_wizard(
         vk_access_token=req.vk_access_token,
     )
 
+    logger.info(f"BEFORE db.add: content_profile={content_profile}")
     db.add(channel)
+    logger.info(f"AFTER db.add: channel.content_profile={channel.content_profile}")
     db.flush()
+    logger.info(f"AFTER flush: channel.content_profile={channel.content_profile}")
 
     schedule = ChannelScheduleORM(
         channel_id=channel.id,

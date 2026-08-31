@@ -90,6 +90,7 @@ class ChannelResponse(BaseModel):
     sources: List[KnowledgeSource]
     created_at: datetime
     updated_at: datetime
+    content_profile: Optional[dict] = None
 
 class ChannelListResponse(BaseModel):
     '''Список каналов для Dashboard.'''
