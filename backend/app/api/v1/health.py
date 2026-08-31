@@ -1,11 +1,13 @@
-"""Health Endpoints - Sprint 41.
+"""Health Endpoints - Sprint 41 + Sprint 66.2 (db-pool).
 
 Unified health API для Dashboard и внешних мониторингов.
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
+
 from typing import Optional
 
 from core.health_unified import UnifiedHealthService
+from core.db_metrics import get_pool_stats
 
 
 router = APIRouter(prefix="/api/health", tags=["health"])
@@ -59,3 +61,9 @@ def get_health_summary():
         "components_degraded": status["summary"]["degraded"],
         "components_error": status["summary"]["error"],
     }
+
+
+@router.get("/db-pool")
+async def db_pool_stats():
+    """Sprint 66.2: Connection pool statistics."""
+    return get_pool_stats()
