@@ -4100,3 +4100,50 @@ Time: 3:12 (нормально для 41 теста с сетью/БД)
 
 ---
 
+
+---
+
+## Sprint 65-70: Phase 4 — Intelligence & Scale
+
+### Sprint 65: Smart Channel Intelligence (текущий)
+- ChannelIntent + ChannelStrategy + Capability Matching
+- Profile Registry: 7 новых профилей
+- E2E: "Новости автомобилей" → ChannelStrategy
+- (LLM-классификация — в 65.2+)
+
+### Sprint 66: Production Hardening
+- Починить тесты (pytest 69 passed)
+- GitHub Actions CI (ruff + pytest + docker build)
+- Pydantic V2 migration (Config → ConfigDict)
+- Logging standard (structured JSON)
+- Error tracking (PipelineFailure)
+- Health Dashboard
+
+### Sprint 67: Multi-Channel Scaling
+- Channel worker isolation (отдельные очереди)
+- Concurrency control (MAX_GLOBAL_WORKERS=5)
+- Rate limit management (Telegram/Pixabay/Ollama)
+- ChannelRuntimeState (idle/researching/generating/publishing)
+- Job execution history
+
+### Sprint 68: Source Intelligence
+- Source health (success rate, response time)
+- Automatic fallback (A failed → B → C)
+- Source scoring (freshness + reliability + uniqueness)
+- Source discovery (AI предлагает, admin подтверждает)
+
+### Sprint 69: Advanced Content Intelligence
+- Content pattern analysis (+18% engagement для видео)
+- Recommendation engine (предложения, не авто-применение)
+- A/B content experiments
+- Channel Personality (tone/emoji/length/headline)
+
+### Sprint 70: Production Deployment
+- Production Docker (prod vs dev compose)
+- VPS deployment (Nginx + FastAPI + PostgreSQL + Redis)
+- Environment management (secrets без Git)
+- Backup strategy (PostgreSQL daily)
+- Monitoring (Prometheus/Grafana)
+
+---
+
