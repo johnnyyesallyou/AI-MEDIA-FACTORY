@@ -45,6 +45,7 @@ def _to_response(c: ChannelORM) -> ChannelResponse:
         description=c.description,
         # Sprint 11: Multi-platform credentials
         vk_group_id=getattr(c, "vk_group_id", None),
+        content_profile=c.content_profile,
         vk_access_token=getattr(c, "vk_access_token", None),
         youtube_channel_id=getattr(c, "youtube_channel_id", None),
         youtube_api_key=getattr(c, "youtube_api_key", None),
@@ -176,7 +177,8 @@ async def create_channel_from_template(
         sources=channel.sources if channel.sources is not None else [],
         created_at=channel.created_at,
         updated_at=channel.updated_at,
-    )
+
+        content_profile=channel.content_profile)
 
 
 
