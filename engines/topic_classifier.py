@@ -77,9 +77,13 @@ DOMAIN_SYNONYMS: Dict[str, List[str]] = {
     
     # Crypto
     "cryptocurrency": [
-        "крипта", "криптовалюта", "crypto", "cryptocurrency",
-        "биткоин", "bitcoin", "btc", "эфир", "ethereum", "eth",
-        "блокчейн", "blockchain", "defi", "nft", "web3"
+        "крипта", "крипты", "криптовалюта", "криптовалюты", "криптовалют",
+        "crypto", "cryptocurrency", "крипто",
+        "биткоин", "биткоина", "bitcoin", "btc",
+        "эфир", "эфира", "ethereum", "eth",
+        "блокчейн", "блокчейна", "blockchain",
+        "defi", "nft", "web3",
+        "майнинг", "mining", "кошелек", "wallet"
     ],
     
     # Movies
