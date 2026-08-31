@@ -22,3 +22,4 @@ __all__ = [
     "ABTest",
     "ABTestResult",  # Sprint 36
 ]
+from .wizard_intelligence import ChannelIntent, ChannelStrategy, CapabilityDefinition
