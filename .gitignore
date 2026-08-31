@@ -27,3 +27,74 @@ Thumbs.db
 postgres_data/
 # Database backups
 backups/
+
+# =============================================================================
+# Sprint 64: Repository Cleanup additions
+# =============================================================================
+
+# Database files (NEVER commit)
+*.db
+*.sqlite
+*.sqlite3
+data/
+*.db-journal
+*.db-wal
+
+# Log files
+*.log
+logs/
+backend_logs.txt
+build_*.txt
+
+# Backup files
+*.backup
+*_backup.py
+*_old.py
+
+# Local development
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Docker
+docker-compose.override.yml
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Data backup
+data_backup_*/
