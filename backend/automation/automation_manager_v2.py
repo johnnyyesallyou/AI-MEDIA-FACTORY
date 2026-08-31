@@ -30,6 +30,10 @@ from .workflow import WorkflowDefinition, WorkflowStage
 
 logger = logging.getLogger(__name__)
 
+# Sprint 66.3: Task timeout (5 minutes)
+TASK_TIMEOUT = 300  # seconds
+
+
 
 class TaskStatus(Enum):
     PENDING = "pending"
@@ -163,6 +167,20 @@ class AutomationManagerV2:
                 await asyncio.sleep(5)  # Backoff before retry
     
     async def _execute_task(self, task: ChannelTask):
+        """Sprint 66.3: Executes task with timeout protection."""
+        logger.info(f"Executing task {task.task_id} with timeout={TASK_TIMEOUT}s")
+        try:
+            await asyncio.wait_for(
+                self._execute_task_internal(task),
+                timeout=TASK_TIMEOUT
+            )
+        except asyncio.TimeoutError:
+            logger.error(f"Task {task.task_id} timed out after {TASK_TIMEOUT}s")
+            task.status = TaskStatus.FAILED
+            task.error = f"Timeout after {TASK_TIMEOUT}s"
+            task.finished_at = datetime.utcnow()
+
+    async def _execute_task_internal(self, task: ChannelTask):
         """Выполняет задачу для канала."""
         print(f"🔨🔨🔨 EXECUTE_TASK START for {task.task_id} ({task.channel_name})", flush=True)
         task.status = TaskStatus.RUNNING
