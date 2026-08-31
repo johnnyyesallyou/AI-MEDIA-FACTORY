@@ -1,5 +1,0 @@
-=== Импорт EvaluatorJob ===
-✅ Импорт успешен
-\n=== Создание job ===
-✅ Job создан: EvaluatorJob
-\n=== Запуск job.run() ===
