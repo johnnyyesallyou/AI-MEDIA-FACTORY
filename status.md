@@ -4063,3 +4063,40 @@ All passed!
 
 ---
 
+
+---
+
+## Sprint 64 — Repository Cleanup & Architecture Consolidation (ЗАВЕРШЁН)
+
+### Что сделано
+- **Root cleanup**: 170 файлов → 21 файл (entrypoints + docs)
+- **Git hygiene**: удалено 28 артефактов (*.db, *.log, *.backup, *.tmp)
+- **Archiving**: 150 одноразовых .py → scripts/legacy/
+- **Reorganization**:
+  - scripts/diagnostics/ (22 файла)
+  - scripts/maintenance/ (2 файла)
+  - scripts/migrations/legacy/ (12 SQL файлов)
+- **.gitignore hardening**: *.db, *.log, *.zip, *_result.txt, openapi*.json
+- **pytest.ini**: testpaths=tests, norecursedirs=legacy/
+
+### Честный статус тестирования (pytest)
+`
+69 tests collected
+41 passed
+1 failed (test_automation_manager.py::test_run_now_endpoint_is_available)
+27 not run (pytest -x остановил на первом fail)
+Time: 3:12 (нормально для 41 теста с сетью/БД)
+`
+
+### Technical debt (перенесено в Sprint 66)
+- test_automation_manager.py - 1 failing test
+- Pydantic V2 warnings (class Config → ConfigDict)
+- pytest-asyncio mark warnings
+- Pytest-timeout не в requirements.txt
+
+### Commits
+- 09b2910: chore: Repository cleanup and architecture consolidation
+- fed5159: chore(sprint-64.5): finish cleanup - 150 one-off scripts archived
+
+---
+
