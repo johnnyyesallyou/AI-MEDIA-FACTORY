@@ -6,11 +6,10 @@
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, JSON, Index
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
-from core.database import Base
+from core.database import Base, PortableJSONB
 
 
 class MangaTitle(Base):
@@ -21,21 +20,22 @@ class MangaTitle(Base):
     canonical_title = Column(String(500), nullable=False, index=True)
     title_slug = Column(String(500), index=True)
     
+    # Sprint 66.4: Use PortableJSONB for SQLite and PostgreSQL compatibility
     # Все варианты названия: {"ru": "Ван Пис", "en": "One Piece", "ja": "ワンピース"}
-    aliases = Column(JSONB, default=dict)
+    aliases = Column(PortableJSONB, default=dict)
     
     # Связь с внешними источниками: {"remanga": "12345", "mangadex": "abc-123"}
-    external_ids = Column(JSONB, default=dict)
+    external_ids = Column(PortableJSONB, default=dict)
     # Сырые данные из каждого источника (Sprint 26)
-    sources_data = Column(JSONB, default=dict)
+    sources_data = Column(PortableJSONB, default=dict)
     
     description = Column(String, nullable=True)
-    genres = Column(JSONB, default=list)
+    genres = Column(PortableJSONB, default=list)
     cover_url = Column(String, nullable=True)
     cover_asset_id = Column(String, nullable=True)
     
     # Языки доступных глав
-    available_languages = Column(JSONB, default=list)
+    available_languages = Column(PortableJSONB, default=list)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

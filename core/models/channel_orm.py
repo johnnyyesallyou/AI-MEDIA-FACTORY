@@ -1,9 +1,8 @@
 import uuid
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy import Column, String, Boolean, DateTime, JSON, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
 
-from core.database import Base
+from core.database import Base, PortableJSONB
 
 
 class ChannelORM(Base):
@@ -17,9 +16,6 @@ class ChannelORM(Base):
     style_profile = Column(String, default="minimal")
     timezone = Column(String, default="UTC")
     description = Column(String, nullable=True)
-
-    # Sprint 14: Image profile configuration
-    image_profile = Column(JSON, nullable=True, default=dict)
 
     bot_token = Column(String, nullable=True)
     chat_id = Column(String, nullable=True)
@@ -41,8 +37,10 @@ class ChannelORM(Base):
     template_id = Column(String, ForeignKey("channel_templates.id"), nullable=True, index=True)
     profile_id = Column(String, ForeignKey("channel_profiles.id"), nullable=True, index=True)
 
-    sources = Column(JSON, default=list)
-    content_profile = Column(JSONB, nullable=True)
+    # Sprint 66.4: Use PortableJSONB for SQLite and PostgreSQL compatibility
+    sources = Column(PortableJSONB, default=list)
+    content_profile = Column(PortableJSONB, nullable=True)
+    image_profile = Column(PortableJSONB, nullable=True, default=dict)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

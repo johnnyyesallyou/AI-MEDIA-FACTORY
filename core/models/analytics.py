@@ -6,12 +6,12 @@ import uuid
 from datetime import datetime
 from sqlalchemy import (
     Column, String, Integer, ForeignKey, DateTime, Text,
-    JSON, UniqueConstraint, Index
+    UniqueConstraint, Index
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from core.database import Base
+from core.database import Base, PortableJSONB
 
 
 class PostMetric(Base):
@@ -32,14 +32,14 @@ class PostMetric(Base):
     
     # CTR metrics
     link_clicks = Column(Integer, default=0)
-    button_clicks = Column(JSONB, default=dict)
+    button_clicks = Column(PortableJSONB, default=dict)
     
     # Timestamps
     measured_at = Column(DateTime, default=datetime.utcnow, index=True)
     period_hours = Column(Integer, default=24)
     
     # Extra metadata (не 'metadata' - зарезервировано!)
-    extra_metadata = Column(JSONB, default=dict)
+    extra_metadata = Column(PortableJSONB, default=dict)
     
     __table_args__ = (
         UniqueConstraint('content_id', 'measured_at', name='uq_post_metric_time'),
@@ -59,9 +59,9 @@ class ABTest(Base):
     description = Column(Text)
     
     # Test configuration
-    variants = Column(JSONB, nullable=False)  # [{id, name, config}]
-    traffic_split = Column(JSONB, nullable=False)  # {variant_id: percentage}
-    scope = Column(JSONB, default=dict)  # {channel_ids: [...], content_type: 'news'}
+    variants = Column(PortableJSONB, nullable=False)  # [{id, name, config}]
+    traffic_split = Column(PortableJSONB, nullable=False)  # {variant_id: percentage}
+    scope = Column(PortableJSONB, default=dict)  # {channel_ids: [...], content_type: 'news'}
     
     # Status
     status = Column(String(50), default="draft")  # draft, running, completed

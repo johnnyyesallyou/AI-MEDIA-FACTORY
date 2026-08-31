@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
@@ -213,8 +213,7 @@ class ChannelProfileResponse(ChannelProfileBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============ SPRINT 8.2: CHANNEL TEMPLATES ============
@@ -282,8 +281,7 @@ class ChannelTemplateResponse(ChannelTemplateBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ApplyTemplateRequest(BaseModel):

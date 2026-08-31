@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from core.database import get_db
 from core.models.post_history_orm import PostHistoryORM, ChannelLearningsORM
@@ -47,8 +47,7 @@ class PostHistoryResponse(BaseModel):
     message_id: Optional[str]
     posted_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ChannelMetricsResponse(BaseModel):

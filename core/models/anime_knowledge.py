@@ -6,11 +6,10 @@
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, JSON, Index
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
-from core.database import Base
+from core.database import Base, PortableJSONB
 
 
 class AnimeTitle(Base):
@@ -24,17 +23,18 @@ class AnimeTitle(Base):
     title_native = Column(String(500))
     title_slug = Column(String(500), index=True)
 
+    # Sprint 66.4: Use PortableJSONB for SQLite and PostgreSQL compatibility
     # Все варианты названия: {"ja": "ワンピース", "en": "One Piece", "romaji": "ONE PIECE"}
-    aliases = Column(JSONB, default=dict)
+    aliases = Column(PortableJSONB, default=dict)
 
     # Связь с внешними источниками: {"anilist": "21", "mal": "21"}
-    external_ids = Column(JSONB, default=dict)
+    external_ids = Column(PortableJSONB, default=dict)
     
     # Данные из разных источников (для cross-source enrichment)
-    sources_data = Column(JSONB, default=dict)
+    sources_data = Column(PortableJSONB, default=dict)
 
     description = Column(String, nullable=True)
-    genres = Column(JSONB, default=list)
+    genres = Column(PortableJSONB, default=list)
     cover_url = Column(String, nullable=True)
 
     # Статус и сезон
