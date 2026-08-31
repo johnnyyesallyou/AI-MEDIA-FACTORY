@@ -98,3 +98,12 @@ frontend/.env.local
 
 # Data backup
 data_backup_*/
+
+# Sprint 64.5 finish
+openapi.json
+openapi_schema.json
+*.zip
+*.tmp
+pytest_output.txt
+*_result.txt
+url.txt
