@@ -29,7 +29,8 @@ DOMAIN_SYNONYMS: Dict[str, List[str]] = {
         "автомобили", "авто", "cars", "car", "automotive",
         "машина", "машины", "автопром", "tesla", "тесла",
         "электромобили", "electric cars", "bmw", "mercedes",
-        "audi", "toyota", "обзор", "review", "тест-драйв", "test drive"
+        "audi", "toyota", "тест-драйв", "test drive",
+        "авто новости", "car news", "automotive news"
     ],
     
     # Science
@@ -43,9 +44,10 @@ DOMAIN_SYNONYMS: Dict[str, List[str]] = {
     # Gaming
     "gaming": [
         "игры", "games", "gaming", "гейминг",
-        "видеоигры", "video games", "консоль", "console",
-        "playstation", "xbox", "nintendo", "steam",
-        "pc gaming", "esports", "киберспорт"
+        "видеоигры", "video games", "видеоигр", "игра",
+        "консоль", "console", "playstation", "xbox", "nintendo", "steam",
+        "pc gaming", "esports", "киберспорт", "cybersport",
+        "геймер", "gamer", "игровой", "игровые"
     ],
     
     # Business
@@ -132,7 +134,16 @@ def classify_intent(description: str, name: str = "") -> ChannelIntent:
     
     # Best domain
     best_domain = max(domain_scores, key=domain_scores.get)
-    confidence = min(domain_scores[best_domain] / 3.0, 1.0)
+    best_score = domain_scores[best_domain]
+    
+    # Confidence: учитываем уникальность matches
+    # Если много общих слов (news, информация) - снижаем confidence
+    unique_keywords = sum(1 for domain in domain_scores if domain_scores[domain] == best_score)
+    if unique_keywords > 1:
+        # Несколько domains с одинаковым score - снижаем confidence
+        confidence = min(best_score / 4.0, 0.7)
+    else:
+        confidence = min(best_score / 2.0, 1.0)
     
     # Topic scoring (for best domain)
     topic_scores = {}
