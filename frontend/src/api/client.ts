@@ -177,6 +177,8 @@ export const channelControlAPI = {
   start: (channelId: string) => apiClient.post(`/channels/${channelId}/start`),
   pause: (channelId: string) => apiClient.post(`/channels/${channelId}/pause`),
   status: (channelId: string) => apiClient.get(`/channels/${channelId}/status`),
+  setPublishingMode: (channelId: string, mode: string) => apiClient.post(`/channels/${channelId}/publishing-mode?mode=${mode}`),
+  getPublishingMode: (channelId: string) => apiClient.get(`/channels/${channelId}/publishing-mode`),
 };
 
 export default apiClient;

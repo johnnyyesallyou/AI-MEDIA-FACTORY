@@ -2,6 +2,7 @@
 import { channelsAPI, automationAPI, channelControlAPI } from '../api/client';
 import { Plus, Radio, Globe, Type, Settings, Trash2, Edit2, MessageCircle, CheckCircle, XCircle, Clock, Play, Pause, BarChart3 } from 'lucide-react';
 import ChannelManager from '../components/ChannelManager';
+import PublishingModeSelector from '../components/PublishingModeSelector';
 
 interface Channel {
   id: string;
@@ -22,6 +23,7 @@ interface Channel {
   telegram_bot_token?: string;
   telegram_chat_id?: string;
   sources: any[];
+  content_profile?: any;
 }
 
 const Channels: React.FC = () => {
@@ -363,6 +365,12 @@ const loadAllSchedules = async (chs: any[]) => {
                     </div>
                     <div className="text-gray-400">
                       Стиль: {channel.style_profile}
+                    </div>
+                    <div className="col-span-2 md:col-span-3 mt-2 pt-2 border-t border-gray-700">
+                      <PublishingModeSelector
+                        channelId={channel.id}
+                        currentMode={channel.content_profile?.publishing_mode || 'approval_required'}
+                      />
                     </div>
                   </div>
 
