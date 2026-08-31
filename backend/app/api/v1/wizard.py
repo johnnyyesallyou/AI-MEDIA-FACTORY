@@ -60,6 +60,8 @@ class WizardConfigRequest(BaseModel):
     schedule_cron: str = "*/30 * * * *"
     job_type: Optional[str] = None
 
+    publishing_mode: Optional[str] = None
+    publishing_frequency: Optional[str] = None
 
 class WizardValidateResponse(BaseModel):
     valid: bool
@@ -186,6 +188,12 @@ async def create_channel_from_wizard(
         "schedule": req.config.schedule_cron,
     }
 
+    # Sprint 65.4: persist publishing settings in content_profile
+    if req.config.publishing_mode:
+        content_profile["publishing_mode"] = req.config.publishing_mode
+    if req.config.publishing_frequency:
+        content_profile["publishing_frequency"] = req.config.publishing_frequency
+
     channel = ChannelORM(
         id=str(uuid.uuid4()),
         name=req.name,
@@ -201,6 +209,7 @@ async def create_channel_from_wizard(
         vk_group_id=req.vk_group_id,
         vk_access_token=req.vk_access_token,
     )
+
     db.add(channel)
     db.flush()
 

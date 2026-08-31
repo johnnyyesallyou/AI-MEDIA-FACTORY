@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import StrategyPreview from './StrategyPreview';
 import { Wand2, CheckCircle, AlertCircle, Loader2, ArrowLeft, Sparkles } from 'lucide-react';
 import { wizardAPI } from '../api/client';
 
@@ -9,6 +10,7 @@ export default function ChannelWizard() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [suggestion, setSuggestion] = useState<any>(null);
+  const [editableConfig, setEditableConfig] = useState<any>(null);
   const [validation, setValidation] = useState<any>(null);
   const [created, setCreated] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -20,6 +22,7 @@ export default function ChannelWizard() {
       setError(null);
       const { data } = await wizardAPI.suggest({ name, description });
       setSuggestion(data);
+      setEditableConfig(data);
       setStep('suggest');
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message);
@@ -28,17 +31,20 @@ export default function ChannelWizard() {
     }
   };
 
-  const handleValidate = async () => {
-    if (!suggestion) return;
+  const handleValidate = async (configOverride?: any) => {
+    const cfg = configOverride || editableConfig || suggestion;
+    if (!cfg) return;
     try {
       setLoading(true);
       setError(null);
       const config = {
-        content_type: suggestion.content_type,
-        topic: suggestion.topic,
-        language: suggestion.language,
-        profile_key: suggestion.profile_key,
-        sources: suggestion.sources,
+        content_type: cfg.content_type,
+        topic: cfg.topic,
+        language: cfg.language,
+        profile_key: cfg.profile_key,
+        sources: cfg.sources,
+        publishing_mode: cfg.publishing_mode,
+        publishing_frequency: cfg.publishing_frequency,
       };
       const { data } = await wizardAPI.validate(config);
       setValidation(data);
@@ -51,7 +57,8 @@ export default function ChannelWizard() {
   };
 
   const handleCreate = async () => {
-    if (!suggestion) return;
+    const cfg = editableConfig || suggestion;
+    if (!cfg) return;
     try {
       setLoading(true);
       setError(null);
@@ -59,11 +66,13 @@ export default function ChannelWizard() {
       const { data } = await wizardAPI.create({
         name,
         config: {
-          content_type: suggestion.content_type,
-          topic: suggestion.topic,
-          language: suggestion.language,
-          profile_key: suggestion.profile_key,
-          sources: suggestion.sources,
+          content_type: cfg.content_type,
+          topic: cfg.topic,
+          language: cfg.language,
+          profile_key: cfg.profile_key,
+          sources: cfg.sources,
+          publishing_mode: cfg.publishing_mode,
+          publishing_frequency: cfg.publishing_frequency,
         },
       });
       setCreated(data);
@@ -160,37 +169,20 @@ export default function ChannelWizard() {
         </div>
       )}
 
-      {/* Suggest step */}
-      {step === 'suggest' && suggestion && (
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h2 className="text-xl font-semibold text-white mb-4">Suggested Configuration</h2>
-          <div className="space-y-2 mb-4">
-            <InfoRow label="Content Type" value={suggestion.content_type} />
-            <InfoRow label="Topic" value={suggestion.topic} />
-            <InfoRow label="Profile" value={suggestion.profile_key} />
-            <InfoRow label="Sources" value={suggestion.sources.join(', ')} />
-            <InfoRow label="Confidence" value={`${(suggestion.confidence * 100).toFixed(0)}%`} color="green" />
-          </div>
-          <div className="mb-6 p-4 bg-blue-900/20 border border-blue-800 rounded-lg">
-            <p className="text-sm text-blue-200">{suggestion.reasoning}</p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setStep('input')}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-            <button
-              onClick={handleValidate}
-              disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-700"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-              Validate
-            </button>
-          </div>
-        </div>
+      {/* Suggest step — StrategyPreview */}
+      {step === 'suggest' && editableConfig && (
+        <StrategyPreview
+          suggestion={editableConfig}
+          onConfirm={(config) => {
+            setEditableConfig(config);
+            handleValidate(config);
+          }}
+          onCancel={() => {
+            setStep('input');
+            setSuggestion(null);
+            setEditableConfig(null);
+          }}
+        />
       )}
 
       {/* Validate step */}
