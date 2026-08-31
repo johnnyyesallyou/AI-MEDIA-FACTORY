@@ -143,3 +143,13 @@ def resolve_channel_profile(channel) -> Dict[str, Any]:
     merged = _deep_merge(merged, stored)
     merged["profile_key"] = key
     return merged
+
+# ---------------------------------------------------------------------------
+# Sprint 65.3: регистрируем расширенные профили Smart Wizard
+# ---------------------------------------------------------------------------
+try:
+    from engines.extended_profiles import NEW_PROFILES as _NEW_PROFILES
+    for _k, _v in _NEW_PROFILES.items():
+        PROFILES.setdefault(_k, _v)
+except Exception:  # pragma: no cover
+    pass
