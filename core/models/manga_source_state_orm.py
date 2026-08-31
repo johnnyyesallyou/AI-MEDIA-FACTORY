@@ -1,10 +1,9 @@
-﻿"""Manga Source State - tracks last seen chapters per title per source."""
+"""Manga Source State - tracks last seen chapters per title per source."""
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime, Integer, Text, UniqueConstraint, Index
-from sqlalchemy.dialects.postgresql import JSONB
 
-from core.database import Base
+from core.database import Base, PortableJSONB
 
 
 class MangaSourceStateORM(Base):
@@ -50,8 +49,9 @@ class MangaSourceStateORM(Base):
     # Statistics
     total_chapters_seen = Column(Integer, default=1)
     
+    # Sprint 66.4: Use PortableJSONB for SQLite and PostgreSQL compatibility
     # Extra metadata (JSONB)
-    extra_data = Column(JSONB, nullable=True, default=dict)
+    extra_data = Column(PortableJSONB, nullable=True, default=dict)
     
     def __repr__(self):
         return f"<MangaSourceState(source={self.source}, title={self.title_name}, chapter={self.last_chapter_number})>"
