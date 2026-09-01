@@ -2,7 +2,7 @@
 
 > Last updated: 2026-09-01
 > Current Phase: **PHASE 3 — Smart Channel Creation**
-> Current Sprint: **Sprint 68 (Smart Wizard)**
+> Current Sprint: **Sprint 69 (10 Channel Pilot — Days 2-3)**
 
 ---
 
@@ -140,9 +140,9 @@ f5aee4a Sprint 66.1-66.2: Connection pool hardening + monitoring
 
 ## 🎯 Next 3 Steps
 
-1. **Sprint 68.1** — Theme Classification (LLM анализирует "Хочу канал про X")
-2. **Sprint 68.2** — Strategy Suggestion (AI предлагает archetype/tone/frequency/mode)
-3. **Sprint 68.3** — Source Recommendation + Risk Classification
+1. **Sprint 69.6** — Monitoring & Guardrails (deduplication, rate limits, scheduler safety)
+2. **Sprint 69.7** — Controlled Launch (1-3 posts/day/channel for Days 4-10)
+3. **Sprint 69.8** — Approval Queue UI (для approval_required каналов)
 
 **PHASE 3 goal:** User writes "Хочу канал про котов" → AI → profile → sources → ready to publish
 
