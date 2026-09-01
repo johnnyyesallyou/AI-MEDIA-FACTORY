@@ -53,6 +53,11 @@ async def run_universal_pipeline(
             detail=f"No strategies for archetype: {archetype.value}"
         )
     
+    # Sprint 69.3 fix: стратегии читают RSS из channel.content_profile,
+    # но получают profile (ChannelProfileORM). Пробрасываем content_profile.
+    if channel.content_profile and not getattr(profile, 'content_profile', None):
+        profile.content_profile = channel.content_profile
+
     pipeline = UniversalContentPipeline(channel=channel, profile=profile)
     pipeline.set_strategy("research", strategies.research(profile))
     pipeline.set_strategy("generation", strategies.generation(profile))
