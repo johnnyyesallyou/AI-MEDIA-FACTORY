@@ -1,0 +1,20 @@
+name: releases
+display_name: Releases Channel
+archetype: releases
+description: New releases - manga, anime, movies, games
+language: ru
+tone: informative
+content:
+  formats: [release_announcement, preview]
+  max_length: 800
+research:
+  freshness_hours: 24
+  sources: [rss, web]
+media:
+  preferred: [image, video]
+  fallback: []
+publishing:
+  frequency_per_day: 4
+  mode: auto
+learning:
+  enabled: true

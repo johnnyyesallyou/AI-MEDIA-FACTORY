@@ -1,0 +1,20 @@
+name: reviews
+display_name: Reviews Channel
+archetype: reviews
+description: Reviews and analysis
+language: ru
+tone: analytical
+content:
+  formats: [review, analysis, opinion]
+  max_length: 1800
+research:
+  freshness_hours: 48
+  sources: [web]
+media:
+  preferred: [image]
+  fallback: [none]
+publishing:
+  frequency_per_day: 2
+  mode: approval_required
+learning:
+  enabled: true

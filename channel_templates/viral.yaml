@@ -1,0 +1,20 @@
+name: viral
+display_name: Viral Channel
+archetype: viral
+description: Memes and trending content
+language: ru
+tone: humorous
+content:
+  formats: [memes, trending, viral_posts]
+  max_length: 400
+research:
+  freshness_hours: 6
+  sources: [web]
+media:
+  preferred: [image]
+  fallback: []
+publishing:
+  frequency_per_day: 8
+  mode: auto
+learning:
+  enabled: true

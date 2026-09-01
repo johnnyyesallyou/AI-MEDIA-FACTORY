@@ -1,0 +1,20 @@
+name: community
+display_name: Community Channel
+archetype: community
+description: Discussion, polls, user content
+language: ru
+tone: casual
+content:
+  formats: [discussion, poll]
+  max_length: 1000
+research:
+  freshness_hours: 24
+  sources: [web]
+media:
+  preferred: [image]
+  fallback: []
+publishing:
+  frequency_per_day: 4
+  mode: approval_required
+learning:
+  enabled: true
