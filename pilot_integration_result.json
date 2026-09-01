@@ -1,0 +1,78 @@
+{
+  "total_channels": 10,
+  "created": 10,
+  "failed": 0,
+  "smoke_ok": 10,
+  "results": [
+    {
+      "title": "Anime News Daily",
+      "status": "OK",
+      "profile_id": "42f342c0-a3ee-47ef-80e0-3880858515f5",
+      "channel_id": "ac6d1daf-6e73-4789-85d2-fc858a4e0eb1",
+      "mode": "auto"
+    },
+    {
+      "title": "Manga Releases Tracker",
+      "status": "OK",
+      "profile_id": "a2ba406f-ee80-4cb1-8ac9-2c1d8cadc691",
+      "channel_id": "c0ddc7aa-ef76-4065-8791-d8f69530aebd",
+      "mode": "approval_required"
+    },
+    {
+      "title": "Gaming News Hub",
+      "status": "OK",
+      "profile_id": "2285aec2-afd8-45c2-8da6-9a3275751171",
+      "channel_id": "de8b315a-d540-4205-baba-476d2cf50e19",
+      "mode": "approval_required"
+    },
+    {
+      "title": "Movie & Series News",
+      "status": "OK",
+      "profile_id": "11c40543-b765-4d61-ab5c-b4c518924391",
+      "channel_id": "05e56e1c-79fb-4330-8df3-9d2443b4895f",
+      "mode": "approval_required"
+    },
+    {
+      "title": "AI News Daily",
+      "status": "OK",
+      "profile_id": "1b9671b6-ddea-4a7d-8148-fd431ffd661d",
+      "channel_id": "1443b761-5fb4-44ed-82ae-78cccf6d2bef",
+      "mode": "approval_required"
+    },
+    {
+      "title": "Tech News Today",
+      "status": "OK",
+      "profile_id": "e35ac083-7201-46d8-a23d-4af5bedb5cb2",
+      "channel_id": "0663cf33-0a96-4cbe-97f3-0a14c7837172",
+      "mode": "auto"
+    },
+    {
+      "title": "Space & Science Daily",
+      "status": "OK",
+      "profile_id": "80c7e316-20dc-4ba4-b4fd-cb5fb5ef5990",
+      "channel_id": "e4902a88-e163-40af-82b0-08dc2126fd22",
+      "mode": "approval_required"
+    },
+    {
+      "title": "Science Facts",
+      "status": "OK",
+      "profile_id": "c6ba3f06-0938-44e0-8218-c460a54caa58",
+      "channel_id": "e4480741-0f82-43f2-bf0a-ebbd05b44a79",
+      "mode": "approval_required"
+    },
+    {
+      "title": "Auto News Daily",
+      "status": "OK",
+      "profile_id": "279bff68-d284-452c-b3e0-969d3bafda7c",
+      "channel_id": "386e9d2e-3625-444c-b760-9e09f346b281",
+      "mode": "approval_required"
+    },
+    {
+      "title": "Entertainment Memes",
+      "status": "OK",
+      "profile_id": "deabcdcd-9186-4eb2-9ff9-75fb247eceee",
+      "channel_id": "909e7665-d8bf-4eb1-90eb-0554cba50c90",
+      "mode": "manual"
+    }
+  ]
+}
