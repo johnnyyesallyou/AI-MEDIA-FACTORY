@@ -1,5 +1,6 @@
 """Sprint 69.5: TelegramPublisher — реальная отправка сообщений в Telegram."""
 import logging
+import asyncio
 import requests
 from typing import Dict, Any, Optional
 
@@ -25,6 +26,9 @@ class TelegramPublisher:
         Returns:
             {"success": bool, "message_id": int, "error": str}
         """
+        # Sprint 69.6: rate limit — минимум 1 секунда между сообщениями
+        await asyncio.sleep(1.0)
+        
         try:
             payload = {
                 "chat_id": self.chat_id,

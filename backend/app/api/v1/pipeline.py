@@ -10,6 +10,7 @@ from core.models.channel_profile_orm import ChannelProfileORM
 from core.models.archetypes import Archetype
 from backend.engines.universal_pipeline import UniversalContentPipeline
 from backend.engines.strategy_registry import get_strategies
+from backend.engines.pipeline_lock import pipeline_lock
 import backend.engines.register_all  # Автоматическая регистрация News strategies
 
 router = APIRouter(prefix="/pipeline", tags=["pipeline"])
@@ -67,7 +68,9 @@ async def run_universal_pipeline(
     if not getattr(profile, 'channel_id', None):
         profile.channel_id = channel.id
 
-    pipeline = UniversalContentPipeline(channel=channel, profile=profile)
+    with pipeline_lock(channel.id):
+
+        pipeline = UniversalContentPipeline(channel=channel, profile=profile)
     pipeline.set_strategy("research", strategies.research(profile))
     pipeline.set_strategy("generation", strategies.generation(profile))
     pipeline.set_strategy("media", strategies.media(profile))
