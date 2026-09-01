@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Sprint 66.3: Test Automation Manager Endpoints
 
