@@ -2,6 +2,7 @@
 
 API для работы с историей постов и генерацией.
 """
+from backend.core.rate_limiter import rate_limit_call
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -65,6 +66,7 @@ class ChannelMetricsResponse(BaseModel):
 # Endpoints
 # ---------------------------------------------------------------------------
 
+@rate_limit_call("post_generate", timeout=120.0)
 @router.post("/generate/{channel_id}", response_model=PostGenerateResponse)
 async def generate_post_for_channel(
     channel_id: str,
@@ -218,6 +220,7 @@ async def get_channel_learnings(
         for l in learnings
     ]
 
+@rate_limit_call("post_publish", timeout=30.0)
 @router.post("/publish/{content_id}")
 async def publish_generated_post(content_id: str, db: Session = Depends(get_db)):
     """

@@ -15,12 +15,17 @@ import sys
 import os
 from pathlib import Path
 from datetime import datetime
-from pythonjsonlogger import jsonlogger
+try:
+    from pythonjsonlogger import jsonlogger
+    _HAS_JSON_LOGGER = True
+except ImportError:
+    jsonlogger = None
+    _HAS_JSON_LOGGER = False
 from typing import Dict, Any
 import traceback
 
 
-class StructuredFormatter(jsonlogger.JsonFormatter):
+class StructuredFormatter((jsonlogger.JsonFormatter if _HAS_JSON_LOGGER else logging.Formatter)):
     """Custom JSON formatter that adds context and structured fields"""
 
     def add_fields(self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]) -> None:

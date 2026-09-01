@@ -1,4 +1,5 @@
 ﻿import uuid
+from backend.core.rate_limiter import rate_limit_call
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from core.repositories.channel_repository import ChannelRepository
 from core.database import get_db, SessionLocal
@@ -53,6 +54,7 @@ async def stop_automation():
     print(f"=== STOP result: {result} ===", flush=True)
     return AutomationStopResponse(status=result["status"], enabled=result["enabled"])
 
+@rate_limit_call("automation_run_now", timeout=30.0)
 @router.post("/run-now", response_model=AutomationRunNowResponse)
 async def run_automation_now(background_tasks: BackgroundTasks):
     execution_id = str(uuid.uuid4())
