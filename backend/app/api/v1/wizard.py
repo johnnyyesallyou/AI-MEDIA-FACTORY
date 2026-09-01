@@ -9,6 +9,7 @@ import logging
 from typing import List, Optional
 from backend.core.rate_limiter import rate_limit_call
 from backend.engines.theme_classifier import ThemeClassifier
+from backend.engines.strategy_suggestor import StrategySuggestor
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -254,6 +255,7 @@ def _infer_job_type(content_type: str) -> str:
 
 # Sprint 68.1: LLM-based theme classification (аддитивно, старые endpoint'ы нетронуты)
 _classifier = ThemeClassifier()
+_suggestor = StrategySuggestor()
 
 
 class AnalyzeRequest(BaseModel):
@@ -268,6 +270,12 @@ class AnalyzeResponse(BaseModel):
     risk_level: str
     suggested_template: str
     publishing_mode: str
+    # Sprint 68.2: strategy suggestion
+    frequency_per_day: int = 4
+    content_formats: list = []
+    media_policy: str = "image"
+    max_post_length: int = 1200
+    research_sources: list = []
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -286,6 +294,10 @@ async def wizard_analyze(req: AnalyzeRequest):
     }
     risk_to_mode = {"low": "auto", "medium": "approval_required", "high": "approval_required"}
 
+    # Sprint 68.2: добавляем strategy suggestion
+    r["publishing_mode"] = risk_to_mode.get(r["risk_level"], "approval_required")
+    strategy = _suggestor.suggest(r)
+
     return AnalyzeResponse(
         theme=r["theme"],
         niche=r["niche"],
@@ -293,5 +305,10 @@ async def wizard_analyze(req: AnalyzeRequest):
         tone=r["tone"],
         risk_level=r["risk_level"],
         suggested_template=archetype_to_template.get(r["archetype"], "news"),
-        publishing_mode=risk_to_mode.get(r["risk_level"], "approval_required"),
+        publishing_mode=r["publishing_mode"],
+        frequency_per_day=strategy["frequency_per_day"],
+        content_formats=strategy["content_formats"],
+        media_policy=strategy["media_policy"],
+        max_post_length=strategy["max_post_length"],
+        research_sources=strategy["research_sources"],
     )
