@@ -57,6 +57,15 @@ async def run_universal_pipeline(
     # но получают profile (ChannelProfileORM). Пробрасываем content_profile.
     if channel.content_profile and not getattr(profile, 'content_profile', None):
         profile.content_profile = channel.content_profile
+    
+    # Sprint 69.5: пробрасываем bot_token + chat_id для publishing
+    if channel.bot_token and not getattr(profile, 'bot_token', None):
+        profile.bot_token = channel.bot_token
+    if channel.chat_id and not getattr(profile, 'chat_id', None):
+        profile.chat_id = channel.chat_id
+    # Sprint 69.5 fix: channel_id для привязки контента к каналу
+    if not getattr(profile, 'channel_id', None):
+        profile.channel_id = channel.id
 
     pipeline = UniversalContentPipeline(channel=channel, profile=profile)
     pipeline.set_strategy("research", strategies.research(profile))
