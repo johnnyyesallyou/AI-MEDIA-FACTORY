@@ -1,4 +1,5 @@
 ﻿import logging
+from backend.core.rate_limiter import rate_limit_call
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List
@@ -49,6 +50,7 @@ class GenerateDraftResponse(BaseModel):
     tokens_output: int
 
 
+@rate_limit_call("research_run", timeout=300.0)
 @router.post("/{channel_id}/run-research", response_model=RunResearchResponse)
 async def run_research(channel_id: str, db: Session = Depends(get_db)):
     channel_repo = ChannelRepository(db)

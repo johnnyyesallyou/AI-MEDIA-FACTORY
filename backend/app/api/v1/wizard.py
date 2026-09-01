@@ -7,6 +7,7 @@ POST /wizard/create-from-wizard — создаёт канал с этим кон
 import uuid
 import logging
 from typing import List, Optional
+from backend.core.rate_limiter import rate_limit_call
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -94,6 +95,7 @@ class CreateFromWizardResponse(BaseModel):
 # 1. SUGGEST
 # ---------------------------------------------------------------------------
 
+@rate_limit_call("wizard_suggest", timeout=30.0)
 @router.post("/suggest", response_model=WizardSuggestResponse)
 async def suggest_config(request: WizardSuggestRequest):
     """Sprint 65.2: Smart Wizard — ChannelIntent -> ChannelStrategy.
@@ -138,6 +140,7 @@ async def suggest_config(request: WizardSuggestRequest):
     )
 
 
+@rate_limit_call("wizard_validate", timeout=10.0)
 @router.post("/validate", response_model=WizardValidateResponse)
 async def validate_wizard_config(req: WizardConfigRequest):
     """Валидирует конфиг: profile_key в PROFILES + sources в SourceRegistry."""
@@ -166,6 +169,7 @@ async def validate_wizard_config(req: WizardConfigRequest):
 # 3. CREATE
 # ---------------------------------------------------------------------------
 
+@rate_limit_call("wizard_create", timeout=60.0)
 @router.post("/create-from-wizard", response_model=CreateFromWizardResponse, status_code=201)
 async def create_channel_from_wizard(
     req: CreateFromWizardRequest,
