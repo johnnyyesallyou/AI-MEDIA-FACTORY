@@ -10,7 +10,7 @@ from core.models.channel_profile_orm import ChannelProfileORM
 from core.models.archetypes import Archetype
 from backend.engines.universal_pipeline import UniversalContentPipeline
 from backend.engines.strategy_registry import get_strategies
-import backend.engines.register_news  # Автоматическая регистрация News strategies
+import backend.engines.register_all  # Автоматическая регистрация News strategies
 
 router = APIRouter(prefix="/pipeline", tags=["pipeline"])
 
