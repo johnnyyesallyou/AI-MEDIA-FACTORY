@@ -21,6 +21,7 @@ from .users import router as users_router
 from .settings import router as settings_router
 from .workflows import router as workflows_router
 from .health import router as health_router
+from .failures import router as failures_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -48,5 +49,6 @@ api_v1_router.include_router(users_router)
 api_v1_router.include_router(settings_router)
 api_v1_router.include_router(workflows_router)
 api_v1_router.include_router(health_router)
+api_v1_router.include_router(failures_router)
 
 
