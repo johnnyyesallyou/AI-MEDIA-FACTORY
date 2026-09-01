@@ -1,223 +1,169 @@
-# AI Media Factory — Roadmap
+# 🗺 AI MEDIA FACTORY — PRODUCT ROADMAP
 
-## Текущая фаза: Phase 3 — Productization
-
-**Цель:** превратить AI Media Factory из набора работающих пайплайнов в **продукт**, где пользователь может создать канал за 5 минут и оставить его работать автономно.
-
-**KPI:** *«Могу ли я создать новый канал за несколько минут и оставить его работать автономно?»*
+> Последний обновлён: 2026-09-01
+> Текущий статус: **PHASE 1 — Production Hardening**
+> Следующий шаг: **Sprint 66.5 — Pipeline Failure Tracking**
 
 ---
 
-## 🎯 Phase 3 — Productization (текущая)
+## Текущая точка
 
-### ✅ Sprint 53 — Channel Config + Source Registry (ЗАВЕРШЁН)
+Проект прошёл важный этап. Реализовано:
 
-**Сделано:**
-- ✅ \SourceRegistry\ с 9 self-describing sources
-- ✅ API \/sources/\ (list, filter, validate)
-- ✅ Миграция 4 каналов на новую схему
-- ✅ \lag_modified\ для JSONB tracking
-- ✅ Исправлен Anime channel (RSS → AniList/MAL)
+- ✅ Channel Management → Research → Generation → Media → Draft → Publish → Metrics → Learning Loop
+- ✅ Research Engine, Writing Engine, PromptBuilder, LLMGenerator
+- ✅ PostGenerationService, Media Policy, Telegram + VK Publishers
+- ✅ Channel Wizard, Post Generator UI, Analytics Dashboard, Review Queue
+- ✅ publishing_mode (auto/approval_required/manual)
+- ✅ ChannelContext + Learning Loop
+- ✅ Structured Logging (JSON), PortableJSONB, Pydantic V2
+- ✅ Connection Pool monitoring (size 20, max_overflow 30)
+- ✅ Task timeout (300s) + asyncio.wait_for wrapper
+- ✅ Unit/CI test separation (63/63 unit + 39/39 CI)
+- ✅ Rate Limiting (8 критических POST endpoints)
 
-**Статус:** 🎉 Закрыт
-
----
-
-### ✅ Sprint 54 — Formatter Layer (ЗАВЕРШЁН)
-
-**Проблема:** формат поста захардкожен внутри publish_job-ов
-
-**Что будет создано:**
-- \engines/formatters/base.py\ — \BaseFormatter\ interface
-- \engines/formatters/manga_formatter.py\
-- \engines/formatters/news_formatter.py\
-- \engines/formatters/anime_formatter.py\
-- \engines/formatters/formatter_registry.py\
-- Рефакторинг publish_job-ов на использование formatter-ов
-
-**Результат:**
-- Формат определяется \channel_profile\, а не job-ом
-- Можно добавить новый тип контента без нового job
-- Основа для Sprint 55 (Wizard)
-
-**Статус:** 🚧 В работе
+Сейчас проект находится на переходе:
+WORKING PRODUCT
+↓
+SCALABLE PLATFORM
 
 ---
 
-### ✅ Sprint 55 — Channel Wizard + AI Suggestion (ЗАВЕРШЁН)
+# 🧱 PHASE 1 — PRODUCTION HARDENING
 
-**Что будет создано:**
-- POST \/wizard/suggest\ — AI предлагает config по названию
-- POST \/wizard/validate\ — backend валидирует
-- AI НЕ источник истины, только предложение
-- Frontend: 5-7 step wizard
+## Sprint 66 — Production Hardening
 
-**UI Flow:**
-\\\
-Название: [ Манга — новые главы ]
-    ↓
-AI: "Определил: manga / new_chapters / RU"
-    ↓
-Источники: ☑ ReManga ☑ MangaDex ☑ ReadManga
-    ↓
-Язык: ● Русский
-    ↓
-Формат: preview поста
-    ↓
-Telegram: [ Подключить ]
-    ↓
-[ Создать канал ]
-\\\
+### Цель
+Закрыть технические риски до масштабирования.
 
-**Статус:** 📋 Planned
+### 66.5 — Pipeline Failure Tracking ⏳ **СЛЕДУЮЩИЙ ШАГ**
 
----
+Создаём единый журнал ошибок pipeline.
 
-### ✅ Sprint 56 — One-Click START + Dashboard (ЗАВЕРШЁН)
-
-**Что будет создано:**
-- POST \/channels/{id}/start\ — активирует cron job
-- POST \/channels/{id}/pause\
-- GET \/channels/{id}/status\ — last run, next run, stats
-- Frontend: карточки каналов с метриками
-
-**UI:**
-\\\
-┌──────────────────────────────────┐
-│  Манга — новые главы             │
-│  ● Telegram connected            │
-│  ● 3 sources connected           │
-│  ● Schedule: 30 min              │
-│                                  │
-│  Last research:  17:00           │
-│  Last publish:   17:02           │
-│  Next run:       17:30           │
-│                                  │
-│          [ ▶ START ]             │
-└──────────────────────────────────┘
-\\\
-
-**Статус:** 📋 Planned
-
----
-
-### ✅ Sprint 57 — History + Analytics (ЗАВЕРШЁН)
-
-**Что будет создано:**
-- История постов с метриками
-- "Что работает" на дашборде
-- Analytics Collector (cron каждый час)
-- Таблицы: \post_history\, \post_metrics\, \channel_learnings\
-
-**Статус:** 📋 Planned
-
----
-
-### ✅ Sprint 58 — Learning Loop (ЗАВЕРШЁН) — Learning Loop UI
-
-**Что будет создано:**
-- Post performance → Analytics → Learning → Recommendation
-- "Посты с коротким описанием получают +27% просмотров"
-- Система предлагает изменение → пользователь подтверждает
-
-**Статус:** 📋 Planned
-
----
-
-### 📋 Sprint 59 — AI Channel Creator
-
-**Что будет создано:**
-- "Создай канал по описанию" → LLM генерирует config proposal
-- Пользователь подтверждает → канал создан
-
-**Статус:** 📋 Planned
-
----
-
-## 🚀 Phase 4 — Expansion (после Phase 3)
-
-### Sprint 60+ — Video Manager
-- Pexels API (бесплатное видео)
-- Runway ML (генерация, платная)
-- Fallback: видео → изображение
-
-### Sprint 61+ — Dzen Publisher
-- Dzen API интеграция
-- Публикация видео + статей
-
-### Sprint 62+ — YouTube
-- YouTube API
-- Публикация Shorts
-
-### Sprint 63+ — Новые источники
-- Дополнительные manga/anime/news источники
-- Custom RSS (UI для добавления)
-
-### Sprint 64+ — Новые AI capabilities
-- Image generation (DALL-E, Stable Diffusion)
-- Video generation (Sora, Pika Labs)
-- Voice generation
-
----
-
-## 📊 Progress Tracking
-
-| Sprint | Status | Start | End | Commits |
-|--------|--------|-------|-----|---------|
-| 46.1A-47 | ✅ Done | - | - | Foundation |
-| 48 | ✅ Done | - | - | JobFactory |
-| 49 | ✅ Done | - | - | Conditional Status |
-| 50 | ✅ Done | - | - | PostMetric |
-| 51 | ✅ Done | - | - | Rich Posts |
-| 52 | ✅ Done | - | - | Channel Cleanup |
-| 52B | ✅ Done | - | - | News Pipeline |
-| 52C | ✅ Done | - | - | RU Translation |
-| **53** | ✅ **Done** | 2026-08-27 | 2026-08-27 | a57f56b |
-| **54** | ✅ **Done** | 2026-08-27 | 2026-08-27 | 36b350c |
-| **55** | ✅ **Done** | 2026-08-27 | 2026-08-27 | (wizard) |
-| **56** | 🚧 **In Progress** | 2026-08-27 | - | - |
-| 55 | 📋 Planned | - | - | - |
-| 56 | 📋 Planned | - | - | - |
-| 57 | 📋 Planned | - | - | - |
-| 58 | 📋 Planned | - | - | - |
-| 59 | 📋 Planned | - | - | - |
-
----
-
-## 🔥 Current Focus
-
-**Sprint 54 — Formatter Layer**
-
-Это самый важный архитектурный рефакторинг Phase 3. Без него:
-- ❌ Нельзя добавить новый тип контента без нового job
-- ❌ Wizard не сможет создавать каналы с разными форматами
-- ❌ Дублирование кода в publish_job-ах
-
-После Sprint 54:
-- ✅ Формат определяется \channel_profile\
-- ✅ Новые типы контента = новые formatter-ы
-- ✅ Основа для Sprint 55 (Wizard) готова
-
----
-
-## 🚫 Freeze List (не трогаем до Phase 4)
-
-- ❌ Video Manager (Runway ML, Sora)
-- ❌ Dzen Publisher
-- ❌ YouTube
-- ❌ Новые manga/anime/news источники
-- ❌ Image generation (DALL-E, Stable Diffusion)
-- ❌ Voice generation
-- ❌ Сложный A/B testing
-- ❌ Дополнительные enrichment-механизмы
-
-**Почему?** Потому что они **не являются узким местом сейчас**. Узкое место = **productization** (Wizard, One-Click START, Dashboard).
-
----
-
-## 📚 Documentation
-
-- \status.md\ — detailed project status
-- \ARCHITECTURE.md\ — current architecture + principles
-- \ROADMAP.md\ — this file
-- \README.md\ — installation + usage (to be updated)
+**Таблица `pipeline_failures`:**
+```sql
+id, channel_id, task_id, pipeline, job, 
+error_type, error_message, attempt, created_at
+Типы ошибок: timeout, exception, rate_limit, network, validation, llm_error, media_error, publish_error, unknown
+Архитектура:
+Pipeline → Job → Exception/Timeout → PipelineFailure → Database → API → Monitoring
+Зачем: При 50 каналах невозможно читать Docker logs. Нужно видеть какие каналы падают, какие jobs, как часто и почему.
+66.6 — Async Tests Stabilization
+Разделить тесты: unit / integration / requires_llm / slow
+Убрать зависания в Automation Manager, Worker lifecycle, Task cancellation
+CI: pytest -m "not integration"
+Локально: pytest -m integration
+66.7 — GitHub Actions CI
+Минимальный pipeline:
+git push → Install dependencies → Ruff → Pytest (unit) → CI tests → Result
+Позже: security scan, docker build, deployment
+Результат Sprint 66
+✅ Errors tracked
+✅ Async tests stable
+✅ CI on every push
+✅ Unit tests without Docker
+✅ Integration tests isolated
+✅ Structured logs
+✅ Timeout protection
+🚀 PHASE 2 — CHANNEL SCALING ARCHITECTURE
+Sprint 67 — Channel Profiles & Universal Pipeline
+Цель: Перестать строить отдельную систему под каждую тему.
+67.1 — Channel Archetypes
+Ограниченный набор: news, releases, educational, entertainment, viral, reviews, community, aggregator
+67.2 — Channel Profile
+YAML-конфигурация: theme, niche, archetype, audience, language, tone, content, research, media, publishing, learning
+67.3 — Universal Pipeline
+UniversalContentPipeline вместо AnimePipeline/MangaPipeline/NewsPipeline
+67.4 — Strategy Registry
+CONTENT_STRATEGIES = {
+    "news": NewsStrategy,
+    "educational": EducationalStrategy,
+    "viral": ViralStrategy,
+    "reviews": ReviewStrategy,
+}
+67.5 — Channel Templates
+Библиотека: channel_templates/news.yaml, releases.yaml, educational.yaml, viral.yaml, reviews.yaml, community.yaml
+🧠 PHASE 3 — SMART CHANNEL CREATION
+Sprint 68 — Smart Wizard
+Цель: Пользователь описывает канал обычным языком.
+68.1 — Theme Classification
+LLM определяет: theme, niche, archetype, risk_level
+68.2 — Strategy Suggestion
+AI предлагает: content strategy, tone, frequency, media, publishing mode
+68.3 — Source Recommendation
+AI предлагает источники по теме (RSS, web, Reddit, publishers)
+68.4 — Risk Classification
+Low Risk (Anime, Gaming, Movies, Memes) → auto
+Medium Risk (Business, Tech, Science, History) → approval_required
+High Risk (Finance, Crypto, Medicine, Nutrition) → manual
+🌐 PHASE 4 — PILOT NETWORK
+Sprint 69 — 10 Channel Pilot
+Pilot Network (10 каналов):
+Entertainment: Anime News, Manga Releases, Gaming News, Movie News
+Technology: AI News, Tech News, Space News
+Knowledge: Science Facts
+Industry: Auto News
+Viral: Entertainment
+Режим публикации:
+30% auto (Anime, Manga)
+50% approval_required (AI, Science, Auto)
+20% manual (experimental)
+Длительность: 14–30 дней
+Метрики:
+Generation: posts_generated, generation_time, llm_errors
+Research: topics_found, duplicates_removed, source_errors
+Media: image_success_rate, video_success_rate, fallback_rate
+Publishing: publish_success_rate, telegram/vk_errors
+Infrastructure: queue_size, worker_utilization, db_pool, memory, cpu
+Content: approval_rate, rejection_rate, edit_rate
+📈 PHASE 5 — SCALE TEST
+Sprint 70 — 10 → 25 → 50 Channels
+Этап 1: 10 channels (7–14 дней)
+Этап 2: 25 channels (проверка workers, queue, DB, LLM, Telegram limits)
+Этап 3: 50 channels (система становится похожей на платформу)
+Ожидаемые проблемы: queue congestion, slow LLM, source rate limits, Telegram rate limits, memory, DB connections, retry storms, duplicate content
+🔥 PHASE 6 — MEDIA NETWORK MANAGEMENT
+Sprint 71 — Network Dashboard
+Channels: Active 43, Paused 5, Errors 2
+Posts Today: Generated 186, Published 173, Failed 3
+Review Queue: Pending 17
+System: Workers 12, Queue 8, DB Pool 24%
+Channel Groups + Bulk operations (Start/Pause/Publishing Mode/Template Update)
+🧠 PHASE 7 — NETWORK INTELLIGENCE
+Sprint 72 — Cross-Channel Intelligence
+Learning Loop расширяется до Network Intelligence.
+Принцип: Insight → Recommendation → Human Approval → Strategy Update
+💰 PHASE 8 — COST & RESOURCE MANAGEMENT
+Sprint 73 — Cost Control
+Аналитика: Cost per channel, Cost per post, LLM tokens, Media requests, API requests, Compute time
+🏗 PHASE 9 — PRODUCTION INFRASTRUCTURE
+Sprint 74 — Production Deployment
+Переход от Docker Compose к production-архитектуре:
+Frontend → API → PostgreSQL + Redis + Worker Pool + LLM Service + Media Service + Object Storage
+🌍 PHASE 10 — LARGE SCALE NETWORK
+Sprint 75+ — 100 → 300 Channels
+Этапы: 50 stable → 100 → 150 → 300
+Каждый этап: load test + monitoring + failure analysis + cost analysis + content quality analysis
+🎯 Стратегия масштабирования
+PHASE 1  Finish Production Hardening (Sprint 66)
+        ↓
+PHASE 2  Channel Profiles + Universal Pipeline (Sprint 67)
+        ↓
+PHASE 3  Smart Wizard (Sprint 68)
+        ↓
+PHASE 4  10 Channel Pilot (Sprint 69)
+        ↓
+PHASE 5  25 → 50 Channel Scale (Sprint 70)
+        ↓
+PHASE 6  Network Management (Sprint 71)
+        ↓
+PHASE 7  Cross-Channel Intelligence (Sprint 72)
+        ↓
+PHASE 8  Cost Control (Sprint 73)
+        ↓
+PHASE 9  Production Infrastructure (Sprint 74)
+        ↓
+PHASE 10 100–300 Channel Network (Sprint 75+)
+Ключевой принцип
+AI Media Factory не должна превратиться в "систему с 300 отдельными пайплайнами".
+Она должна стать универсальным движком, который получает Channel Profile и автоматически выбирает стратегии research, generation, media и publishing.
