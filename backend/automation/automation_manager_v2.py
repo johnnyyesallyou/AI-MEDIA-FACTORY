@@ -20,6 +20,10 @@ import uuid
 
 from sqlalchemy.orm import Session
 from core.database import SessionLocal
+try:
+    from backend.core.error_logger import get_error_logger
+except ImportError:
+    get_error_logger = None
 from core.models.channel_orm import ChannelORM
 from core.models.execution_log_orm import ExecutionLogORM
 
@@ -166,6 +170,60 @@ class AutomationManagerV2:
                 logger.exception(f"Channel worker error for {channel_id}: {e}")
                 await asyncio.sleep(5)  # Backoff before retry
     
+
+    def _record_pipeline_failure(self, task, error_type: str, error_message: str):
+        """Sprint 66.5: persist failure via ErrorLogger (signature-adaptive)."""
+        try:
+            if get_error_logger is None:
+                return
+            import inspect
+            svc = get_error_logger()
+            names = [m for m in ("log_failure", "record_failure", "log_error",
+                                 "record_error", "log", "record", "save") if hasattr(svc, m)]
+            if not names:
+                names = [m for m in dir(svc)
+                         if not m.startswith("_") and callable(getattr(svc, m))]
+            values = {
+                "channel_id": getattr(task, "channel_id", None),
+                "task_id": getattr(task, "task_id", None),
+                "pipeline": getattr(task, "pipeline", None) or "unknown",
+                "job": getattr(task, "job_type", None) or "unknown",
+                "job_name": getattr(task, "job_type", None) or "unknown",
+                "job_type": getattr(task, "job_type", None) or "unknown",
+                "error_type": error_type,
+                "error_message": str(error_message)[:2000],
+                "message": str(error_message)[:2000],
+                "error": str(error_message)[:2000],
+            }
+            for name in names:
+                fn = getattr(svc, name)
+                try:
+                    sig = inspect.signature(fn)
+                except (TypeError, ValueError):
+                    continue
+                params = sig.parameters
+                kwargs, ok = {}, True
+                for pname, param in params.items():
+                    if pname == "self":
+                        continue
+                    if pname in values:
+                        kwargs[pname] = values[pname]
+                    elif (param.default is param.empty and param.kind not in
+                          (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)):
+                        ok = False
+                        break
+                if not ok:
+                    continue
+                try:
+                    fn(**kwargs)
+                    logger.info(f"Pipeline failure recorded via ErrorLogger.{name}()")
+                    return
+                except TypeError:
+                    continue
+            logger.warning("No compatible ErrorLogger method found for failure recording")
+        except Exception as e:
+            logger.warning(f"Failed to record pipeline failure: {e}")
+
     async def _execute_task(self, task: ChannelTask):
         """Sprint 66.3: Executes task with timeout protection."""
         logger.info(f"Executing task {task.task_id} with timeout={TASK_TIMEOUT}s")
@@ -178,6 +236,7 @@ class AutomationManagerV2:
             logger.error(f"Task {task.task_id} timed out after {TASK_TIMEOUT}s")
             task.status = TaskStatus.FAILED
             task.error = f"Timeout after {TASK_TIMEOUT}s"
+            self._record_pipeline_failure(task, "timeout", task.error)
             task.finished_at = datetime.utcnow()
 
     async def _execute_task_internal(self, task: ChannelTask):
@@ -228,6 +287,7 @@ class AutomationManagerV2:
             task.error = str(e)
             task.completed_at = datetime.utcnow()
             
+            self._record_pipeline_failure(task, "exception", str(e))
             logger.error(f"Task {task.task_id} failed: {e}")
             
             # Retry logic

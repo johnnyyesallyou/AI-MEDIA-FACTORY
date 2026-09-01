@@ -107,5 +107,5 @@ def get_db():
 
 
 # Регистрация новых моделей для автоматического создания таблиц
-if os.getenv("APP_ENV") != "test":
-    from core.models.execution_log_orm import ExecutionLogORM
+from core.models.execution_log_orm import ExecutionLogORM
+from core.models.pipeline_failure_orm import PipelineFailure
