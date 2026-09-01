@@ -276,6 +276,8 @@ class AnalyzeResponse(BaseModel):
     media_policy: str = "image"
     max_post_length: int = 1200
     research_sources: list = []
+    # Sprint 68.3: реальные URLs
+    research_source_urls: list = []
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -311,4 +313,5 @@ async def wizard_analyze(req: AnalyzeRequest):
         media_policy=strategy["media_policy"],
         max_post_length=strategy["max_post_length"],
         research_sources=strategy["research_sources"],
+        research_source_urls=strategy.get("research_source_urls", []),
     )
