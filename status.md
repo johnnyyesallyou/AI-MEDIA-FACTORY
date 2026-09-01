@@ -8,11 +8,11 @@
 
 ## 🎯 Current Focus
 
-**Sprint 66.5: Pipeline Failure Tracking**
-- Create `pipeline_failures` table
-- API endpoint `/api/v1/failures`
-- Wire recording into automation workers
-- Dashboard integration
+**Sprint 66.7: GitHub Actions CI**
+- Create `.github/workflows/ci.yml`
+- Ruff lint on every push
+- Unit tests (without Docker/Ollama)
+- CI tests on every push
 
 **Next:** Sprint 66.6 (Async Tests Stabilization) → Sprint 66.7 (GitHub Actions CI)
 
@@ -45,9 +45,9 @@
 | 66.4 PortableJSONB | ✅ | SQLite + PostgreSQL support (12 models migrated) |
 | 66.4 Pydantic V2 | ✅ | `ConfigDict` migration (0 deprecation warnings) |
 | 66.4 Test Infrastructure | ✅ | pytest-asyncio + event loop fixtures + conftest.py |
-| **66.5 Pipeline Failures** | ⏳ | NEXT: error tracking table + API + worker integration |
-| 66.6 Async Tests | ⏳ | TODO: stabilize automation_manager tests |
-| 66.7 GitHub Actions CI | ⏳ | TODO: CI pipeline on every push |
+| 66.5 Pipeline Failures | ✅ | pipeline_failures table + ErrorLogger + /failures API (8 endpoints) + worker integration |
+| 66.6 Async Tests | ✅ | 63/63 unit passed (1.67s), pytest-asyncio auto mode, integration markers |
+| **66.7 GitHub Actions CI** | ⏳ | NEXT: .github/workflows/ci.yml |
 
 ---
 
