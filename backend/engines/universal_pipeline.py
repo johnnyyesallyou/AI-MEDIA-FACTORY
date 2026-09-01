@@ -88,6 +88,11 @@ class UniversalContentPipeline:
             
             sources = await research.collect_sources()
             topics = await research.extract_topics(sources)
+            
+            # Sprint 69.6: дедупликация — пропускаем уже опубликованные темы
+            original_count = len(topics)
+            topics = filter_new_topics(channel_id=self.channel.id, topics=topics)
+            logger.info(f"Dedup: {original_count} topics → {len(topics)} new")
             result.topics_found = len(topics)
             logger.info(f"[1/4] Research done: {len(topics)} topics")
             
