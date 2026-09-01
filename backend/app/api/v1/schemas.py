@@ -17,6 +17,10 @@ class ChannelCreateRequest(BaseModel):
     workflow_id: Optional[str] = Field(default=None, description="Идентификатор workflow шаблона для канала")
     description: Optional[str] = None
 
+    # Sprint 69: Telegram credentials (для публикации)
+    bot_token: Optional[str] = None
+    chat_id: Optional[str] = None
+
 class TelegramConnectionRequest(BaseModel):
     '''Схема для подключения Telegram бота.'''
     bot_token: str = Field(description="Bot Token от @BotFather")
