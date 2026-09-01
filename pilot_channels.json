@@ -1,7 +1,7 @@
 {
   "created_at": "2026-09-01T21:12:35.011800",
   "bot_username": "openclavv_ai_bot",
-  "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+  "bot_token": "${TELEGRAM_BOT_TOKEN}",
   "total": 10,
   "channels": [
     {
@@ -14,7 +14,7 @@
       "about": "Daily anime news, releases, and updates from the world of Japanese animation",
       "telegram_channel_id": 3529920052,
       "bot_chat_id": -1003529920052,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     },
@@ -28,7 +28,7 @@
       "about": "Track new manga chapter releases, recommendations, and updates",
       "telegram_channel_id": 4293360589,
       "bot_chat_id": -1004293360589,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     },
@@ -42,7 +42,7 @@
       "about": "Latest gaming news, patches, announcements, and trailers",
       "telegram_channel_id": 4412856598,
       "bot_chat_id": -1004412856598,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     },
@@ -56,7 +56,7 @@
       "about": "Breaking news about movies, TV series, trailers, and casting",
       "telegram_channel_id": 4383377965,
       "bot_chat_id": -1004383377965,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     },
@@ -70,7 +70,7 @@
       "about": "Daily artificial intelligence news, research breakthroughs, and industry updates",
       "telegram_channel_id": 4466408770,
       "bot_chat_id": -1004466408770,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     },
@@ -84,7 +84,7 @@
       "about": "Technology news covering gadgets, software, hardware, and startups",
       "telegram_channel_id": 4347585295,
       "bot_chat_id": -1004347585295,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     },
@@ -98,7 +98,7 @@
       "about": "Space exploration, astronomy, and scientific discoveries",
       "telegram_channel_id": 4414961343,
       "bot_chat_id": -1004414961343,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     },
@@ -112,7 +112,7 @@
       "about": "Fascinating science facts, explanations, and educational content",
       "telegram_channel_id": 3917163030,
       "bot_chat_id": -1003917163030,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     },
@@ -126,7 +126,7 @@
       "about": "Automotive news: new cars, EVs, Tesla, BMW, Mercedes, motorsport",
       "telegram_channel_id": 3773589347,
       "bot_chat_id": -1003773589347,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     },
@@ -140,7 +140,7 @@
       "about": "Best memes, funny content, and viral entertainment",
       "telegram_channel_id": 4439385502,
       "bot_chat_id": -1004439385502,
-      "bot_token": "TELEGRAM_BOT_TOKEN_REDACTED",
+      "bot_token": "${TELEGRAM_BOT_TOKEN}",
       "bot_username": "openclavv_ai_bot",
       "created_at": "2026-09-01T21:12:35.011800"
     }
