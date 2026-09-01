@@ -1,0 +1,84 @@
+{
+  "Anime News Daily": {
+    "sources": [
+      {"name": "MyAnimeList", "url": "https://myanimelist.net/rss/news.xml", "type": "rss"},
+      {"name": "ANN", "url": "https://www.animenewsnetwork.com/all/rss.xml", "type": "rss"},
+      {"name": "Crunchyroll", "url": "https://www.crunchyroll.com/news/rss.xml", "type": "rss"}
+    ],
+    "schedule": "0 */6 * * *",
+    "job_type": "universal_pipeline"
+  },
+  "Manga Releases Tracker": {
+    "sources": [
+      {"name": "MangaDex", "url": "https://mangadex.org/rss", "type": "rss"},
+      {"name": "ANN", "url": "https://www.animenewsnetwork.com/all/rss.xml", "type": "rss"}
+    ],
+    "schedule": "0 */8 * * *",
+    "job_type": "universal_pipeline"
+  },
+  "Gaming News Hub": {
+    "sources": [
+      {"name": "IGN", "url": "https://feeds.feedburner.com/ign/games-all", "type": "rss"},
+      {"name": "GameSpot", "url": "https://www.gamespot.com/feeds/mashup/", "type": "rss"}
+    ],
+    "schedule": "0 */6 * * *",
+    "job_type": "universal_pipeline"
+  },
+  "Movie & Series News": {
+    "sources": [
+      {"name": "IMDb", "url": "https://www.imdb.com/news/rss", "type": "rss"},
+      {"name": "Deadline", "url": "https://deadline.com/feed/", "type": "rss"}
+    ],
+    "schedule": "0 */8 * * *",
+    "job_type": "universal_pipeline"
+  },
+  "AI News Daily": {
+    "sources": [
+      {"name": "MIT TR AI", "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed", "type": "rss"},
+      {"name": "OpenAI", "url": "https://openai.com/blog/rss.xml", "type": "rss"},
+      {"name": "HuggingFace", "url": "https://huggingface.co/blog/feed.xml", "type": "rss"}
+    ],
+    "schedule": "0 */6 * * *",
+    "job_type": "universal_pipeline"
+  },
+  "Tech News Today": {
+    "sources": [
+      {"name": "TechCrunch", "url": "https://techcrunch.com/feed/", "type": "rss"},
+      {"name": "Ars Technica", "url": "https://arstechnica.com/feed/", "type": "rss"}
+    ],
+    "schedule": "0 */6 * * *",
+    "job_type": "universal_pipeline"
+  },
+  "Space & Science Daily": {
+    "sources": [
+      {"name": "NASA", "url": "https://www.nasa.gov/rss/dyn/breaking_news.rss", "type": "rss"},
+      {"name": "Space.com", "url": "https://www.space.com/feeds/all", "type": "rss"}
+    ],
+    "schedule": "0 */12 * * *",
+    "job_type": "universal_pipeline"
+  },
+  "Science Facts": {
+    "sources": [
+      {"name": "Science Daily", "url": "https://www.sciencedaily.com/rss/all.xml", "type": "rss"},
+      {"name": "Nature", "url": "https://www.nature.com/nature.rss", "type": "rss"}
+    ],
+    "schedule": "0 */12 * * *",
+    "job_type": "universal_pipeline"
+  },
+  "Auto News Daily": {
+    "sources": [
+      {"name": "Car and Driver", "url": "https://www.caranddriver.com/rss/all.xml", "type": "rss"},
+      {"name": "Electrek", "url": "https://electrek.co/feed/", "type": "rss"}
+    ],
+    "schedule": "0 */8 * * *",
+    "job_type": "universal_pipeline"
+  },
+  "Entertainment Memes": {
+    "sources": [
+      {"name": "Reddit r/memes", "url": "https://www.reddit.com/r/memes/.rss", "type": "rss"},
+      {"name": "Reddit r/funny", "url": "https://www.reddit.com/r/funny/.rss", "type": "rss"}
+    ],
+    "schedule": "0 0 * * *",
+    "job_type": "universal_pipeline"
+  }
+}
