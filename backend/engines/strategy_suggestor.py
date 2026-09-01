@@ -3,6 +3,7 @@ import logging
 from typing import Dict, Any, List, Optional
 
 from core.models.archetypes import Archetype, get_archetype_defaults
+from backend.engines.source_recommendations import get_source_urls
 
 logger = logging.getLogger(__name__)
 
@@ -78,13 +79,17 @@ class StrategySuggestor:
             ["rss", "web"]
         )
         
+        # Sprint 68.3: реальные URLs вместо строк
+        source_urls = get_source_urls(niche, theme, limit=5)
+        
         strategy = {
             "frequency_per_day": frequency,
             "content_formats": defaults.allowed_formats,
             "media_policy": defaults.media_policy,
             "tone": defaults.tone,
             "max_post_length": defaults.max_post_length,
-            "research_sources": sources,
+            "research_sources": sources,  # строки (для совместимости)
+            "research_source_urls": source_urls,  # Sprint 68.3: реальные URLs
             "publishing_mode": classification.get("publishing_mode", defaults.publishing_mode),
         }
         
