@@ -2,7 +2,7 @@
 
 > Последний обновлён: 2026-09-01
 > Текущий статус: **PHASE 1 — Production Hardening**
-> Следующий шаг: **Sprint 66.5 — Pipeline Failure Tracking**
+> Следующий шаг: **Sprint 68.1 — Theme Classification (LLM)**
 
 ---
 
@@ -21,6 +21,10 @@
 - ✅ Task timeout (300s) + asyncio.wait_for wrapper
 - ✅ Unit/CI test separation (63/63 unit + 39/39 CI)
 - ✅ Rate Limiting (8 критических POST endpoints)
+- ✅ Channel Archetypes (8 universal types)
+- ✅ ChannelProfile ORM + CRUD + Assign
+- ✅ Universal Content Pipeline + Strategy Registry
+- ✅ Channel Templates (6 YAML) + from-template API
 
 Сейчас проект находится на переходе:
 WORKING PRODUCT
@@ -31,12 +35,12 @@ SCALABLE PLATFORM
 
 # 🧱 PHASE 1 — PRODUCTION HARDENING
 
-## Sprint 66 — Production Hardening
+## Sprint 66 — Production Hardening ✅ CLOSED
 
 ### Цель
 Закрыть технические риски до масштабирования.
 
-### 66.5 — Pipeline Failure Tracking ⏳ **СЛЕДУЮЩИЙ ШАГ**
+### 66.5 — Pipeline Failure Tracking ✅ CLOSED
 
 Создаём единый журнал ошибок pipeline.
 
