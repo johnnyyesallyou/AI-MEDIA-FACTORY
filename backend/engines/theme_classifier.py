@@ -51,7 +51,7 @@ Return ONLY valid JSON (no markdown, no explanation):
         """Classify channel description using LLM."""
         logger.info(f"Classifying: {description[:50]}...")
         
-        prompt = self.CLASSIFICATION_PROMPT.format(description=description)
+        prompt = self.CLASSIFICATION_PROMPT.replace("{description}", description)
         
         try:
             response = requests.post(
