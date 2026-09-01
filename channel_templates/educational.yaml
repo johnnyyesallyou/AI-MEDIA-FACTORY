@@ -1,0 +1,20 @@
+name: educational
+display_name: Educational Channel
+archetype: educational
+description: Facts, explainers, how-to
+language: ru
+tone: informative
+content:
+  formats: [explainer, facts, how_to]
+  max_length: 1500
+research:
+  freshness_hours: 72
+  sources: [web]
+media:
+  preferred: [image]
+  fallback: [none]
+publishing:
+  frequency_per_day: 3
+  mode: approval_required
+learning:
+  enabled: true
