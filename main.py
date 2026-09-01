@@ -1,5 +1,6 @@
 import sys
 import os
+BASE_DIR = os.getenv("APP_BASE_DIR", os.path.dirname(os.path.abspath(__file__)))
 import asyncio
 import logging
 from fastapi import FastAPI, Request
@@ -88,8 +89,8 @@ app.include_router(health_router.router)
 app.include_router(system_metrics.router)
 
 # Sprint 11: Serving generated assets
-os.makedirs("/app/assets", exist_ok=True)
-app.mount("/assets", StaticFiles(directory="/app/assets"), name="assets")
+os.makedirs(os.path.join(BASE_DIR, "assets"), exist_ok=True)
+app.mount("/assets", StaticFiles(directory=os.path.join(BASE_DIR, "assets")), name="assets")
 
 @app.get("/")
 async def root(request: Request):

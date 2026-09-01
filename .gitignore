@@ -107,3 +107,6 @@ openapi_schema.json
 pytest_output.txt
 *_result.txt
 url.txt
+
+assets/
+logs/
