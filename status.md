@@ -1,14 +1,14 @@
 # AI Media Factory — Project Status
 
 > Last updated: 2026-09-01
-> Current Phase: **PHASE 1 — Production Hardening**
-> Current Sprint: **Sprint 66 (66.5 in progress)**
+> Current Phase: **PHASE 3 — Smart Channel Creation**
+> Current Sprint: **Sprint 68 (Smart Wizard)**
 
 ---
 
 ## 🎯 Current Focus
 
-**Sprint 66.7: GitHub Actions CI**
+**Sprint 68.1: Theme Classification (LLM)**
 - Create `.github/workflows/ci.yml`
 - Ruff lint on every push
 - Unit tests (without Docker/Ollama)
@@ -47,19 +47,19 @@
 | 66.4 Test Infrastructure | ✅ | pytest-asyncio + event loop fixtures + conftest.py |
 | 66.5 Pipeline Failures | ✅ | pipeline_failures table + ErrorLogger + /failures API (8 endpoints) + worker integration |
 | 66.6 Async Tests | ✅ | 63/63 unit passed (1.67s), pytest-asyncio auto mode, integration markers |
-| **66.7 GitHub Actions CI** | ⏳ | NEXT: .github/workflows/ci.yml |
+| 66.7 GitHub Actions CI | ✅ | .github/workflows/ci.yml + requirements-test.txt |
 
 ---
 
-### Sprint 67 — Channel Scaling Architecture (57% Foundation)
+### Sprint 67 — Channel Scaling Architecture ✅ CLOSED
 
 | Step | Status | Result |
 |------|--------|--------|
-| 67.1 LLM Profiler | ✅ Created | 326 lines, `@profile_llm_call` decorator (not integrated) |
-| 67.2 Cache Layer | ✅ Created | 354 lines, `cache_get`/`cache_set` (not integrated) |
-| 67.3 Rate Limiter | ✅ Created | 319 lines, `@rate_limit_call` decorator |
-| 67.4 Rate Limiting Integration | ✅ Done | 8 POST endpoints protected (wizard, posts, research, automation) |
-| 67.5 Worker Pool | ⏳ | TODO: asyncio.gather for batch processing |
+| 67.1 Channel Archetypes | ✅ | 8 archetypes (news/releases/educational/viral/reviews/community/aggregator) + ArchetypeDefaults |
+| 67.2 Channel Profile ORM | ✅ | ChannelProfileORM (12 fields) + Pydantic V2 + CRUD + assign endpoint |
+| 67.3 Universal Pipeline | ✅ | UniversalContentPipeline (research→generation→media→publish) + Protocol strategies |
+| 67.4 Strategy Registry | ✅ | 8 archetypes registered (NEWS specialized + 7 generic) |
+| 67.5 Channel Templates | ✅ | 6 YAML templates + from-template + assign (E2E: Gaming News from news template) |
 
 **Note:** Performance framework created but not yet integrated into production engines. Real LLM generation happens in `automation/jobs/`, not `backend/engines/`.
 
@@ -140,11 +140,11 @@ f5aee4a Sprint 66.1-66.2: Connection pool hardening + monitoring
 
 ## 🎯 Next 3 Steps
 
-1. **Sprint 66.5** — Pipeline Failure Tracking (error journal + API + UI)
-2. **Sprint 66.6** — Async Tests Stabilization (fix hanging tests)
-3. **Sprint 66.7** — GitHub Actions CI (automated testing on push)
+1. **Sprint 68.1** — Theme Classification (LLM анализирует "Хочу канал про X")
+2. **Sprint 68.2** — Strategy Suggestion (AI предлагает archetype/tone/frequency/mode)
+3. **Sprint 68.3** — Source Recommendation + Risk Classification
 
-**After Sprint 66 CLOSED:** Move to Sprint 67 (Channel Profiles + Universal Pipeline)
+**PHASE 3 goal:** User writes "Хочу канал про котов" → AI → profile → sources → ready to publish
 
 ---
 
@@ -159,7 +159,11 @@ f5aee4a Sprint 66.1-66.2: Connection pool hardening + monitoring
 
 ## 🔑 Key Decisions
 
-1. **PortableJSONB** — SQLite for testing, PostgreSQL for production (single codebase)
+1. **Universal Pipeline over separate pipelines** — один движок для всех каналов через Strategy Registry (вместо anime/manga/news pipelines)
+2. **Archetypes as foundation** — 8 архетипов покрывают все типы каналов
+3. **YAML Templates** — декларативное описание шаблонов, легко добавлять новые
+4. **Profile assignment** — один profile может использоваться многими каналами
+5. **PortableJSONB** — SQLite for testing, PostgreSQL for production (single codebase)
 2. **Rate Limiting** — Decorator-based, applied to 8 critical POST endpoints
 3. **Task Timeout** — 300s hard limit via `asyncio.wait_for`
 4. **Connection Pool** — Size 20, max_overflow 30 (supports 16+ active channels)
