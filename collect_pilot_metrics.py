@@ -22,11 +22,11 @@ def collect_metrics_for_channel(db, channel: ChannelORM, cutoff: datetime) -> di
     
     # Считаем posts за период
     posts_stats = db.execute(text("""
-        SELECT 
+        SELECT
             COUNT(*) as total,
-            COUNT(*) FILTER (WHERE status = 'published') as published,
-            COUNT(*) FILTER (WHERE status = 'failed' OR status = 'error') as failed,
-            COUNT(*) FILTER (WHERE status = 'draft') as draft,
+            COUNT(*) FILTER (WHERE status = 'published' OR telegram_message_id IS NOT NULL OR published_at IS NOT NULL) as published,
+            COUNT(*) FILTER (WHERE status IN ('failed', 'error')) as failed,
+            COUNT(*) FILTER (WHERE status = 'draft' OR status = 'research' OR status = 'approved') as draft,
             AVG(LENGTH(COALESCE(draft_text, ''))) as avg_len
         FROM content
         WHERE channel_id = :cid AND created_at >= :cutoff

@@ -35,7 +35,7 @@ from .workflow import WorkflowDefinition, WorkflowStage
 logger = logging.getLogger(__name__)
 
 # Sprint 66.3: Task timeout (5 minutes)
-TASK_TIMEOUT = 300  # seconds
+TASK_TIMEOUT = 600  # seconds
 
 
 
