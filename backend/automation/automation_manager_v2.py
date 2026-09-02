@@ -224,6 +224,73 @@ class AutomationManagerV2:
         except Exception as e:
             logger.warning(f"Failed to record pipeline failure: {e}")
 
+    async def _try_universal_pipeline(self, channel, task):
+        """Sprint 69.15: Universal Pipeline для pilot каналов (telegram + sources + archetype).
+        Возвращает dict результата или None (fallback на старый workflow)."""
+        try:
+            # Только telegram каналы с реальным ботом
+            if getattr(channel, "platform", None) != "telegram":
+                return None
+            if not (getattr(channel, "bot_token", None) and getattr(channel, "chat_id", None)):
+                return None
+
+            cp = getattr(channel, "content_profile", None) or {}
+            if not cp.get("sources"):
+                return None
+
+            profile = None
+            if getattr(channel, "profile_id", None):
+                db = SessionLocal()
+                try:
+                    profile = db.query(ChannelProfileORM).filter(
+                        ChannelProfileORM.id == channel.profile_id
+                    ).first()
+                finally:
+                    db.close()
+
+            if not profile or not getattr(profile, "archetype", None):
+                return None
+
+            from backend.engines.strategy_registry import get_strategies
+            import backend.engines.register_all  # noqa: F401 — регистрация стратегий
+            from backend.engines.universal_pipeline import UniversalContentPipeline
+            from core.models.archetypes import Archetype
+
+            try:
+                strategies = get_strategies(Archetype(profile.archetype))
+            except Exception as e:
+                logger.warning(f"get_strategies failed: {e}")
+                strategies = None
+            # Sprint 69.15: даже если get_strategies возвращает None (fallback в UniversalContentPipeline)
+            # UniversalContentPipeline сам создаст дефолтные стратегии через get_strategies внутри
+            # Поэтому мы не блокируем запуск — просто логируем warning
+
+            # Пробрасываем данные в profile (как в pipeline.py)
+            if not getattr(profile, "content_profile", None):
+                profile.content_profile = cp
+            if not getattr(profile, "bot_token", None):
+                profile.bot_token = channel.bot_token
+            if not getattr(profile, "chat_id", None):
+                profile.chat_id = channel.chat_id
+            if not getattr(profile, "channel_id", None):
+                profile.channel_id = channel.id
+
+            logger.info(f"Sprint 69.15: Universal Pipeline for {task.channel_name}")
+            print(f"   🚀 Universal Pipeline for {task.channel_name}", flush=True)
+
+            pipeline = UniversalContentPipeline(channel=channel, profile=profile)
+            pipe_result = await pipeline.run()
+
+            return {
+                "status": "ok",
+                "topics": pipe_result.topics_found,
+                "generated": pipe_result.posts_generated,
+                "published": pipe_result.posts_published,
+            }
+        except Exception as e:
+            logger.error(f"Universal Pipeline failed for {task.channel_name}: {e}")
+            return None
+
     async def _execute_task(self, task: ChannelTask):
         """Sprint 66.3: Executes task with timeout protection."""
         logger.info(f"Executing task {task.task_id} with timeout={TASK_TIMEOUT}s")
@@ -261,18 +328,25 @@ class AutomationManagerV2:
                     task.error = "Rate limit exceeded"
                     return
                 
-                # Выполняем workflow
-                logger.info(f"Executing workflow for channel {task.channel_name}")
-                print(f"   🚀 Calling runner.run_now() for {task.task_id}", flush=True)
-                # Sprint 8.4: передаём workflow_id из канала в runner
-                workflow_id = getattr(channel, "workflow_id", None)
-                if workflow_id:
-                    logger.info(f"Executing workflow {workflow_id} from channel for {task.channel_name}")
-                    result = await self.runner.run_now(channel=channel, workflow_id=workflow_id)
+                # Sprint 69.15: pilot каналы идут через Universal Pipeline
+                universal_result = await self._try_universal_pipeline(channel, task)
+
+                if universal_result is not None:
+                    result = universal_result
+                    print(f"   ✅ Universal Pipeline: {result}", flush=True)
                 else:
-                    logger.info(f"Channel has no workflow_id, using default pipeline for {task.channel_name}")
-                    result = await self.runner.run_now(channel=channel)
-                print(f"   ✅ runner.run_now() returned: {result.get('status', 'unknown')}", flush=True)
+                    # Выполняем workflow (legacy каналы)
+                    logger.info(f"Executing workflow for channel {task.channel_name}")
+                    print(f"   🚀 Calling runner.run_now() for {task.task_id}", flush=True)
+                    # Sprint 8.4: передаём workflow_id из канала в runner
+                    workflow_id = getattr(channel, "workflow_id", None)
+                    if workflow_id:
+                        logger.info(f"Executing workflow {workflow_id} from channel for {task.channel_name}")
+                        result = await self.runner.run_now(channel=channel, workflow_id=workflow_id)
+                    else:
+                        logger.info(f"Channel has no workflow_id, using default pipeline for {task.channel_name}")
+                        result = await self.runner.run_now(channel=channel)
+                    print(f"   ✅ runner.run_now() returned: {result.get('status', 'unknown')}", flush=True)
                 
                 task.status = TaskStatus.COMPLETED
                 task.completed_at = datetime.utcnow()

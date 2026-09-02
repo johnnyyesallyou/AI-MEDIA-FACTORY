@@ -41,3 +41,20 @@ def pipeline_lock(channel_id: str, timeout: float = 30.0):
     finally:
         lock.release()
         logger.debug(f"Pipeline lock released for {channel_id}")
+
+def release_all_locks():
+    """Sprint 69.15: принудительное освобождение всех locks (после падений)."""
+    global _channel_locks
+    released = 0
+    for ch_id, lock in list(_channel_locks.items()):
+        # Попытаться освободить (если занят)
+        if lock.locked():
+            try:
+                lock.release()
+                released += 1
+                logger.info(f"Force-released lock for {ch_id}")
+            except Exception:
+                pass
+    # Очистить реестр
+    _channel_locks.clear()
+    return released
