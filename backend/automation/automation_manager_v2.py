@@ -279,7 +279,17 @@ class AutomationManagerV2:
             logger.info(f"Sprint 69.15: Universal Pipeline for {task.channel_name}")
             print(f"   🚀 Universal Pipeline for {task.channel_name}", flush=True)
 
+            # Sprint 69.15 fix: передаём стратегии из get_strategies
             pipeline = UniversalContentPipeline(channel=channel, profile=profile)
+            
+            # Устанавливаем стратегии
+            if strategies:
+                pipeline.set_strategy("research", strategies.research())
+                pipeline.set_strategy("generation", strategies.generation())
+                pipeline.set_strategy("media", strategies.media())
+                pipeline.set_strategy("publishing", strategies.publishing())
+                logger.info(f"Strategies set for {task.channel_name}")
+            
             pipe_result = await pipeline.run()
 
             return {
