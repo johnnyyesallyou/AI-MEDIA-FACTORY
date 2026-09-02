@@ -1,0 +1,355 @@
+﻿INFO:     127.0.0.1:46754 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:60380 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 534 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 534 -> 532 chars (passed=True)
+[5/7] Grammar validation: 0 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 532 chars
+Raw generated length=532
+Item c482bfe5-d71f-48bc-8579-1e40d4f11a45: model=llama3.1:8b, fact_check=True, issues=2
+Written item=c482bfe5-d71f-48bc-8579-1e40d4f11a45 len=532
+Processing item=2b12153b-5c65-4669-b2e0-76ebad5e4491 headline=тАШRunnerтАЩ Review: Alan Ritchson and Owen Wilson in 
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (1807 chars)
+INFO:     172.20.0.5:44692 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47746 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:49284 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 500 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 500 -> 498 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 498 chars
+Raw generated length=498
+Item 2b12153b-5c65-4669-b2e0-76ebad5e4491: model=llama3.1:8b, fact_check=True, issues=3
+Written item=2b12153b-5c65-4669-b2e0-76ebad5e4491 len=498
+Processing item=043a03f4-ad22-474b-b8a4-6fc607f51375 headline=Emily Alyn Lind Is a Proud тАЬF***ing Know-It-AllтАЭ
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (1800 chars)
+INFO:     172.20.0.5:42218 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:55624 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 361 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 361 -> 358 chars (passed=True)
+[5/7] Grammar validation: 0 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 358 chars
+Raw generated length=358
+Item 043a03f4-ad22-474b-b8a4-6fc607f51375: model=llama3.1:8b, fact_check=True, issues=2
+Written item=043a03f4-ad22-474b-b8a4-6fc607f51375 len=358
+Processing item=f5718332-29f2-4007-a501-2bd5f90f3ca1 headline=The Buzziest New Show on Netflix? A Video Game Tra
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (1733 chars)
+INFO:     172.20.0.5:39060 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51900 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:54920 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 404 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 404 -> 401 chars (passed=True)
+[5/7] Grammar validation: 0 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 401 chars
+Raw generated length=401
+Item f5718332-29f2-4007-a501-2bd5f90f3ca1: model=llama3.1:8b, fact_check=True, issues=2
+Written item=f5718332-29f2-4007-a501-2bd5f90f3ca1 len=401
+Processing item=4e26c121-ee29-4c57-b36b-ee22a0b48de3 headline=The JokeтАЩs On Us. Literally
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (1685 chars)
+INFO:     172.20.0.5:57086 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:49376 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:56854 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50664 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 656 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 656 -> 653 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 653 chars
+Raw generated length=653
+Item 4e26c121-ee29-4c57-b36b-ee22a0b48de3: model=llama3.1:8b, fact_check=True, issues=3
+Written item=4e26c121-ee29-4c57-b36b-ee22a0b48de3 len=653
+Processing item=f6375f52-9c14-48f3-9366-bc95181735dc headline=тАШMy Notes on MarsтАЩ Review: Mackenzie Davis and Rup
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (1808 chars)
+INFO:     172.20.0.5:57094 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49112 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:42918 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:42610 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 504 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 504 -> 500 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 500 chars
+Raw generated length=500
+Item f6375f52-9c14-48f3-9366-bc95181735dc: model=llama3.1:8b, fact_check=True, issues=3
+Written item=f6375f52-9c14-48f3-9366-bc95181735dc len=500
+Processing item=ec9f402d-f6f5-46ec-8d06-60d3c869407a headline=Travis Kelce Breaks Down Wedding to Taylor Swift a
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2020 chars)
+INFO:     172.20.0.5:47290 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35714 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:51880 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 582 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 582 -> 573 chars (passed=True)
+[5/7] Grammar validation: 0 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 573 chars
+Raw generated length=573
+Item ec9f402d-f6f5-46ec-8d06-60d3c869407a: model=llama3.1:8b, fact_check=True, issues=2
+Written item=ec9f402d-f6f5-46ec-8d06-60d3c869407a len=573
+Processing item=11cca55f-6aaf-40cd-8972-d316a2403a75 headline=New Regency Takes International Rights to Ferran A
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2008 chars)
+INFO:     172.20.0.5:35320 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33616 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:60406 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:45276 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 356 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 356 -> 354 chars (passed=True)
+[5/7] Grammar validation: 0 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 347 chars
+Raw generated length=347
+Item 11cca55f-6aaf-40cd-8972-d316a2403a75: model=llama3.1:8b, fact_check=True, issues=2
+Written item=11cca55f-6aaf-40cd-8972-d316a2403a75 len=347
+Processing item=d500c862-1b85-48ac-8f71-af66bb4797cd headline=Blackpink and тАШWhite LotusтАЩ Star Lisa Documentary 
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2010 chars)
+INFO:     172.20.0.5:44588 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:42506 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:39552 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 493 chars
+docker : /usr/local/lib/python3.10/concurrent/futures/thread.py:85: RuntimeWarning: coroutine 'to_thread' was never awaited
+строка:1 знак:1
++ docker logs amf_backend --since 15m 2>&1 | Out-File -FilePath ".\rece ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (/usr/local/lib/...s never awaited:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  del work_item
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+FactGuard removed 0 sentences
+[4/7] Fact check: 493 -> 489 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 489 chars
+Raw generated length=489
+Item d500c862-1b85-48ac-8f71-af66bb4797cd: model=llama3.1:8b, fact_check=True, issues=3
+Written item=d500c862-1b85-48ac-8f71-af66bb4797cd len=489
+Processing item=7383bf5a-2b58-4c39-b30d-a8e8b5ed7c6d headline=Jordan Firstman, Matteo Lane Lead U.S. Voice Cast 
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2088 chars)
+INFO:     172.20.0.5:48382 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:54954 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49284 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:58948 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 350 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 350 -> 348 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 348 chars
+Raw generated length=348
+Item 7383bf5a-2b58-4c39-b30d-a8e8b5ed7c6d: model=llama3.1:8b, fact_check=True, issues=3
+Written item=7383bf5a-2b58-4c39-b30d-a8e8b5ed7c6d len=348
+Processing item=e4aadb88-ca43-4187-8046-42a34c7176ad headline=Wrongful Terrorism Case of Sri Lankan Student Set 
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2117 chars)
+INFO:     172.20.0.5:44540 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46976 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:55726 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 539 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 539 -> 534 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 534 chars
+Raw generated length=534
+Item e4aadb88-ca43-4187-8046-42a34c7176ad: model=llama3.1:8b, fact_check=True, issues=3
+Written item=e4aadb88-ca43-4187-8046-42a34c7176ad len=534
+Processing item=0ee329d2-cd07-465f-9e6f-2dfe02eee537 headline=тАШFall 2: DeadpointтАЩ Review: A Mostly Successful Se
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (1991 chars)
+INFO:     172.20.0.5:32846 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:56646 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47612 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47918 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 336 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 336 -> 335 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 3 issues found
+[7/7] Post-processed: 335 chars
+Raw generated length=335
+Item 0ee329d2-cd07-465f-9e6f-2dfe02eee537: model=llama3.1:8b, fact_check=True, issues=4
+Written item=0ee329d2-cd07-465f-9e6f-2dfe02eee537 len=335
+Processing item=2c250a9b-be40-4a19-b992-60e5da5c9765 headline=тАШThe Girl With The LeicaтАЩ Review: An Impressionist
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2100 chars)
+INFO:     172.20.0.5:46424 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46724 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35596 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 381 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 381 -> 379 chars (passed=True)
+[5/7] Grammar validation: 0 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 379 chars
+Raw generated length=379
+Item 2c250a9b-be40-4a19-b992-60e5da5c9765: model=llama3.1:8b, fact_check=True, issues=2
+Written item=2c250a9b-be40-4a19-b992-60e5da5c9765 len=379
+Processing item=f46d703d-c5cd-4e00-b74f-8edb0f28c4b5 headline=Robert Pattinson Says тАШThe Batman 2тАЩ Action Scenes
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2051 chars)
+INFO:     172.20.0.5:42556 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:56388 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40522 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54224 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 364 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 364 -> 364 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 1 issues found
+[7/7] Post-processed: 364 chars
+Raw generated length=364
+Item f46d703d-c5cd-4e00-b74f-8edb0f28c4b5: model=llama3.1:8b, fact_check=True, issues=2
+Written item=f46d703d-c5cd-4e00-b74f-8edb0f28c4b5 len=364
+Processing item=74389657-2f76-4a60-9d7b-0c498791a6d3 headline=тАШMy Notes on MarsтАЩ Review: Mackenzie Davis and Rup
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2018 chars)
+INFO:     172.20.0.5:32972 - "GET /metrics HTTP/1.1" 200 OK
+Task f6f4e10b-1491-4be1-9c6f-f9386f439409 timed out after 600s
+Pipeline failure logged
+Pipeline failure recorded via ErrorLogger.log_error()
+   тП│ Waiting for task in queue 24df0f84...
+INFO:     172.20.0.5:45160 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47554 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:59654 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:39254 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50348 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56618 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:59126 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:49692 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:57016 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37598 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:42144 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:33232 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39864 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48120 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47758 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:52722 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:60912 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38726 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37402 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37836 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58100 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:60788 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35090 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:52800 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50936 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:53330 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:41214 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60122 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:57282 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46812 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40516 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:43444 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48448 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:58788 - "GET /metrics HTTP/1.1" 200 OK
+Scheduled automation started for channel 386e9d2e-3625-444c-b760-9e09f346b281
+╤А╤ЯтАЭ╥Р Scheduled automation run for channel 386e9d2e-3625-444c-b760-9e09f346b281
+Using AutomationManager v2 for channel 386e9d2e-3625-444c-b760-9e09f346b281
+ЁЯУе ENQUEUING task 011a9be7-098b-4d3e-a4c5-64e74d7b3be3 into queue 386e9d2e
+   Queue exists: True
+   Queue size before: 0
+Enqueued task 011a9be7-098b-4d3e-a4c5-64e74d7b3be3 for channel Auto News Daily
+Scheduled automation completed for channel 386e9d2e-3625-444c-b760-9e09f346b281
+Scheduled automation started for channel de8b315a-d540-4205-baba-476d2cf50e19
+╤А╤ЯтАЭ╥Р Scheduled automation run for channel de8b315a-d540-4205-baba-476d2cf50e19
+Using AutomationManager v2 for channel de8b315a-d540-4205-baba-476d2cf50e19
+ЁЯУе ENQUEUING task c854c83e-6346-4ff0-b3eb-cb7c1a990cf6 into queue de8b315a
+   Queue exists: True
+   Queue size before: 0
+Enqueued task c854c83e-6346-4ff0-b3eb-cb7c1a990cf6 for channel Gaming News Hub
+Scheduled automation completed for channel de8b315a-d540-4205-baba-476d2cf50e19
+   ЁЯУд GOT TASK! 011a9be7-098b-4d3e-a4c5-64e74d7b3be3 for Auto News Daily
+Processing task 011a9be7-098b-4d3e-a4c5-64e74d7b3be3 for channel Auto News Daily
+Executing task 011a9be7-098b-4d3e-a4c5-64e74d7b3be3 with timeout=600s
+   ЁЯУд GOT TASK! c854c83e-6346-4ff0-b3eb-cb7c1a990cf6 for Gaming News Hub
+Processing task c854c83e-6346-4ff0-b3eb-cb7c1a990cf6 for channel Gaming News Hub
+Executing task c854c83e-6346-4ff0-b3eb-cb7c1a990cf6 with timeout=600s
+ЁЯФиЁЯФиЁЯФи EXECUTE_TASK START for 011a9be7-098b-4d3e-a4c5-64e74d7b3be3 (Auto News Daily)
+Rate limit OK for channel Auto News Daily: 0/50 posts today
+Sprint 69.15: Universal Pipeline for Auto News Daily
+   ЁЯЪА Universal Pipeline for Auto News Daily
+[1/4] Research for channel Auto News Daily
+Pipeline failed: ResearchStrategy not set
+Pipeline completed in 0.0s: 0 topics, 0 generated, 0 published, 1 errors
+   тЬЕ Universal Pipeline: {'status': 'ok', 'topics': 0, 'generated': 0, 'published': 0}
+Task 011a9be7-098b-4d3e-a4c5-64e74d7b3be3 completed successfully
+ЁЯФиЁЯФиЁЯФи EXECUTE_TASK START for c854c83e-6346-4ff0-b3eb-cb7c1a990cf6 (Gaming News Hub)
+Rate limit OK for channel Gaming News Hub: 0/50 posts today
+Sprint 69.15: Universal Pipeline for Gaming News Hub
+   ЁЯЪА Universal Pipeline for Gaming News Hub
+[1/4] Research for channel Gaming News Hub
+Pipeline failed: ResearchStrategy not set
+Pipeline completed in 0.0s: 0 topics, 0 generated, 0 published, 1 errors
+   тЬЕ Universal Pipeline: {'status': 'ok', 'topics': 0, 'generated': 0, 'published': 0}
+Task c854c83e-6346-4ff0-b3eb-cb7c1a990cf6 completed successfully
+   тП│ Waiting for task in queue 386e9d2e...
+   тП│ Waiting for task in queue de8b315a...
+INFO:     172.20.0.5:48962 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42558 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38672 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46004 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:59856 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35404 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:60894 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38854 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43490 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:53224 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48184 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40696 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:51702 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:53788 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:54172 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:60640 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37418 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:44432 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50966 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37130 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:34266 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:41502 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50410 - "GET /metrics HTTP/1.1" 200 OK
