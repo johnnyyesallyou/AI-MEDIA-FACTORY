@@ -11,6 +11,7 @@ from .wizard import router as wizard_router
 from .channel_control import router as channel_control_router
 from .posts import router as posts_router
 from .automation import router as automation_router
+from .pilot_metrics import router as pilot_metrics_router
 from .automation_v2 import router as automation_v2_router
 from .analytics import router as analytics_router
 from .knowledge import router as knowledge_router
@@ -55,5 +56,6 @@ api_v1_router.include_router(health_router)
 api_v1_router.include_router(failures_router)
 api_v1_router.include_router(profiles_router)
 api_v1_router.include_router(pipeline_router)
+api_v1_router.include_router(pilot_metrics_router)
 
 
