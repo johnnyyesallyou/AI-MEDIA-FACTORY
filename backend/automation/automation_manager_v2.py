@@ -25,6 +25,7 @@ try:
 except ImportError:
     get_error_logger = None
 from core.models.channel_orm import ChannelORM
+from core.models.channel_profile_orm import ChannelProfileORM
 from core.models.execution_log_orm import ExecutionLogORM
 
 from .runner import AutomationRunner
