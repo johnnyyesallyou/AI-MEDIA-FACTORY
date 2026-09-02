@@ -146,8 +146,28 @@ class NewsPublishingStrategy:
                 result = await publisher.send_message(text)
             
             if result.get("success"):
-                logger.info(f"Published to Telegram: message_id={result.get('message_id')}")
-                return {"success": True, "mode": "auto", "message_id": result.get("message_id")}
+                message_id = result.get("message_id")
+                logger.info(f"Published to Telegram: message_id={message_id}")
+                
+                # Sprint 69.14 fix: сохраняем telegram_message_id и published_at
+                try:
+                    db2 = SessionLocal()
+                    try:
+                        db2.execute(
+                            text("UPDATE content SET telegram_message_id = :mid, published_at = NOW() WHERE id = :cid"),
+                            {"mid": str(message_id), "cid": content.id}
+                        )
+                        db2.commit()
+                        logger.info(f"Saved telegram_message_id={message_id} to content {content.id}")
+                    except Exception as e:
+                        logger.error(f"Failed to save telegram_message_id: {e}")
+                        db2.rollback()
+                    finally:
+                        db2.close()
+                except Exception as e:
+                    logger.error(f"DB session error: {e}")
+                
+                return {"success": True, "mode": "auto", "message_id": message_id}
             else:
                 logger.error(f"Telegram publish failed: {result.get('error')}")
                 return {"success": False, "error": result.get("error")}
