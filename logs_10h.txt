@@ -1,0 +1,136 @@
+﻿INFO:     172.20.0.5:50586 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52522 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 792 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 792 -> 790 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 1 issues found
+[7/7] Post-processed: 783 chars
+Raw generated length=783
+Item 82932497-01fd-4d62-ba64-d4662eaa2e41: model=llama3.1:8b, fact_check=True, issues=2
+Written item=82932497-01fd-4d62-ba64-d4662eaa2e41 len=783
+Processing item=1d329c96-419d-479d-ba74-a1919ef19198 headline=╨п ╨┤╨░╨╗ ╤З╨╡╤В╤Л╤А╨╡╨╝ ╨Ш╨Ш-╤А╨╡╨▓╤М╤О╨╡╤А╨░╨╝ 60 ╨▒╨░╨│╨╛╨▓, ╨┐╤А╨╛ ╨║╨╛╤В╨╛╤А╤Л╨╡ ╤В
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2070 chars)
+INFO:     172.20.0.5:56466 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:45000 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:42968 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 682 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 682 -> 679 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 672 chars
+Raw generated length=672
+Item 82932497-01fd-4d62-ba64-d4662eaa2e41: model=llama3.1:8b, fact_check=True, issues=3
+Written item=82932497-01fd-4d62-ba64-d4662eaa2e41 len=672
+Processing item=1d329c96-419d-479d-ba74-a1919ef19198 headline=╨п ╨┤╨░╨╗ ╤З╨╡╤В╤Л╤А╨╡╨╝ ╨Ш╨Ш-╤А╨╡╨▓╤М╤О╨╡╤А╨░╨╝ 60 ╨▒╨░╨│╨╛╨▓, ╨┐╤А╨╛ ╨║╨╛╤В╨╛╤А╤Л╨╡ ╤В
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2070 chars)
+INFO:     172.20.0.5:45722 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48280 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:55946 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52618 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40154 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:34976 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 803 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 803 -> 800 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 800 chars
+Raw generated length=800
+Item 1d329c96-419d-479d-ba74-a1919ef19198: model=llama3.1:8b, fact_check=True, issues=3
+Written item=1d329c96-419d-479d-ba74-a1919ef19198 len=800
+Processing item=3b026c13-8647-499b-9e77-b9dfb1bf23a8 headline=╨в╨╛╨┐-5 ╨┐╤А╨╛╨▒╨╗╨╡╨╝, ╤Б ╨║╨╛╤В╨╛╤А╤Л╨╝╨╕ ╤П ╤Б╤В╨╛╨╗╨║╨╜╤Г╨╗╤Б╤П ╨┐╤А╨╕ ╤А╨░╨╖╤А╨░╨▒╨╛
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2411 chars)
+INFO:     172.20.0.5:36160 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:59856 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:53560 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35818 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 764 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 764 -> 762 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 762 chars
+Raw generated length=762
+Item 1d329c96-419d-479d-ba74-a1919ef19198: model=llama3.1:8b, fact_check=True, issues=3
+Written item=1d329c96-419d-479d-ba74-a1919ef19198 len=762
+Processing item=3b026c13-8647-499b-9e77-b9dfb1bf23a8 headline=╨в╨╛╨┐-5 ╨┐╤А╨╛╨▒╨╗╨╡╨╝, ╤Б ╨║╨╛╤В╨╛╤А╤Л╨╝╨╕ ╤П ╤Б╤В╨╛╨╗╨║╨╜╤Г╨╗╤Б╤П ╨┐╤А╨╕ ╤А╨░╨╖╤А╨░╨▒╨╛
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (2411 chars)
+INFO:     127.0.0.1:50976 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47234 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37450 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50292 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38936 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38698 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:54688 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48376 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:45004 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:51440 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:33504 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 1864 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 1864 -> 1856 chars (passed=True)
+[5/7] Grammar validation: 3 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 1856 chars
+Raw generated length=1856
+Item 3b026c13-8647-499b-9e77-b9dfb1bf23a8: model=llama3.1:8b, fact_check=True, issues=5
+Written item=3b026c13-8647-499b-9e77-b9dfb1bf23a8 len=1856
+Processing item=f39eeff4-c0b0-4ad5-803e-1375bdf38d05 headline=╨Э╨╡ ╨║╨╛╨╜╨║╤Г╤А╨╕╤А╤Г╨╣ ╤Б ╨Ш╨Ш тАФ ╤Г╨┐╤А╨░╨▓╨╗╤П╨╣ ╨╕╨╝. ╨Ъ╨░╨║ ╤Б╨┐╨╡╤Ж╨╕╨░╨╗╨╕╤Б╤В╤Г 
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (3396 chars)
+INFO:     172.20.0.5:36244 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:43838 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:44122 - "GET /metrics HTTP/1.1" 200 OK
+[3/7] LLM generated 737 chars
+FactGuard removed 0 sentences
+[4/7] Fact check: 737 -> 735 chars (passed=True)
+[5/7] Grammar validation: 1 issues found
+[6/7] Style validation: 2 issues found
+[7/7] Post-processed: 735 chars
+Raw generated length=735
+Item 3b026c13-8647-499b-9e77-b9dfb1bf23a8: model=llama3.1:8b, fact_check=True, issues=3
+Written item=3b026c13-8647-499b-9e77-b9dfb1bf23a8 len=735
+Processing item=f39eeff4-c0b0-4ad5-803e-1375bdf38d05 headline=╨Э╨╡ ╨║╨╛╨╜╨║╤Г╤А╨╕╤А╤Г╨╣ ╤Б ╨Ш╨Ш тАФ ╤Г╨┐╤А╨░╨▓╨╗╤П╨╣ ╨╕╨╝. ╨Ъ╨░╨║ ╤Б╨┐╨╡╤Ж╨╕╨░╨╗╨╕╤Б╤В╤Г 
+ModelSelector: detected content type 'news' (score: 1)
+ModelSelector: content_type='news' -> model='llama3.1:8b'
+[1/7] Model selected: llama3.1:8b
+[2/7] Prompt built (3396 chars)
+Task 94179b0e-79e3-4657-8e55-08dede80bf9e timed out after 300s
+Pipeline failure logged
+Pipeline failure recorded via ErrorLogger.log_error()
+   тП│ Waiting for task in queue c0ddc7aa...
+Task c0a24b98-7ed2-47f3-9cb1-7d87d2816eec timed out after 300s
+Pipeline failure logged
+Pipeline failure recorded via ErrorLogger.log_error()
+   тП│ Waiting for task in queue 24df0f84...
+INFO:     172.20.0.5:33556 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39242 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46424 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48884 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:49266 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:39266 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37196 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48486 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33384 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:39978 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:53976 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:54792 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:49204 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:51110 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47914 - "GET /metrics HTTP/1.1" 200 OK
