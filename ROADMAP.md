@@ -2,7 +2,8 @@
 
 > Последний обновлён: 2026-09-01
 > Текущий статус: **PHASE 1 — Production Hardening**
-> Следующий шаг: **Sprint 69.6 — Monitoring & Guardrails**
+> Текущая фаза: **OBSERVATION PERIOD (7-14 дней)**
+> Следующий шаг: **Sprint 70 — Pilot Analysis**
 
 ---
 
@@ -266,6 +267,210 @@ Bad Post → Analyze → Prompt Fix → Regenerate → Validate
 **Result:** Stabilized pipeline ready for 25-channel scale test
 
 ---
+
+
+## 🔍 OBSERVATION PERIOD (7-14 days)
+
+**Статус:** IN PROGRESS (начало: 2026-09-02)
+
+Наблюдаем 14 каналов без изменений в системе. Собираем данные для Sprint 70.
+
+---
+
+## Sprint 70 — Pilot Analysis & Stabilization
+
+**Цель:** Go/Fix/Stop decision для масштабирования на основе реальных данных.
+
+### 70.1 — Channel Metrics Collection
+
+Для каждого из 14 каналов собрать:
+channel
+├── generated: N posts
+├── published: N posts
+├── failed: N posts
+├── rejected: N posts (approval_required)
+├── edited: N posts
+├── approval_rate: X%
+├── publish_success_rate: X%
+├── source → topic conversion: X%
+├── duplicate_rate: X%
+├── average text length: N chars
+├── media distribution: image/video/none
+└── errors: [list]
+
+**Result:** `PILOT_METRICS.md` с метриками по каждому каналу
+
+### 70.2 — Source Quality Analysis
+
+Для каждого RSS источника построить conversion funnel:
+
+RSS Source
+↓
+fetched: N topics
+↓
+unique: N topics (после dedup)
+↓
+accepted: N topics (прошли фильтры)
+↓
+generated: N posts
+↓
+published: N posts
+
+**Критерии удаления источника:**
+- Conversion rate < 5%
+- 0 published posts за 7 дней
+- Постоянные errors при fetch
+
+**Result:** Список источников на удаление + список качественных источников
+
+### 70.3 — LLM Quality Assessment
+
+Классифицировать все сгенерированные посты по категориям:
+
+- **A. Фактические ошибки** (неверные данные, даты, имена)
+- **B. Галлюцинации** (выдуманные факты)
+- **C. Плохой русский** (грамматика, стиль)
+- **D. Слабый заголовок** (неинформативный, clickbait)
+- **E. Повторяемость** (одинаковые фразы в разных постах)
+- **F. Непопадание в стиль канала** (tone mismatch)
+- **G. Хороший пост** (ready to publish)
+
+**Result:** Распределение по категориям A-G для каждого канала
+
+### 70.4 — Channel Rating (Go/Fix/Stop)
+
+Для каждого канала определить решение:
+
+| Канал | Pipeline | Качество | Источники | Ошибки | Решение |
+|-------|----------|----------|-----------|--------|---------|
+| Anime News Daily | 🟢 | высокое | хорошие | мало | **GO → Scale** |
+| AI News Daily | 🟢 | высокое | хорошие | мало | **GO → Scale** |
+| Tech News Today | 🟡 | среднее | часть слабая | мало | **FIX → Improve** |
+| Channel X | 🔴 | низкое | плохие | много | **STOP → Kill** |
+
+**Критерии:**
+- **GO:** publish_success > 95%, approval_rate > 70%, errors < 5%
+- **FIX:** publish_success 80-95%, approval_rate 50-70%, errors 5-15%
+- **STOP:** publish_success < 80%, approval_rate < 50%, errors > 15%
+
+**Result:** Список каналов для масштабирования, улучшения, удаления
+
+### 70.5 — Stabilization Actions
+
+На основе 70.2 + 70.3 + 70.4:
+
+1. **Удалить плохие источники** (< 5% conversion)
+2. **Улучшить prompts** для каналов с категориями A-F > 30%
+3. **Удалить STOP каналы**
+4. **Зафиксировать GO каналы** для Sprint 71
+
+**Result:** Стабилизированная система готова к Sprint 71
+
+### Результат Sprint 70
+PILOT_REPORT.md:
+├── Channel Metrics (14 каналов)
+├── Source Quality (22 RSS источника)
+├── LLM Quality Assessment (категории A-G)
+├── Channel Rating (Go/Fix/Stop)
+└── Stabilization Actions (что исправить)
+
+---
+
+## Sprint 71 — Scale to 25 Channels
+
+**Цель:** Масштабирование GO каналов + добавление новых на основе данных.
+
+### 71.1 — Scale GO Channels
+- Увеличить frequency для GO каналов (если нужно)
+- Добавить дополнительные источники (если conversion высокий)
+
+### 71.2 — Add New Channels
+На основе Portfolio Roadmap добавить каналы из матрицы:
+- Entertainment: Anime, Manga, Gaming, Movies
+- Technology: AI, Space, Gadgets, Science
+- Automotive: BMW, JDM, EV, Motorsport
+
+**Критерии добавления:**
+- Доказанная жизнеспособность archetype (из Sprint 70)
+- Наличие качественных источников (conversion > 20%)
+- LLM quality > 70% (категории A-F < 30%)
+
+### 71.3 — Concurrency Testing
+Проверить что система выдерживает 25 каналов:
+- DB performance
+- CPU/RAM usage
+- Ollama inference time
+- Queue processing
+- Telegram API limits
+
+**Result:** 25 каналов стабильно работают
+
+---
+
+## Sprint 72 — Scale to 50 Channels
+
+**Цель:** Проверка операционной модели.
+
+### 72.1 — Cost Analysis
+- Стоимость одного канала (AI inference, API calls, storage)
+- Количество постов/день на канал
+- Количество ошибок/день
+- Количество ручной работы (approval, edits)
+
+### 72.2 — Operational Metrics
+- Total posts/day
+- Total errors/day
+- Total approval queue size
+- Average time to publish
+
+**Result:** Понимание economics of scale
+
+---
+
+## Sprint 73 — Scale to 100 Channels
+
+**Цель:** Distributed architecture.
+
+### 73.1 — Infrastructure Upgrade
+- Redis/NATS для очередей
+- Несколько LLM workers
+- Centralized monitoring
+- Automatic recovery
+
+### 73.2 — Alerting System
+- Alert on pipeline failures
+- Alert on source degradation
+- Alert on quality drop
+
+**Result:** 100 каналов с production-grade infrastructure
+
+---
+
+## Portfolio Roadmap (Future Channels)
+
+Матрица тематик для будущих каналов (выбор на основе данных Sprint 70):
+             AI Media Factory
+                    │
+    ┌───────────────┼────────────────┐
+    ↓               ↓                ↓
+Entertainment    Technology       Automotive
+    │               │                │
+ Anime            AI               BMW
+ Manga            Space            JDM
+ Gaming           Gadgets          EV
+ Movies           Science          Motorsport
+    │
+    ↓
+Channel Archetype
+    │
+    ├── News
+    ├── Education
+    ├── Memes
+    ├── Reviews
+    └── Community
+
+**Принцип:** Канал создаётся только после доказательства жизнеспособности archetype + sources + LLM quality.
+
 
 # 📈 PHASE 5 — MULTI-CHANNEL OPERATIONS
 
