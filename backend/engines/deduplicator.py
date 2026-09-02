@@ -43,6 +43,7 @@ def filter_new_topics(channel_id: str, topics: List[Dict[str, Any]]) -> List[Dic
               AND source_url IN ({placeholders})
               AND source_url IS NOT NULL
               AND source_url != ''
+              AND (status = 'published' OR telegram_message_id IS NOT NULL OR published_at IS NOT NULL)
         """
         
         result = db.execute(text(query), params)
