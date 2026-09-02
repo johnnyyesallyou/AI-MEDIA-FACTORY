@@ -1,0 +1,79 @@
+﻿INFO:     172.20.0.5:57144 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35546 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40820 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37844 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37244 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35436 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37070 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48136 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:33330 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:45648 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35608 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51930 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:52454 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:53832 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:58774 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:36174 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:36576 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50278 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45908 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47716 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:58676 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:36260 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:34760 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38986 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37434 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38612 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50038 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:42834 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:32962 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:39284 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40280 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:33216 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:57186 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60496 - "GET /metrics HTTP/1.1" 200 OK
+Job "Analytics Collector (post metrics + learnings) (trigger: interval[1:00:00], next run at: 2026-09-02 21:44:41 UTC)" raised an exception
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/apscheduler/executors/base.py", line 131, in run_job
+    retval = job.func(*job.args, **job.kwargs)
+  File "/app/backend/automation/scheduler.py", line 79, in <lambda>
+    func=lambda: asyncio.create_task(self.run_analytics_collection()),
+  File "/usr/local/lib/python3.10/asyncio/tasks.py", line 336, in create_task
+    loop = events.get_running_loop()
+RuntimeError: no running event loop
+INFO:     172.20.0.5:59938 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37410 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:42466 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:34806 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:52298 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:41522 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49748 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:36470 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:33134 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46372 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:54354 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46538 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:32986 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60880 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40626 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38528 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:56740 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48406 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:34522 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:52102 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55576 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:55436 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:41520 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48722 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35798 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40218 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40144 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55100 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:33724 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:54798 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38024 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:36088 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:53170 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46580 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33914 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:52846 - "GET /metrics HTTP/1.1" 200 OK

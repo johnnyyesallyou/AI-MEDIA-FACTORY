@@ -284,10 +284,10 @@ class AutomationManagerV2:
             
             # Устанавливаем стратегии
             if strategies:
-                pipeline.set_strategy("research", strategies.research())
-                pipeline.set_strategy("generation", strategies.generation())
-                pipeline.set_strategy("media", strategies.media())
-                pipeline.set_strategy("publishing", strategies.publishing())
+                pipeline.set_strategy("research", strategies.research(profile))
+                pipeline.set_strategy("generation", strategies.generation(profile))
+                pipeline.set_strategy("media", strategies.media(profile))
+                pipeline.set_strategy("publishing", strategies.publishing(profile))
                 logger.info(f"Strategies set for {task.channel_name}")
             
             pipe_result = await pipeline.run()
