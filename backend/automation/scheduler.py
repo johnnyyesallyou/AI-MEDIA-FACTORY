@@ -76,7 +76,7 @@ class AutomationScheduler:
 
         # Sprint 58: Analytics Collector (every hour)
         self.scheduler.add_job(
-            func=lambda: asyncio.create_task(self.run_analytics_collection()),
+            func=self._run_analytics_safe,
             trigger="interval",
             hours=1,
             id="analytics_collector_job",
@@ -117,6 +117,23 @@ class AutomationScheduler:
         logger.info("Automation scheduler started with %d jobs", len(self.scheduler.get_jobs()))
         print(f"рџљЂ Automation scheduler started with {len(self.scheduler.get_jobs())} jobs", flush=True)
 
+
+    def _run_analytics_safe(self):
+        """Sprint 69.16: Safe sync wrapper для APScheduler.
+        APScheduler вызывает из sync контекста, где нет event loop.
+        Создаём новый loop, выполняем async функцию, закрываем.
+        """
+        try:
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(self.run_analytics_collection())
+            finally:
+                loop.close()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Analytics collection failed: {e}")
 
     async def run_analytics_collection(self):
         """Sprint 58: hourly analytics collection for active connected channels."""

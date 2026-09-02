@@ -156,12 +156,16 @@ class NewsPublishingStrategy:
                     try:
                         db2 = SessionLocal()
                         try:
-                            db2.execute(
-                                text("UPDATE content SET telegram_message_id = :mid, published_at = NOW() WHERE id = :cid"),
-                                {"mid": str(message_id), "cid": content_id}
-                            )
-                            db2.commit()
-                            logger.info(f"Saved telegram_message_id={message_id} to content {content_id}")
+                            # Sprint 69.16: ORM update (обходит затенение text локальной строкой)
+                            from datetime import datetime as _dt
+                            row = db2.query(ContentORM).filter(ContentORM.id == content_id).first()
+                            if row:
+                                row.telegram_message_id = str(message_id)
+                                row.published_at = _dt.utcnow()
+                                db2.commit()
+                                logger.info(f"Saved telegram_message_id={message_id} to content {content_id}")
+                            else:
+                                logger.error(f"Content row not found: {content_id}")
                         except Exception as e:
                             logger.error(f"Failed to save telegram_message_id: {e}")
                             db2.rollback()
