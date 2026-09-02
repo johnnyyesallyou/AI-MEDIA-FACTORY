@@ -1,5 +1,6 @@
 """Sprint 69.4: LLM-based post generation для NewsGenerationStrategy."""
 import logging
+from backend.engines.ollama_limiter import with_ollama_limit
 import os
 import json
 import requests
@@ -41,15 +42,19 @@ Requirements:
 Write the post directly, no explanations:"""
 
     try:
-        response = requests.post(
-            f"{OLLAMA_URL}/api/generate",
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-            },
-            timeout=60,
-        )
+        # Sprint 69.12: concurrency limit для предотвращения перегрузки Ollama
+        async def _make_request():
+            return requests.post(
+                f"{OLLAMA_URL}/api/generate",
+                json={
+                    "model": OLLAMA_MODEL,
+                    "prompt": prompt,
+                    "stream": False,
+                },
+                timeout=60,
+            )
+        
+        response = await with_ollama_limit(_make_request())
         response.raise_for_status()
         
         result = response.json()
