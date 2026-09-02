@@ -229,6 +229,16 @@ class AutomationManagerV2:
         """Sprint 69.15: Universal Pipeline для pilot каналов (telegram + sources + archetype).
         Возвращает dict результата или None (fallback на старый workflow)."""
         try:
+            # Sprint 69.17: перечитываем channel из БД чтобы получить свежие content_profile
+            db = SessionLocal()
+            try:
+                fresh_channel = db.query(ChannelORM).filter(ChannelORM.id == channel.id).first()
+                if fresh_channel:
+                    channel = fresh_channel
+                    logger.debug(f"Refreshed channel {channel.name} from DB")
+            finally:
+                db.close()
+            
             # Только telegram каналы с реальным ботом
             if getattr(channel, "platform", None) != "telegram":
                 return None
