@@ -2,7 +2,7 @@
 
 > Last updated: 2026-09-01
 > Current Phase: **PHASE 3 — Smart Channel Creation**
-> Current Sprint: **Sprint 69 (10 Channel Pilot — Days 2-3)**
+> Current Phase: **OBSERVATION PERIOD (7-14 days)**
 
 ---
 
@@ -138,11 +138,40 @@ f5aee4a Sprint 66.1-66.2: Connection pool hardening + monitoring
 
 ---
 
-## 🎯 Next 3 Steps
 
-1. **Sprint 69.6** — Monitoring & Guardrails (deduplication, rate limits, scheduler safety)
-2. **Sprint 69.7** — Controlled Launch (1-3 posts/day/channel for Days 4-10)
-3. **Sprint 69.8** — Approval Queue UI (для approval_required каналов)
+## 🔍 OBSERVATION PERIOD (7-14 days)
+
+**Статус:** Активное наблюдение за пилотом (начало: 2026-09-02)
+
+**Что делаем:**
+- Наблюдаем 14 каналов (13 Telegram + 1 VK)
+- Собираем метрики по каждому каналу
+- НЕ меняем архитектуру, pipeline, prompts
+- Исправляем только критические баги
+
+**Критерии успеха:**
+- Publish success rate > 95%
+- Approval rate > 70% (для approval_required каналов)
+- Pipeline failures < 5%
+- Нет критических ошибок в логах
+
+**Что собираем:**
+- Количество generated/published/failed/rejected постов
+- Conversion rate: sources → topics → posts
+- LLM quality (фактические ошибки, галлюцинации, стиль)
+- Source quality (какие RSS дают 0 topics)
+- Telegram API errors
+
+**Следующий шаг:** Sprint 70 — Pilot Analysis (Go/Fix/Stop decision)
+
+## 🎯 Next Steps
+
+1. **OBSERVATION (7-14 дней)** — собираем метрики, не меняем систему
+2. **Sprint 70.1** — Pilot Analysis: метрики по каждому каналу
+3. **Sprint 70.2** — Source Quality Analysis: conversion funnels
+4. **Sprint 70.3** — LLM Quality Assessment: категории проблем A-G
+5. **Sprint 70.4** — Channel Rating: Go/Fix/Stop decision
+6. **Sprint 71** — Scale to 25 channels (только если 70.4 = GO)
 
 **PHASE 3 goal:** User writes "Хочу канал про котов" → AI → profile → sources → ready to publish
 
