@@ -1,0 +1,2 @@
+date,channel,message_id_or_url,headline,label,score_1_5,factual_error,hallucination,bad_russian,weak_headline,repetitive,style_mismatch,decision,notes
+2026-09-02,Tech News Today,telegram_message_12,Example headline,G,5,false,false,false,false,false,false,keep,Good post
