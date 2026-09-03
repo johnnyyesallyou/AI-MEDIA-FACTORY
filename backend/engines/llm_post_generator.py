@@ -45,15 +45,15 @@ Write the post directly, no explanations:"""
     try:
         # Sprint 69.12: concurrency limit для предотвращения перегрузки Ollama
         async def _make_request():
-            return requests.post(
-                f"{OLLAMA_URL}/api/generate",
-                json={
-                    "model": OLLAMA_MODEL,
-                    "prompt": prompt,
-                    "stream": False,
-                },
-                timeout=60,
-            )
+            async with httpx.AsyncClient(timeout=180.0) as client:
+                return await client.post(
+                    f"{OLLAMA_URL}/api/generate",
+                    json={
+                        "model": OLLAMA_MODEL,
+                        "prompt": prompt,
+                        "stream": False,
+                    },
+                )
         
         response = await with_ollama_limit(_make_request())
         response.raise_for_status()

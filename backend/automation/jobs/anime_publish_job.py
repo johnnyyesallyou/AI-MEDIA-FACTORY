@@ -1,18 +1,18 @@
-"""Anime Publish Job - Sprint 31.5.
+﻿"""Anime Publish Job - Sprint 31.5.
 
-Публикует anime через Knowledge Layer + Publishing Layer.
+РџСѓР±Р»РёРєСѓРµС‚ anime С‡РµСЂРµР· Knowledge Layer + Publishing Layer.
 
 Pipeline:
   ContentORM (anime_episode_id)
-       ↓
+       в†“
   AnimeEpisode + AnimeTitle (Knowledge Layer)
-       ↓
+       в†“
   PublicationImageResolver (policy-driven: cover)
-       ↓
-  Telegraph page (если publishing_policy.telegraph_page)
-       ↓
+       в†“
+  Telegraph page (РµСЃР»Рё publishing_policy.telegraph_page)
+       в†“
   Publication (text + image + buttons)
-       ↓
+       в†“
   PlatformPublisher.publish()
 """
 import logging
@@ -43,23 +43,22 @@ CAPTION_LIMIT = 1024
 
 class AnimePublishJob:
     def _translate_to_russian(self, text: str, max_length: int = 500) -> str:
-        """Sprint 51: переводит EN описание на русский через LLM (gemma2:9b)."""
+        """Sprint 51: РїРµСЂРµРІРѕРґРёС‚ EN РѕРїРёСЃР°РЅРёРµ РЅР° СЂСѓСЃСЃРєРёР№ С‡РµСЂРµР· LLM (gemma2:9b)."""
         if not text or not text.strip():
             return ""
         
-        # Если уже содержит кириллицу — возвращаем как есть
+        # Р•СЃР»Рё СѓР¶Рµ СЃРѕРґРµСЂР¶РёС‚ РєРёСЂРёР»Р»РёС†Сѓ вЂ” РІРѕР·РІСЂР°С‰Р°РµРј РєР°Рє РµСЃС‚СЊ
         import re
-        if re.search(r"[а-яА-ЯёЁ]", text):
+        if re.search(r"[Р°-СЏРђ-РЇС‘РЃ]", text):
             return text
         
         try:
             import requests
-import httpx
-            prompt = f"""Переведи описание аниме на русский язык. Сохрани стиль и эмоции. Только перевод, без пояснений.
+            prompt = f"""РџРµСЂРµРІРµРґРё РѕРїРёСЃР°РЅРёРµ Р°РЅРёРјРµ РЅР° СЂСѓСЃСЃРєРёР№ СЏР·С‹Рє. РЎРѕС…СЂР°РЅРё СЃС‚РёР»СЊ Рё СЌРјРѕС†РёРё. РўРѕР»СЊРєРѕ РїРµСЂРµРІРѕРґ, Р±РµР· РїРѕСЏСЃРЅРµРЅРёР№.
 
-Описание: {text[:800]}
+РћРїРёСЃР°РЅРёРµ: {text[:800]}
 
-Перевод на русском:"""
+РџРµСЂРµРІРѕРґ РЅР° СЂСѓСЃСЃРєРѕРј:"""
             
             response = requests.post(
                 "http://host.docker.internal:11434/api/generate",
@@ -79,10 +78,10 @@ import httpx
         except Exception as e:
             self.logger.warning(f"Translation failed: {e}")
         
-        return ""  # Не возвращаем EN текст, пусть будет пустой
+        return ""  # РќРµ РІРѕР·РІСЂР°С‰Р°РµРј EN С‚РµРєСЃС‚, РїСѓСЃС‚СЊ Р±СѓРґРµС‚ РїСѓСЃС‚РѕР№
     
 
-    """Knowledge-aware publisher для anime через Publishing Layer."""
+    """Knowledge-aware publisher РґР»СЏ anime С‡РµСЂРµР· Publishing Layer."""
 
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -93,7 +92,7 @@ import httpx
         db = SessionLocal()
         try:
             anime_channel = channel or db.query(ChannelORM).filter(
-                ChannelORM.name.like("%Аниме%") | ChannelORM.name.like("%Anime%"),
+                ChannelORM.name.like("%РђРЅРёРјРµ%") | ChannelORM.name.like("%Anime%"),
                 ChannelORM.is_connected == True,
             ).first()
 
@@ -152,9 +151,9 @@ import httpx
                 if not anime_title:
                     continue
 
-                # RU-only filter (если включён)
+                # RU-only filter (РµСЃР»Рё РІРєР»СЋС‡С‘РЅ)
                 title_name = self._get_title_name(anime_title, title_items[0])
-                if publishing_policy.get("require_ru_title") and not re.search(r"[а-яА-ЯёЁ]", title_name):
+                if publishing_policy.get("require_ru_title") and not re.search(r"[Р°-СЏРђ-РЇС‘РЃ]", title_name):
                     self.logger.info(f"Skipping EN-only: {title_name[:50]}")
                     for item in title_items:
                         item.status = "skipped_en"
@@ -162,7 +161,7 @@ import httpx
                     skipped_en += 1
                     continue
 
-                max_item = title_items[0]  # Для anime пока берём первый (все episode=1)
+                max_item = title_items[0]  # Р”Р»СЏ anime РїРѕРєР° Р±РµСЂС‘Рј РїРµСЂРІС‹Р№ (РІСЃРµ episode=1)
 
                 try:
                     result = self._publish_one(
@@ -226,7 +225,7 @@ import httpx
 
     def _get_title_name(self, anime_title: AnimeTitle, item: ContentORM) -> str:
         meta = self._meta(item)
-        # Приоритет: romaji > english > native > canonical
+        # РџСЂРёРѕСЂРёС‚РµС‚: romaji > english > native > canonical
         if anime_title.aliases:
             if "romaji" in anime_title.aliases:
                 return anime_title.aliases["romaji"]
@@ -244,7 +243,7 @@ import httpx
 
     def _format_hashtag(self, tag: str) -> str:
         tag = html_lib.unescape(tag.strip())
-        tag = re.sub(r'[^\wа-яА-ЯёЁ\s]', '', tag)
+        tag = re.sub(r'[^\wР°-СЏРђ-РЇС‘РЃ\s]', '', tag)
         tag = tag.replace(' ', '_')
         tag = re.sub(r'^[\d_]+', '', tag)
         return f"#{tag}" if tag else ""
@@ -262,7 +261,7 @@ import httpx
         formatting: dict,
         publishing_policy: dict,
     ) -> Publication:
-        """Sprint 54: делегируем форматирование в AnimeFormatter."""
+        """Sprint 54: РґРµР»РµРіРёСЂСѓРµРј С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ РІ AnimeFormatter."""
         formatter = AnimeFormatter()
         ctx = FormatContext(
             item=item,
@@ -308,7 +307,7 @@ import httpx
         formatting = profile.get("formatting_profile", {})
         title_name = self._get_title_name(anime_title, item)
 
-        # Telegraph (если разрешено)
+        # Telegraph (РµСЃР»Рё СЂР°Р·СЂРµС€РµРЅРѕ)
         telegraph_url = None
         if telegraph and publishing_policy.get("telegraph_page"):
             try:
@@ -332,16 +331,16 @@ import httpx
         anilist_url = f"https://anilist.co/anime/{anime_title.external_ids.get('anilist', '')}"
         short_url = shortener.shorten(anilist_url) if anilist_url else ""
 
-        # Image через Publishing Layer (policy-driven)
+        # Image С‡РµСЂРµР· Publishing Layer (policy-driven)
         image_url = image_resolver.resolve(item, channel)
         if not image_url:
-            # Fallback: cover из AnimeTitle
+            # Fallback: cover РёР· AnimeTitle
             image_url = anime_title.cover_url
 
         if not image_url:
             return {"status": "failed", "error": "No image resolved"}
 
-        # Строим Publication
+        # РЎС‚СЂРѕРёРј Publication
         publication = self._build_publication(
             anime_title=anime_title,
             item=item,
@@ -353,7 +352,7 @@ import httpx
             publishing_policy=publishing_policy,
         )
 
-        # Отправляем через Publishing Layer
+        # РћС‚РїСЂР°РІР»СЏРµРј С‡РµСЂРµР· Publishing Layer
         result = publisher.publish(publication)
 
         if result.get("status") == "success":
