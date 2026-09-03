@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 """Sprint 67.3: Universal Pipeline API."""
 import asyncio
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
@@ -64,6 +68,12 @@ async def run_universal_pipeline(
         profile.bot_token = channel.bot_token
     if channel.chat_id and not getattr(profile, 'chat_id', None):
         profile.chat_id = channel.chat_id
+
+    # Sprint 69.19: пробрасываем publishing.mode из content_profile
+    cp = getattr(channel, 'content_profile', None) or {}
+    publishing_mode = cp.get('publishing_mode', 'auto')
+    profile.publishing = {'mode': publishing_mode}
+    logger.info(f'Set profile.publishing.mode={publishing_mode} for {channel.name}')
     # Sprint 69.5 fix: channel_id для привязки контента к каналу
     if not getattr(profile, 'channel_id', None):
         profile.channel_id = channel.id
