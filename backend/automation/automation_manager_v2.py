@@ -285,6 +285,12 @@ class AutomationManagerV2:
                 profile.chat_id = channel.chat_id
             if not getattr(profile, "channel_id", None):
                 profile.channel_id = channel.id
+            
+            # Sprint 69.17: пробрасываем publishing.mode из content_profile
+            # NewsPublishingStrategy читает profile.publishing.mode
+            if not getattr(profile, "publishing", None):
+                profile.publishing = {"mode": cp.get("publishing_mode", "auto")}
+                logger.debug(f"Set profile.publishing.mode={cp.get('publishing_mode', 'auto')}")
 
             logger.info(f"Sprint 69.15: Universal Pipeline for {task.channel_name}")
             print(f"   🚀 Universal Pipeline for {task.channel_name}", flush=True)
