@@ -54,6 +54,7 @@ class AnimePublishJob:
         
         try:
             import requests
+import httpx
             prompt = f"""Переведи описание аниме на русский язык. Сохрани стиль и эмоции. Только перевод, без пояснений.
 
 Описание: {text[:800]}
