@@ -4,6 +4,7 @@ from backend.engines.ollama_limiter import with_ollama_limit
 import os
 import json
 import requests
+import httpx
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)

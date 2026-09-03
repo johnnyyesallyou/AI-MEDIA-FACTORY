@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 _ollama_semaphore: Optional[asyncio.Semaphore] = None
 
 
-def get_ollama_semaphore(max_concurrent: int = 2) -> asyncio.Semaphore:
+def get_ollama_semaphore(max_concurrent: int = 1) -> asyncio.Semaphore:
     """
     Возвращает semaphore для ограничения параллельных вызовов Ollama.
     

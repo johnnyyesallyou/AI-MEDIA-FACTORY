@@ -1,0 +1,239 @@
+﻿INFO:     172.20.0.5:35648 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60852 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:39966 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:33362 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38830 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:39068 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:58960 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:43580 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52032 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:59112 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37634 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:54326 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:51596 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:41896 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:59666 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58490 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:34210 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:58752 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50584 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:44508 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:55332 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:56586 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46438 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50788 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47328 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40646 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:40948 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:45866 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:52986 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:44146 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39330 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50408 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:36592 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:43914 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37948 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:49270 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:37248 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54210 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:55268 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47354 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:35274 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:42724 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38634 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:58740 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36354 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50240 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48916 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:44912 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:56354 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47156 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:47338 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51800 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46596 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:38768 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48914 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:43010 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:57718 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:54602 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:60022 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55114 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:55504 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:48998 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:50058 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     172.20.0.5:46080 - "GET /metrics HTTP/1.1" 200 OK
+Scheduled automation started for channel 05e56e1c-79fb-4330-8df3-9d2443b4895f
+╤А╤ЯтАЭ╥Р Scheduled automation run for channel 05e56e1c-79fb-4330-8df3-9d2443b4895f
+Using AutomationManager v2 for channel 05e56e1c-79fb-4330-8df3-9d2443b4895f
+ЁЯУе ENQUEUING task 800f1cfa-62be-42c8-8d7d-2cc05dc414a7 into queue 05e56e1c
+   Queue exists: True
+   Queue size before: 0
+Enqueued task 800f1cfa-62be-42c8-8d7d-2cc05dc414a7 for channel Movie & Series News
+Scheduled automation completed for channel 05e56e1c-79fb-4330-8df3-9d2443b4895f
+Scheduled automation started for channel 24df0f84-46c2-4df4-ab39-d76881b35438
+╤А╤ЯтАЭ╥Р Scheduled automation run for channel 24df0f84-46c2-4df4-ab39-d76881b35438
+Using AutomationManager v2 for channel 24df0f84-46c2-4df4-ab39-d76881b35438
+ЁЯУе ENQUEUING task 44454757-c202-4998-931d-7f9771d7efa8 into queue 24df0f84
+   Queue exists: True
+   Queue size before: 0
+Enqueued task 44454757-c202-4998-931d-7f9771d7efa8 for channel ╨Э╨╛╨▓╨╛╤Б╤В╨╕ ЁЯУ░
+Scheduled automation completed for channel 24df0f84-46c2-4df4-ab39-d76881b35438
+Scheduled automation started for channel ac6d1daf-6e73-4789-85d2-fc858a4e0eb1
+╤А╤ЯтАЭ╥Р Scheduled automation run for channel ac6d1daf-6e73-4789-85d2-fc858a4e0eb1
+Using AutomationManager v2 for channel ac6d1daf-6e73-4789-85d2-fc858a4e0eb1
+ЁЯУе ENQUEUING task 6cc5bc98-a54d-4058-8936-dfb4b6401e2e into queue ac6d1daf
+   Queue exists: True
+   Queue size before: 0
+Enqueued task 6cc5bc98-a54d-4058-8936-dfb4b6401e2e for channel Anime News Daily
+Scheduled automation completed for channel ac6d1daf-6e73-4789-85d2-fc858a4e0eb1
+   ЁЯУд GOT TASK! 800f1cfa-62be-42c8-8d7d-2cc05dc414a7 for Movie & Series News
+Processing task 800f1cfa-62be-42c8-8d7d-2cc05dc414a7 for channel Movie & Series News
+Executing task 800f1cfa-62be-42c8-8d7d-2cc05dc414a7 with timeout=600s
+   ЁЯУд GOT TASK! 44454757-c202-4998-931d-7f9771d7efa8 for ╨Э╨╛╨▓╨╛╤Б╤В╨╕ ЁЯУ░
+Processing task 44454757-c202-4998-931d-7f9771d7efa8 for channel ╨Э╨╛╨▓╨╛╤Б╤В╨╕ ЁЯУ░
+Executing task 44454757-c202-4998-931d-7f9771d7efa8 with timeout=600s
+   ЁЯУд GOT TASK! 6cc5bc98-a54d-4058-8936-dfb4b6401e2e for Anime News Daily
+Processing task 6cc5bc98-a54d-4058-8936-dfb4b6401e2e for channel Anime News Daily
+Executing task 6cc5bc98-a54d-4058-8936-dfb4b6401e2e with timeout=600s
+ЁЯФиЁЯФиЁЯФи EXECUTE_TASK START for 800f1cfa-62be-42c8-8d7d-2cc05dc414a7 (Movie & Series News)
+Rate limit OK for channel Movie & Series News: 0/50 posts today
+Sprint 69.15: Universal Pipeline for Movie & Series News
+   ЁЯЪА Universal Pipeline for Movie & Series News
+Strategy 'research' set: NewsResearchStrategy
+Strategy 'generation' set: NewsGenerationStrategy
+Strategy 'media' set: NewsMediaStrategy
+NewsPublishingStrategy: mode=approval_required, platform=telegram
+Strategy 'publishing' set: NewsPublishingStrategy
+Strategies set for Movie & Series News
+[1/4] Research for channel Movie & Series News
+Collecting 5 real RSS sources
+Fetching RSS: IMDb (https://www.imdb.com/news/rss)
+  IMDb: 0 topics
+Fetching RSS: Deadline (https://deadline.com/feed/)
+  Deadline: 10 topics
+Fetching RSS: Variety (https://variety.com/feed/)
+  Variety: 1 topics
+Fetching RSS: The Hollywood Reporter (https://www.hollywoodreporter.com/feed/)
+  The Hollywood Reporter: 1 topics
+Fetching RSS: Collider (https://collider.com/feed/)
+  Collider: 1 topics
+Total: 13 topics from 5 sources
+Extracted 10 topics from RSS
+Dedup check: 0 existing URLs found out of 10 topics
+Dedup: all 10 topics are new
+Dedup: 10 topics тЖТ 10 new
+[1/4] Research done: 10 topics
+[2/4] Generation for 10 topics
+Generating news post: Amelia DimoldenbergтАЩs Hit YouTube Series тАШChicken Shop DateтАЩ
+LLM generated 741 chars for: Amelia DimoldenbergтАЩs Hit YouTube Series тАШChicken 
+Generating news post: French TV In Focus: Screenings & Shows To Watch At The Unifr
+LLM generated 731 chars for: French TV In Focus: Screenings & Shows To Watch At
+Generating news post: Tubi Turns To Football Freestylers Woody & Kleiny For First 
+LLM generated 576 chars for: Tubi Turns To Football Freestylers Woody & Kleiny 
+Generating news post: Sandra H├╝ller To Star As Celebrated Late Male German Artist 
+LLM generated 507 chars for: Sandra H├╝ller To Star As Celebrated Late Male Germ
+Generating news post: Jeff Goldblum To Host Season 2 Premiere Of тАШSaturday Night L
+LLM generated 592 chars for: Jeff Goldblum To Host Season 2 Premiere Of тАШSaturd
+Generating news post: UnifranceтАЩs Rendez-Vous Brings French Sellers & Global Buyer
+LLM generated 495 chars for: UnifranceтАЩs Rendez-Vous Brings French Sellers & Gl
+Generating news post: Calls Grow For Palestinian Flag To Fly At Venice Film Festiv
+LLM generated 841 chars for: Calls Grow For Palestinian Flag To Fly At Venice F
+Generating news post: Goalhanger Wants To Make The тАЬBritish BourneтАЭ With Geopoliti
+LLM generated 769 chars for: Goalhanger Wants To Make The тАЬBritish BourneтАЭ With
+Generating news post: тАШSlow HorsesтАЩ Maker See-Saw Films Hires Fifth SeasonтАЩs Ben I
+LLM generated 429 chars for: тАШSlow HorsesтАЩ Maker See-Saw Films Hires Fifth Seas
+Generating news post: тАШThe GentlemenтАЩ Star Theo James On Meghan Markle Casting, Gu
+LLM generated 526 chars for: тАШThe GentlemenтАЩ Star Theo James On Meghan Markle C
+[2/4] Generation done: 10 posts
+[3/4] Media selection for 10 posts
+Selecting media for: Amelia DimoldenbergтАЩs Hit YouTube Series тАШChicken 
+Selecting media for: French TV In Focus: Screenings & Shows To Watch At
+Selecting media for: Tubi Turns To Football Freestylers Woody & Kleiny 
+Selecting media for: Sandra H├╝ller To Star As Celebrated Late Male Germ
+Selecting media for: Jeff Goldblum To Host Season 2 Premiere Of тАШSaturd
+Selecting media for: UnifranceтАЩs Rendez-Vous Brings French Sellers & Gl
+Selecting media for: Calls Grow For Palestinian Flag To Fly At Venice F
+Selecting media for: Goalhanger Wants To Make The тАЬBritish BourneтАЭ With
+Selecting media for: тАШSlow HorsesтАЩ Maker See-Saw Films Hires Fifth Seas
+Selecting media for: тАШThe GentlemenтАЩ Star Theo James On Meghan Markle C
+[4/4] Publishing for 10 posts
+Publishing (mode=approval_required): Amelia DimoldenbergтАЩs Hit YouTube Series тАШChicken 
+Content saved: id=c8972119-79ec-4add-a090-4454adf5140c, status=draft, headline=Amelia DimoldenbergтАЩs Hit YouTube Series тАШChicken 
+Saved as draft (approval_required)
+Publishing (mode=approval_required): French TV In Focus: Screenings & Shows To Watch At
+Content saved: id=65bffc6e-7d07-4491-bebb-e0d606d35d21, status=draft, headline=French TV In Focus: Screenings & Shows To Watch At
+Saved as draft (approval_required)
+Publishing (mode=approval_required): Tubi Turns To Football Freestylers Woody & Kleiny 
+Content saved: id=75204eff-813e-4c38-bfcb-f285863ba83b, status=draft, headline=Tubi Turns To Football Freestylers Woody & Kleiny 
+Saved as draft (approval_required)
+Publishing (mode=approval_required): Sandra H├╝ller To Star As Celebrated Late Male Germ
+Content saved: id=fce92479-7193-400b-8444-b7beed6ed498, status=draft, headline=Sandra H├╝ller To Star As Celebrated Late Male Germ
+Saved as draft (approval_required)
+Publishing (mode=approval_required): Jeff Goldblum To Host Season 2 Premiere Of тАШSaturd
+Content saved: id=c3e79d5f-5de8-4001-9e6e-d07c8a4d0457, status=draft, headline=Jeff Goldblum To Host Season 2 Premiere Of тАШSaturd
+Saved as draft (approval_required)
+Publishing (mode=approval_required): UnifranceтАЩs Rendez-Vous Brings French Sellers & Gl
+Content saved: id=0ab0367e-44a7-474b-8928-1346f5f24072, status=draft, headline=UnifranceтАЩs Rendez-Vous Brings French Sellers & Gl
+Saved as draft (approval_required)
+Publishing (mode=approval_required): Calls Grow For Palestinian Flag To Fly At Venice F
+Content saved: id=00692a8c-3b5a-44c2-b05a-b049dc17dc5a, status=draft, headline=Calls Grow For Palestinian Flag To Fly At Venice F
+Saved as draft (approval_required)
+Publishing (mode=approval_required): Goalhanger Wants To Make The тАЬBritish BourneтАЭ With
+Content saved: id=cf52e166-3eb6-4a3e-9f7b-4196aecebca3, status=draft, headline=Goalhanger Wants To Make The тАЬBritish BourneтАЭ With
+Saved as draft (approval_required)
+Publishing (mode=approval_required): тАШSlow HorsesтАЩ Maker See-Saw Films Hires Fifth Seas
+Content saved: id=a52f35a1-52f5-4dc2-acf2-a119b9fbbdec, status=draft, headline=тАШSlow HorsesтАЩ Maker See-Saw Films Hires Fifth Seas
+Saved as draft (approval_required)
+Publishing (mode=approval_required): тАШThe GentlemenтАЩ Star Theo James On Meghan Markle C
+Content saved: id=2493b070-e632-43f2-ba15-2ae6ad0b11d9, status=draft, headline=тАШThe GentlemenтАЩ Star Theo James On Meghan Markle C
+Saved as draft (approval_required)
+[4/4] Publishing done: 10 published
+Pipeline completed in 324.0s: 10 topics, 10 generated, 10 published, 0 errors
+   тЬЕ Universal Pipeline: {'status': 'ok', 'topics': 10, 'generated': 10, 'published': 10}
+Task 800f1cfa-62be-42c8-8d7d-2cc05dc414a7 completed successfully
+ЁЯФиЁЯФиЁЯФи EXECUTE_TASK START for 44454757-c202-4998-931d-7f9771d7efa8 (╨Э╨╛╨▓╨╛╤Б╤В╨╕ ЁЯУ░)
+Rate limit OK for channel ╨Э╨╛╨▓╨╛╤Б╤В╨╕ ЁЯУ░: 0/50 posts today
+Sprint 69.15: Universal Pipeline for ╨Э╨╛╨▓╨╛╤Б╤В╨╕ ЁЯУ░
+   ЁЯЪА Universal Pipeline for ╨Э╨╛╨▓╨╛╤Б╤В╨╕ ЁЯУ░
+Strategy 'research' set: NewsResearchStrategy
+Strategy 'generation' set: NewsGenerationStrategy
+Strategy 'media' set: NewsMediaStrategy
+NewsPublishingStrategy: mode=auto, platform=telegram
+Strategy 'publishing' set: NewsPublishingStrategy
+Strategies set for ╨Э╨╛╨▓╨╛╤Б╤В╨╕ ЁЯУ░
+[1/4] Research for channel ╨Э╨╛╨▓╨╛╤Б╤В╨╕ ЁЯУ░
+Collecting 4 real RSS sources
+Pipeline failed: 'str' object has no attribute 'get'
+Pipeline completed in 0.0s: 0 topics, 0 generated, 0 published, 1 errors
+   тЬЕ Universal Pipeline: {'status': 'ok', 'topics': 0, 'generated': 0, 'published': 0}
+Task 44454757-c202-4998-931d-7f9771d7efa8 completed successfully
+ЁЯФиЁЯФиЁЯФи EXECUTE_TASK START for 6cc5bc98-a54d-4058-8936-dfb4b6401e2e (Anime News Daily)
+Rate limit OK for channel Anime News Daily: 12/50 posts today
+Sprint 69.15: Universal Pipeline for Anime News Daily
+   ЁЯЪА Universal Pipeline for Anime News Daily
+Strategy 'research' set: NewsResearchStrategy
+Strategy 'generation' set: NewsGenerationStrategy
+Strategy 'media' set: NewsMediaStrategy
+NewsPublishingStrategy: mode=auto, platform=telegram
+Strategy 'publishing' set: NewsPublishingStrategy
+Strategies set for Anime News Daily
+[1/4] Research for channel Anime News Daily
+Collecting 5 real RSS sources
+Fetching RSS: MyAnimeList (https://myanimelist.net/rss/news.xml)
+  MyAnimeList: 5 topics
+Fetching RSS: ANN (https://www.animenewsnetwork.com/all/rss.xml)
+  ANN: 5 topics
+Fetching RSS: Crunchyroll (https://www.crunchyroll.com/news/rss.xml)
+  Crunchyroll: 0 topics
+Fetching RSS: Anime Herald (https://www.animeherald.com/feed/)
+  Anime Herald: 0 topics
+Fetching RSS: Otaku USA (https://otakuusamagazine.com/feed/)
+  Otaku USA: 0 topics
+Total: 10 topics from 5 sources
+Extracted 10 topics from RSS
+Dedup check: 5 existing URLs found out of 10 topics
+Dedup: skipped 5 duplicate topics, kept 5 new
+Dedup: 10 topics тЖТ 5 new
+[1/4] Research done: 5 topics
+[2/4] Generation for 5 topics
+Generating news post: 'Mahou no Shimai Lulutto Lily Part 2' Reveals Additional Cas
