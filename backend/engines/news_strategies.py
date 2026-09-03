@@ -7,6 +7,7 @@ from backend.engines.llm_post_generator import generate_news_post_llm
 from backend.engines.telegram_publisher import TelegramPublisher
 from core.database import SessionLocal
 from core.models.content_orm import ContentORM
+from core.models.channel_orm import ChannelORM
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +86,68 @@ class NewsPublishingStrategy:
     def __init__(self, profile: Any):
         self.profile = profile
         publishing = getattr(profile, 'publishing', None) or {}
-        self.mode = publishing.get('mode', 'approval_required')
+        mode = publishing.get('mode')
+        if not mode:
+            cp = getattr(profile, 'content_profile', None) or {}
+            if isinstance(cp, dict):
+                mode = cp.get('publishing_mode')
+        self.mode = mode or 'approval_required'
+
+        # Sprint 69.18: platform + credentials из канала (если не проброшены)
+        self.platform = getattr(profile, 'platform', None)
+        if getattr(profile, 'channel_id', None):
+            try:
+                db = SessionLocal()
+                try:
+                    ch = db.query(ChannelORM).filter(ChannelORM.id == profile.channel_id).first()
+                    if ch:
+                        self.platform = self.platform or ch.platform
+                        if not getattr(profile, 'vk_group_id', None):
+                            profile.vk_group_id = ch.vk_group_id
+                        if not getattr(profile, 'vk_access_token', None):
+                            profile.vk_access_token = ch.vk_access_token
+                        if not getattr(profile, 'bot_token', None):
+                            profile.bot_token = ch.bot_token
+                        if not getattr(profile, 'chat_id', None):
+                            profile.chat_id = ch.chat_id
+                finally:
+                    db.close()
+            except Exception as e:
+                logger.warning(f"Channel lookup failed: {e}")
+        self.platform = self.platform or 'telegram'
+        logger.info(f"NewsPublishingStrategy: mode={self.mode}, platform={self.platform}")
     
+    def _publish_vk(self, post: Dict[str, Any]) -> Dict[str, Any]:
+        """Sprint 69.18: публикация в VK через wall.post."""
+        import requests as _requests
+        group_id = getattr(self.profile, "vk_group_id", None)
+        token = getattr(self.profile, "vk_access_token", None)
+        if not group_id or not token:
+            return {"success": False, "error": "VK credentials missing"}
+        gid = "".join(ch for ch in str(group_id) if ch.isdigit())
+        title = post.get("title", "")
+        body = post.get("content", "")
+        message = (title + "\n\n" + body)[:4000]
+        try:
+            resp = _requests.post(
+                "https://api.vk.com/method/wall.post",
+                data={
+                    "owner_id": "-" + gid,
+                    "message": message,
+                    "access_token": token,
+                    "v": "5.131",
+                },
+                timeout=30,
+            )
+            data = resp.json()
+        except Exception as e:
+            return {"success": False, "error": f"VK API error: {e}"}
+        if "response" in data and data["response"].get("post_id"):
+            post_id = data["response"]["post_id"]
+            logger.info(f"Published to VK: post_id={post_id}")
+            return {"success": True, "message_id": f"vk_{post_id}"}
+        return {"success": False, "error": str(data.get("error"))}
+
     async def publish(self, post: Dict[str, Any], media_url: Optional[str]) -> Dict[str, Any]:
         logger.info(f"Publishing (mode={self.mode}): {post.get('title', '')[:50]}")
         
@@ -124,6 +185,25 @@ class NewsPublishingStrategy:
         
         # Auto mode: отправляем в Telegram
         if self.mode == "auto":
+            # Sprint 69.18: VK платформа — публикуем в VK и возвращаемся
+            if self.platform == "vk":
+                vk_result = self._publish_vk(post)
+                if vk_result.get("success"):
+                    try:
+                        from datetime import datetime as _dt
+                        db2 = SessionLocal()
+                        try:
+                            row = db2.query(ContentORM).filter(ContentORM.id == content.id).first()
+                            if row:
+                                row.telegram_message_id = str(vk_result.get("message_id"))
+                                row.published_at = _dt.utcnow()
+                                db2.commit()
+                                logger.info(f"Saved VK post id to content {content.id}")
+                        finally:
+                            db2.close()
+                    except Exception as e:
+                        logger.error(f"Failed to save VK post id: {e}")
+                return vk_result
             # Получаем bot_token и chat_id из profile (проброшены из channel)
             bot_token = getattr(self.profile, 'bot_token', None)
             chat_id = getattr(self.profile, 'chat_id', None)

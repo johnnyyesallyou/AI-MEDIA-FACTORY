@@ -239,10 +239,13 @@ class AutomationManagerV2:
             finally:
                 db.close()
             
-            # Только telegram каналы с реальным ботом
-            if getattr(channel, "platform", None) != "telegram":
+            # Sprint 69.18: разрешаем telegram + vk
+            platform = getattr(channel, "platform", None)
+            if platform not in ("telegram", "vk"):
                 return None
-            if not (getattr(channel, "bot_token", None) and getattr(channel, "chat_id", None)):
+            if platform == "telegram" and not (getattr(channel, "bot_token", None) and getattr(channel, "chat_id", None)):
+                return None
+            if platform == "vk" and not (getattr(channel, "vk_group_id", None) and getattr(channel, "vk_access_token", None)):
                 return None
 
             cp = getattr(channel, "content_profile", None) or {}
@@ -291,6 +294,12 @@ class AutomationManagerV2:
             if not getattr(profile, "publishing", None):
                 profile.publishing = {"mode": cp.get("publishing_mode", "auto")}
                 logger.debug(f"Set profile.publishing.mode={cp.get('publishing_mode', 'auto')}")
+            if not getattr(profile, "platform", None):
+                profile.platform = channel.platform
+            if not getattr(profile, "vk_group_id", None):
+                profile.vk_group_id = getattr(channel, "vk_group_id", None)
+            if not getattr(profile, "vk_access_token", None):
+                profile.vk_access_token = getattr(channel, "vk_access_token", None)
 
             logger.info(f"Sprint 69.15: Universal Pipeline for {task.channel_name}")
             print(f"   🚀 Universal Pipeline for {task.channel_name}", flush=True)
