@@ -289,11 +289,12 @@ class AutomationManagerV2:
             if not getattr(profile, "channel_id", None):
                 profile.channel_id = channel.id
             
-            # Sprint 69.17: пробрасываем publishing.mode из content_profile
+            # Sprint 69.19 FIX: ВСЕГДА пробрасываем publishing.mode из content_profile
             # NewsPublishingStrategy читает profile.publishing.mode
-            if not getattr(profile, "publishing", None):
-                profile.publishing = {"mode": cp.get("publishing_mode", "auto")}
-                logger.debug(f"Set profile.publishing.mode={cp.get('publishing_mode', 'auto')}")
+            # ВАЖНО: всегда перезаписываем, даже если profile.publishing уже существует
+            publishing_mode = cp.get("publishing_mode", "auto")
+            profile.publishing = {"mode": publishing_mode}
+            logger.debug(f"Set profile.publishing.mode={publishing_mode} (always)")
             if not getattr(profile, "platform", None):
                 profile.platform = channel.platform
             if not getattr(profile, "vk_group_id", None):
@@ -438,6 +439,20 @@ class AutomationManagerV2:
         
         # Создаём задачу
         workflow = WorkflowDefinition.default()  # Default workflow
+        
+        # Sprint 69.19 FIX: пробрасываем publishing.mode из content_profile
+        # ВНИМАНИЕ: ключ stage_type.value = "publish" (не "publishing")
+        cp = getattr(channel, "content_profile", None) or {}
+        publishing_mode = cp.get("publishing_mode", "auto")
+        
+        # Ищем stage с типом PUBLISH и устанавливаем config
+        for stage in workflow.stages:
+            if stage.stage_type.value == "publish":
+                stage.config["mode"] = publishing_mode
+                break
+                
+        logger.info(f"Set workflow.publish.mode={publishing_mode} for {channel.name}")
+        
         task = ChannelTask(
             task_id=str(uuid.uuid4()),
             channel_id=channel.id,
