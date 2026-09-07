@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import Any, List, Optional
 from datetime import datetime
 from enum import Enum
 from core.models.channel import ChannelConfig, KnowledgeSource, SourceType
@@ -173,7 +173,7 @@ class ChannelScheduleResponse(BaseModel):
     auto_publish: bool
     is_active: bool
     last_run: Optional[datetime] = None
-    next_run: Optional[datetime] = None
+    next_run: Optional[Any] = None
 
 
 # ============ SPRINT 8.2: CHANNEL PROFILES ============
