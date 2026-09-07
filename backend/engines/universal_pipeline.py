@@ -1,3 +1,4 @@
+from backend.engines import register_all  # Sprint 69.21: регистрирует все стратегии
 """Sprint 67.3: Universal Content Pipeline.
 
 Единый движок для всех типов каналов.
