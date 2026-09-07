@@ -69,17 +69,33 @@ class GenericResearchStrategy:
 class GenericGenerationStrategy:
     def __init__(self, profile: Any):
         self.profile = profile
-        defaults = get_archetype_defaults(_arch(profile))
+        self.archetype = _arch(profile)  # Sprint 69.21: сохраняем для LLM prompt
+        defaults = get_archetype_defaults(self.archetype)
         cfg = profile.content or {}
         self.max_length = cfg.get("max_length", defaults.max_post_length)
         self.formats = cfg.get("formats", defaults.allowed_formats)
         self.tone = profile.tone or defaults.tone
 
     async def generate_post(self, topic: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        logger.info(f"[{self.tone}] Generating post (max={self.max_length})")
+        logger.info(f"[{self.tone}] Generating post with LLM (archetype={self.archetype}, max={self.max_length})")
+        
+        # Sprint 69.21: реальная LLM-генерация вместо копирования RSS
+        from backend.engines.llm_post_generator import generate_generic_post_llm
+        
+        llm_content = await generate_generic_post_llm(
+            topic=topic,
+            archetype=self.archetype,
+            tone=self.tone,
+            max_length=self.max_length,
+            language="Russian"
+        )
+        
+        # Fallback на RSS summary если LLM недоступен
+        content = llm_content if llm_content else topic.get("summary", "")
+        
         return {
             "title": topic.get("title", ""),
-            "content": topic.get("summary", ""),
+            "content": content,
             "url": topic.get("url", ""),
             "source": topic.get("source", ""),
             "format": self.formats[0] if self.formats else "post",
