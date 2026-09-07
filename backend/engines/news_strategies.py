@@ -155,7 +155,7 @@ class NewsPublishingStrategy:
         db = SessionLocal()
         try:
             channel_id = getattr(self.profile, 'channel_id', None)
-            status = "draft" if self.mode == "approval_required" else "published"
+            status = "draft" if self.mode == "approval_required" else "pending"
             
             content = ContentORM(
                 headline=post.get("title", ""),
@@ -241,6 +241,7 @@ class NewsPublishingStrategy:
                             row = db2.query(ContentORM).filter(ContentORM.id == content_id).first()
                             if row:
                                 row.telegram_message_id = str(message_id)
+                                row.status = "published"  # Sprint 69.20: pending → published
                                 row.published_at = _dt.utcnow()
                                 db2.commit()
                                 logger.info(f"Saved telegram_message_id={message_id} to content {content_id}")
@@ -257,6 +258,25 @@ class NewsPublishingStrategy:
                 return {"success": True, "mode": "auto", "message_id": message_id}
             else:
                 logger.error(f"Telegram publish failed: {result.get('error')}")
+
+                # Sprint 69.20 FIX: обновляем статус на "failed"
+                content_id = content.id if hasattr(content, "id") else None
+                if content_id:
+                    try:
+                        db2 = SessionLocal()
+                        try:
+                            row = db2.query(ContentORM).filter(ContentORM.id == content_id).first()
+                            if row:
+                                row.status = "failed"  # Sprint 69.20: pending → failed
+                                db2.commit()
+                                logger.info(f"Updated status to failed for content {content_id}")
+                        except Exception as e:
+                            logger.error(f"Failed to update status to failed: {e}")
+                            db2.rollback()
+                        finally:
+                            db2.close()
+                    except Exception as e:
+                        logger.error(f"DB session error: {e}")
                 return {"success": False, "error": result.get("error")}
         
         # Approval required: сохраняем как draft

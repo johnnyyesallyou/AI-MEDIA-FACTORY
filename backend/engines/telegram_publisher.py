@@ -1,48 +1,58 @@
-"""Sprint 69.5: TelegramPublisher — реальная отправка сообщений в Telegram."""
+"""Sprint 69.20: TelegramPublisher — реальная отправка сообщений в Telegram с санитизацией."""
 import logging
 import asyncio
 import requests
 from typing import Dict, Any, Optional
+from backend.engines.html_sanitizer import sanitize_for_telegram, sanitize_keep_links
 
 logger = logging.getLogger(__name__)
 
 
 class TelegramPublisher:
     """Отправляет сообщения в Telegram через Bot API."""
-    
+
     def __init__(self, bot_token: str, chat_id: str):
         self.bot_token = bot_token
         self.chat_id = chat_id
         self.base_url = f"https://api.telegram.org/bot{bot_token}"
-    
+
     async def send_message(self, text: str, parse_mode: str = "HTML") -> Dict[str, Any]:
         """
         Отправляет текстовое сообщение в канал.
         
+        Sprint 69.20: автоматически санитизирует текст от неподдерживаемого HTML.
+
         Args:
             text: текст сообщения
             parse_mode: "HTML" | "Markdown" | None
-        
+
         Returns:
             {"success": bool, "message_id": int, "error": str}
         """
         # Sprint 69.6: rate limit — минимум 1 секунда между сообщениями
         await asyncio.sleep(1.0)
-        
+
+        # Sprint 69.20: санитизация HTML перед отправкой
+        if parse_mode == "HTML":
+            original_len = len(text)
+            text = sanitize_for_telegram(text)
+            if len(text) != original_len:
+                logger.debug(f"Text sanitized: {original_len} → {len(text)} chars")
+
         try:
             payload = {
                 "chat_id": self.chat_id,
                 "text": text,
                 "parse_mode": parse_mode,
             }
-            
+
             response = requests.post(
                 f"{self.base_url}/sendMessage",
                 json=payload,
                 timeout=30,
             )
             response.raise_for_status()
-            
+
             result = response.json()
             if result.get("ok"):
                 message_id = result.get("result", {}).get("message_id")
@@ -52,30 +62,35 @@ class TelegramPublisher:
                 error = result.get("description", "Unknown error")
                 logger.error(f"Telegram API error: {error}")
                 return {"success": False, "error": error}
-        
+
         except requests.exceptions.RequestException as e:
             logger.error(f"Telegram request failed: {e}")
             return {"success": False, "error": str(e)}
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
             return {"success": False, "error": str(e)}
-    
-    async def send_photo(self, photo_url: str, caption: str = "") -> Dict[str, Any]:
+
+    async def send_photo(self, photo_url: str, caption: str = "", parse_mode: str = "HTML") -> Dict[str, Any]:
         """Отправляет фото с подписью."""
+        # Sprint 69.20: санитизация caption
+        if parse_mode == "HTML" and caption:
+            caption = sanitize_for_telegram(caption)
+
         try:
             payload = {
                 "chat_id": self.chat_id,
                 "photo": photo_url,
                 "caption": caption,
+                "parse_mode": parse_mode,
             }
-            
+
             response = requests.post(
                 f"{self.base_url}/sendPhoto",
                 json=payload,
                 timeout=30,
             )
             response.raise_for_status()
-            
+
             result = response.json()
             if result.get("ok"):
                 message_id = result.get("result", {}).get("message_id")
@@ -85,7 +100,7 @@ class TelegramPublisher:
                 error = result.get("description", "Unknown error")
                 logger.error(f"Telegram API error: {error}")
                 return {"success": False, "error": error}
-        
+
         except Exception as e:
             logger.error(f"Send photo failed: {e}")
             return {"success": False, "error": str(e)}

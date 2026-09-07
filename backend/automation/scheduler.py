@@ -203,7 +203,7 @@ class AutomationScheduler:
         if not self.scheduler:
             return
 
-        job_id = f"channel_{schedule.channel_id}"
+        job_id = f"channel_{schedule.channel_id}_{schedule.cron_expression.replace(' ', '_')}"
 
         existing_job = self.scheduler.get_job(job_id)
         if existing_job:
@@ -267,11 +267,23 @@ class AutomationScheduler:
             return {"status": "failed", "error": str(e)}
 
     def get_next_run(self, channel_id: str):
+        """Возвращает список всех next_run_time для канала (может быть несколько расписаний)."""
         if not self.scheduler:
             return None
-        job_id = f"channel_{channel_id}"
-        job = self.scheduler.get_job(job_id)
-        return job.next_run_time if job else None
+        
+        # Sprint 69.20: ищем ВСЕ jobs для этого канала
+        prefix = f"channel_{channel_id}_"
+        next_runs = []
+        for job in self.scheduler.get_jobs():
+            if job.id.startswith(prefix):
+                if job.next_run_time:
+                    next_runs.append({
+                        "job_id": job.id,
+                        "next_run": job.next_run_time.isoformat() if hasattr(job.next_run_time, "isoformat") else str(job.next_run_time)
+                    })
+        
+        # Обратная совместимость: если нет jobs, возвращаем None
+        return next_runs if next_runs else None
 
     async def refresh_schedule(self, channel_id: str):
         if not self.scheduler:
@@ -286,10 +298,16 @@ class AutomationScheduler:
             if schedule and schedule.is_active:
                 await self.add_channel_job(schedule)
             else:
-                job_id = f"channel_{channel_id}"
-                if self.scheduler.get_job(job_id):
-                    self.scheduler.remove_job(job_id)
-                    logger.info("Removed inactive schedule for channel %s", channel_id)
+                # Sprint 69.20: удаляем ВСЕ jobs для этого канала
+                prefix = f"channel_{channel_id}_"
+                removed = 0
+                for job in self.scheduler.get_jobs():
+                    if job.id.startswith(prefix):
+                        self.scheduler.remove_job(job.id)
+                        removed += 1
+                
+                if removed > 0:
+                    logger.info(f"Removed {removed} inactive schedules for channel {channel_id}")
         finally:
             db.close()
 
