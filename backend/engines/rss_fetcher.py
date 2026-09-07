@@ -23,7 +23,7 @@ async def fetch_rss_topics(sources: List[Dict[str, Any]], max_age_hours: int = 2
     cutoff = datetime.utcnow() - timedelta(hours=max_age_hours)
     
     for src in sources:
-        if src.get("type") != "rss":
+        if src.get("source_type") != "rss":
             continue
         
         url = src.get("url")
