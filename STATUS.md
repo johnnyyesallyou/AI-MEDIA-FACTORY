@@ -20,6 +20,16 @@
 - ✅ `PipelineResult.stage_timings` + лог с процентами по стадиям (research/writing/media/publishing)
 - ✅ Таблица `pipeline_run_metrics` (ORM: `core/models/pipeline_run_metrics_orm.py`), метрики пишутся после каждого прогона
 - ✅ API: `GET /api/v1/metrics/pipeline/{channel_id}`, `/summary/all`, `/slowest/top`
+
+### Sprint 73.2 — Multi-channel Baseline (completed, 2026-09-08)
+- ✅ Прогон всех 14 каналов через `run-all-channels` (семафор 3), метрики в `pipeline_run_metrics`
+- **Network baseline (10 продуктивных прогонов):** 62 поста опубликовано, 0 errors; Avg=486.7s, **P50=507.6s, P95=779.6s**
+- **Writing share = 97.5%** (research 0.9%, publishing 1.7%), LLM ≈ 74–81s на пост
+- Top каналы по времени: Gaming 829s/10 постов, Movie 719s/9, Манга 620s/8
+- Без постов (дедупликация отсекла все темы): Новости 📰, Science Facts, Manga Releases Tracker; VK-канал — нет VK_TOKEN
+- **Вывод:** Writing = 92–98% на всех каналах → гипотеза подтверждена, Writing Optimization Sprint обоснован (параллельная генерация / model routing)
+- Next: Sprint 73.3 (execution_id сквозная трассировка + LLM-метрики) → 73.4 Dashboard
+
 - 📊 Первый вывод: **~92% времени пайплайна — LLM-генерация (writing)**, research ~3%, publishing ~4%
 
 ### Production System
