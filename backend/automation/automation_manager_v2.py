@@ -323,6 +323,9 @@ class AutomationManagerV2:
             
             pipe_result = await pipeline.run()
 
+            # Sprint 73.1: сохраняем метрики прогона в БД
+            self._save_run_metrics(task, pipe_result)
+
             return {
                 "status": "ok",
                 "topics": pipe_result.topics_found,
@@ -332,6 +335,36 @@ class AutomationManagerV2:
         except Exception as e:
             logger.error(f"Universal Pipeline failed for {task.channel_name}: {e}")
             return None
+
+    def _save_run_metrics(self, task, pipe_result) -> None:
+        """Sprint 73.1: persist pipeline stage timings to pipeline_run_metrics."""
+        timings = getattr(pipe_result, "stage_timings", {}) or {}
+        try:
+            from core.models.pipeline_run_metrics_orm import PipelineRunMetrics
+
+            db = SessionLocal()
+            try:
+                db.add(PipelineRunMetrics(
+                    channel_id=str(task.channel_id),
+                    channel_name=task.channel_name,
+                    execution_id=getattr(task, "execution_id", None),
+                    research_ms=int(timings.get("research", 0) * 1000),
+                    writing_ms=int(timings.get("writing", 0) * 1000),
+                    media_ms=int(timings.get("media", 0) * 1000),
+                    publishing_ms=int(timings.get("publishing", 0) * 1000),
+                    total_ms=int(getattr(pipe_result, "duration_seconds", 0) * 1000),
+                    topics_found=getattr(pipe_result, "topics_found", 0) or 0,
+                    topics_generated=getattr(pipe_result, "posts_generated", 0) or 0,
+                    topics_published=getattr(pipe_result, "posts_published", 0) or 0,
+                    errors_count=len(getattr(pipe_result, "errors", []) or []),
+                    success="true" if getattr(pipe_result, "success", False) else "false",
+                ))
+                db.commit()
+                logger.info(f"Sprint 73.1: run metrics saved for {task.channel_name}")
+            finally:
+                db.close()
+        except Exception as e:
+            logger.warning(f"Sprint 73.1: failed to save run metrics: {e}")
 
     async def _execute_task(self, task: ChannelTask):
         """Sprint 66.3: Executes task with timeout protection.
