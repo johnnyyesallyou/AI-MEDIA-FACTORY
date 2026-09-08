@@ -7,6 +7,8 @@ import logging
 from typing import List, Dict, Any, Optional
 
 from core.models.archetypes import Archetype, get_archetype_defaults
+from core.models.publication_builder import PublicationBuilder
+from core.models.renderers import TelegramRenderer, VKRenderer
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +167,23 @@ class GenericPublishingStrategy:
         gid = "".join(ch for ch in str(group_id) if ch.isdigit())
         title = post.get("title", "")
         body = post.get("content", "")
-        message = (title + "\n\n" + body)[:4000]
+        # Sprint 72.5: Use VKRenderer instead of manual formatting
+        try:
+            builder = PublicationBuilder()
+            from core.models.channel_orm import ChannelORM
+            db_temp = SessionLocal()
+            channel = db_temp.query(ChannelORM).filter(ChannelORM.id == getattr(self.profile, 'channel_id', None)).first()
+            db_temp.close()
+            
+            publication = builder.build(post=post, profile=self.profile, channel=channel)
+            renderer = VKRenderer()
+            render_result = renderer.render(publication)
+            message = render_result.message
+            logger.info(f"Sprint 72.5: VK Publication built")
+        except Exception as e:
+            logger.error(f"Sprint 72.5: VK Builder/Renderer failed: {e}")
+            # Fallback to manual formatting
+            message = (title + "\n\n" + body)[:4000]
         try:
             resp = _requests.post(
                 "https://api.vk.com/method/wall.post",
@@ -206,6 +224,8 @@ class GenericPublishingStrategy:
             db.add(content)
             db.commit()
             db.refresh(content)
+            content_id = content.id  # Sprint 72.5: save before db.close()
+            rendered_text = None  # Sprint 72.5: will be set by Renderer
             logger.info(f"Content saved: id={content.id}, status={initial_status}, headline={content.headline[:50]}")
         except Exception as e:
             logger.exception(f"Failed to save content: {e}")
@@ -246,9 +266,9 @@ class GenericPublishingStrategy:
             if self.platform == "vk":
                 vk_result = self._publish_vk(post)
                 if vk_result.get("success"):
-                    _mark_status(content.id, "published", vk_result.get("message_id"))
+                    _mark_status(content_id, "published", vk_result.get("message_id"))
                 else:
-                    _mark_status(content.id, "failed")
+                    _mark_status(content_id, "failed")
                     logger.error(f"VK publish failed: {vk_result.get('error')}")
                 return vk_result
 
@@ -256,34 +276,70 @@ class GenericPublishingStrategy:
             chat_id = getattr(self.profile, "chat_id", None)
             if not bot_token or not chat_id:
                 logger.error("bot_token or chat_id not set")
-                _mark_status(content.id, "failed")
+                _mark_status(content_id, "failed")
                 return {"success": False, "error": "Missing bot_token/chat_id"}
 
             from backend.engines.telegram_publisher import TelegramPublisher
             publisher = TelegramPublisher(bot_token, chat_id)
 
-            text = f"{post.get('content', '')}"
-            if post.get("source"):
-                text += f"\n\nИсточник: {post['source']}"
+            # Sprint 72.5: Use PublicationBuilder + Renderer instead of manual formatting
+            try:
+                builder = PublicationBuilder()
+                from core.models.channel_orm import ChannelORM
+                db_temp = SessionLocal()
+                channel = db_temp.query(ChannelORM).filter(ChannelORM.id == channel_id).first()
+                db_temp.close()
+                
+                publication = builder.build(post=post, profile=self.profile, channel=channel)
+                
+                if self.platform == 'vk':
+                    renderer = VKRenderer()
+                    render_result = renderer.render(publication)
+                    rendered_text = render_result.message
+                    text = rendered_text
+                else:  # telegram
+                    renderer = TelegramRenderer(source_emoji="🔗")
+                    render_result = renderer.render(publication)
+                    rendered_text = render_result.text
+                    text = rendered_text
+                
+                logger.info(f"Sprint 72.5: Publication built and rendered for {self.platform}")
+            except Exception as e:
+                logger.error(f"Sprint 72.5: Builder/Renderer failed: {e}")
+                # Fallback to manual formatting
+                text = f"{post.get('content', '')}"
+                if post.get("source"):
+                    text += f"\n\nИсточник: {post['source']}"
 
             if media_url:
                 result = await publisher.send_photo(media_url, caption=text)
             else:
+                # Sprint 72.5: Extract render metadata if available
+                parse_mode = None
+                reply_markup = None
+                disable_web_page_preview = False
+                
+                if 'render_result' in locals() and hasattr(render_result, 'parse_mode'):
+                    parse_mode = render_result.parse_mode
+                    reply_markup = render_result.reply_markup
+                    disable_web_page_preview = render_result.disable_web_page_preview
+                    logger.info(f"Sprint 72.5: Passing render metadata to publisher")
+                
                 result = await publisher.send_message(text)
 
             if result.get("success"):
                 message_id = result.get("message_id")
                 logger.info(f"Published to Telegram: message_id={message_id}")
-                _mark_status(content.id, "published", message_id)
+                _mark_status(content_id, "published", message_id)
                 return {"success": True, "mode": "auto", "message_id": message_id}
             else:
                 logger.error(f"Telegram publish failed: {result.get('error')}")
-                _mark_status(content.id, "failed")
-                return {"success": False, "error": result.get("error")}
+                _mark_status(content_id, "failed")
+                result = await publisher.send_message(text, parse_mode=parse_mode, reply_markup=reply_markup, disable_web_page_preview=disable_web_page_preview)
 
         if self.mode == "approval_required":
             logger.info("Saved as draft (approval_required)")
             return {"success": True, "mode": "approval_required", "status": "draft", "content_id": content.id}
 
-        _mark_status(content.id, "failed")
+        _mark_status(content_id, "failed")
         return {"success": False, "mode": "manual", "reason": "Manual mode"}
