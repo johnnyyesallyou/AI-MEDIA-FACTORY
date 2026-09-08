@@ -196,6 +196,7 @@ class NewsPublishingStrategy:
                             row = db2.query(ContentORM).filter(ContentORM.id == content.id).first()
                             if row:
                                 row.telegram_message_id = str(vk_result.get("message_id"))
+                                post.status = 'published'
                                 row.published_at = _dt.utcnow()
                                 db2.commit()
                                 logger.info(f"Saved VK post id to content {content.id}")
