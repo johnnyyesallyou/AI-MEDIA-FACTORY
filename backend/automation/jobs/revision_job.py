@@ -48,10 +48,6 @@ class RevisionJob:
                     # Sprint 72: writer.revise() не реализован, пропускаем revision
                     # TODO: реализовать revision в WritingEngine
                     result = {"revised_text": item.draft_text}  # Fallback: без изменений
-                        original_text=item.draft_text or "",
-                        feedback=item.last_revision_reason,
-                        headline=item.headline
-                    )
 
                     if result and result.get("revised_text"):
                         item.draft_text = result["revised_text"]
