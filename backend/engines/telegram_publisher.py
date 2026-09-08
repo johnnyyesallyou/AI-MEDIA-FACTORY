@@ -16,7 +16,7 @@ class TelegramPublisher:
         self.chat_id = chat_id
         self.base_url = f"https://api.telegram.org/bot{bot_token}"
 
-    async def send_message(self, text: str, parse_mode: str = "HTML") -> Dict[str, Any]:
+    async def send_message(self, text: str, parse_mode: str = "HTML", reply_markup: dict = None, disable_web_page_preview: bool = False) -> Dict[str, Any]:
         """
         Отправляет текстовое сообщение в канал.
         
