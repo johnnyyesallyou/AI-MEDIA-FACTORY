@@ -327,6 +327,7 @@ class NewsPublishingStrategy:
                         logger.error(f"DB session error: {e}")
                 
                 return {"success": True, "mode": "auto", "message_id": message_id}
+                # Sprint 72.4: DB already updated above, just return success
             else:
                 logger.error(f"Telegram publish failed: {result.get('error')}")
 
