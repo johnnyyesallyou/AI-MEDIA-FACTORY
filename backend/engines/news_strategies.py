@@ -281,26 +281,22 @@ class NewsPublishingStrategy:
                 logger.info(f"Published to Telegram: message_id={message_id}")
                 
                 # Sprint 72.4: Обновляем БД с telegram_message_id и status
+                logger.info(f"Sprint 72.4: Attempting to update DB for content {content.id}")
                 try:
                     from datetime import datetime as _dt
                     db2 = SessionLocal()
-                    try:
-                        row = db2.query(ContentORM).filter(ContentORM.id == content.id).first()
-                        if row:
-                            row.telegram_message_id = str(message_id)
-                            row.status = "published"
-                            row.published_at = _dt.utcnow()
-                            db2.commit()
-                            logger.info(f"Sprint 72.4: Updated DB - telegram_message_id={message_id}, status=published")
-                        else:
-                            logger.error(f"Content row not found: {content.id}")
-                    except Exception as e:
-                        logger.error(f"Failed to update DB: {e}")
-                        db2.rollback()
-                    finally:
-                        db2.close()
+                    row = db2.query(ContentORM).filter(ContentORM.id == content.id).first()
+                    if row:
+                        row.telegram_message_id = str(message_id)
+                        row.status = "published"
+                        row.published_at = _dt.utcnow()
+                        db2.commit()
+                        logger.info(f"Sprint 72.4: Updated DB - telegram_message_id={message_id}, status=published")
+                    else:
+                        logger.error(f"Content row not found: {content.id}")
+                    db2.close()
                 except Exception as e:
-                    logger.error(f"DB session error: {e}")
+                    logger.error(f"Sprint 72.4: DB update failed: {e}", exc_info=True)
                 
                 # Sprint 69.15 fix: сохраняем telegram_message_id и published_at
                 # Получаем content.id из созданной записи
