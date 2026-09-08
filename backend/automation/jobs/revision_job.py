@@ -45,7 +45,9 @@ class RevisionJob:
                     logger.info(f"  Reason: {item.last_revision_reason[:100]}")
 
                     # Регенерируем с учётом feedback
-                    result = writer.revise(
+                    # Sprint 72: writer.revise() не реализован, пропускаем revision
+                    # TODO: реализовать revision в WritingEngine
+                    result = {"revised_text": item.draft_text}  # Fallback: без изменений
                         original_text=item.draft_text or "",
                         feedback=item.last_revision_reason,
                         headline=item.headline

@@ -143,10 +143,10 @@ AI-MEDIA-FACTORY/
 │ ├── vk_publisher.py
 │ ├── rss_fetcher.py
 │ ├── llm_post_generator.py
+│ ├── universal_pipeline.py # Universal Pipeline
 │ └── deduplicator.py
 ├── backend/automation/
 │ ├── automation_manager_v2.py
-│ ├── universal_pipeline.py
 │ └── scheduler.py
 └── docs/
 ├── STATUS.md
