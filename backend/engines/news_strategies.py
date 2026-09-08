@@ -176,6 +176,7 @@ class NewsPublishingStrategy:
             logger.info(f"Content saved: id={content.id}, status={status}, headline={content.headline[:50]}")
             
             # Sprint 72.4: Build Publication and render for Telegram
+            render_metadata = None
             try:
                 builder = PublicationBuilder()
                 profile = self.profile
@@ -201,12 +202,20 @@ class NewsPublishingStrategy:
                 content._render_metadata['reply_markup'] = render_result.reply_markup
                 content._render_metadata['disable_web_page_preview'] = render_result.disable_web_page_preview
                 
+                # Sprint 72.4 fix: сохраняем metadata в локальную переменную —
+                # ORM-объект будет detached после db.close()
+                render_metadata = {
+                    'parse_mode': render_result.parse_mode,
+                    'reply_markup': render_result.reply_markup,
+                    'disable_web_page_preview': render_result.disable_web_page_preview,
+                }
+                
                 db.commit()
                 logger.info(f"Sprint 72.4: Publication built and rendered for telegram")
             except Exception as e:
                 logger.error(f"Sprint 72.4: Builder/Renderer failed: {e}")
                 # Fallback: используем оригинальный content
-                pass
+                render_metadata = None
         except Exception as e:
             logger.exception(f"Failed to save content: {e}")
             try:
@@ -236,7 +245,7 @@ class NewsPublishingStrategy:
                                 row.published_at = _dt.utcnow()
                                 row.status = "published"  # Sprint 71.3: pending → published для VK
                                 db2.commit()
-                                logger.info(f"Saved VK post id to content {content.id}")
+                                logger.info(f"Saved VK post id to content {content_id}")
                         finally:
                             db2.close()
                     except Exception as e:
@@ -265,8 +274,8 @@ class NewsPublishingStrategy:
                 reply_markup = None
                 disable_web_page_preview = False
             
-                if hasattr(content, '_render_metadata'):
-                    metadata = content._render_metadata
+                if render_metadata:
+                    metadata = render_metadata
                     parse_mode = metadata.get('parse_mode')
                     reply_markup = metadata.get('reply_markup')
                     disable_web_page_preview = metadata.get('disable_web_page_preview', False)
@@ -301,8 +310,8 @@ class NewsPublishingStrategy:
                     logger.error(f"Sprint 72.4: DB update failed: {e}", exc_info=True)
                 
                 # Sprint 69.15 fix: сохраняем telegram_message_id и published_at
-                # Получаем content.id из созданной записи
-                content_id = content.id if hasattr(content, 'id') else None
+                # Sprint 72.4 fix: используем локальную переменную content_id —
+                # ORM-объект content detached после db.close()
                 if content_id and message_id:
                     try:
                         db2 = SessionLocal()
@@ -332,7 +341,7 @@ class NewsPublishingStrategy:
                 logger.error(f"Telegram publish failed: {result.get('error')}")
 
                 # Sprint 69.20 FIX: обновляем статус на "failed"
-                content_id = content.id if hasattr(content, "id") else None
+                # Sprint 72.4 fix: content_id уже сохранён до db.close()
                 if content_id:
                     try:
                         db2 = SessionLocal()
@@ -354,7 +363,7 @@ class NewsPublishingStrategy:
         # Approval required: сохраняем как draft
         if self.mode == "approval_required":
             logger.info(f"Saved as draft (approval_required)")
-            return {"success": True, "mode": "approval_required", "status": "draft", "content_id": content.id}
+            return {"success": True, "mode": "approval_required", "status": "draft", "content_id": content_id}
         
         # Manual mode
         return {"success": False, "mode": "manual", "reason": "Manual mode"}
