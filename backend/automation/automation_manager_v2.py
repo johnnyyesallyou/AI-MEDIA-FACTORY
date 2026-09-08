@@ -35,8 +35,9 @@ from .workflow import WorkflowDefinition, WorkflowStage
 
 logger = logging.getLogger(__name__)
 
-# Sprint 66.3: Task timeout (5 minutes)
-TASK_TIMEOUT = 600  # seconds
+# Sprint 72.6: Task timeout raised 600 -> 1800s: 10 topics x ~30s LLM (sequential,
+# shared Ollama) can exceed 600s when multiple channels run in parallel
+TASK_TIMEOUT = 1800  # seconds
 
 
 
