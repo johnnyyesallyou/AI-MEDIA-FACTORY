@@ -1,12 +1,20 @@
 # AI Media Factory — Status
 
-**Last Updated:** 2026-09-08 15:12
-**Current Sprint:** 72.4 (completed)
-**Next Sprint:** 72.5 — GenericPublishingStrategy Integration
+**Last Updated:** 2026-09-08 (Sprint 72.6 regression completed)
+**Current Sprint:** 72.6 (completed)
+**Next Sprint:** 73 — Observability
 
 ---
 
 ## Current State
+
+### Automation/Scheduler tail — CLOSED (Sprint 72.6)
+- ✅ Fixed `revision_job.py` IndentationError (backend crash loop)
+- ✅ Fixed DetachedInstanceError in NewsPublishingStrategy reporting (published counter now correct)
+- ✅ Task timeout raised 600s → 1800s; global concurrency limit = 3 tasks (semaphore)
+- ✅ Full regression on all 14 channels via `/api/v1/automation-v2/run-all-channels`: **~130 posts published, 0 DetachedInstance errors**
+- ⚠️ ~10 min per channel (10 topics × LLM) — see Sprint 73 for metrics
+- ⚠️ Known degradations: VK_TOKEN not set (1 channel), AniList 403 / ReadManga 402 (sources)
 
 ### Production System
 - **14 active channels** across Telegram and VK platforms
