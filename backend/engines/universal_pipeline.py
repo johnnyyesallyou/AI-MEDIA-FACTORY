@@ -8,6 +8,7 @@ from backend.engines.vk_publishing_strategy import VkPublishingStrategy
 Заменяет отдельные pipelines (news/manga/anime) через Strategy Registry.
 """
 import logging
+import time
 from backend.engines.deduplicator import filter_new_topics
 from typing import Optional, Dict, Any, List, Protocol
 from dataclasses import dataclass, field
@@ -50,6 +51,17 @@ class PipelineResult:
     errors: List[str] = field(default_factory=list)
     duration_seconds: float = 0.0
     topics_found: int = 0
+    # Sprint 73.1: тайминги по стадиям (секунды)
+    stage_timings: Dict[str, float] = field(default_factory=dict)
+
+    def stage_summary(self) -> str:
+        """Sprint 73.1: человекочитаемая сводка по стадиям с процентами."""
+        total = sum(self.stage_timings.values()) or 1.0
+        parts = [
+            f"{name}={secs:.1f}s ({secs / total * 100:.1f}%)"
+            for name, secs in self.stage_timings.items()
+        ]
+        return " | ".join(parts)
 
 
 class UniversalContentPipeline:
@@ -88,12 +100,14 @@ class UniversalContentPipeline:
             if not research:
                 raise ValueError("ResearchStrategy not set")
             
+            _stage_start = time.perf_counter()
             sources = await research.collect_sources()
             topics = await research.extract_topics(sources)
             
             # Sprint 69.6: дедупликация — пропускаем уже опубликованные темы
             original_count = len(topics)
             topics = filter_new_topics(channel_id=self.channel.id, topics=topics)
+            result.stage_timings["research"] = time.perf_counter() - _stage_start
             logger.info(f"Dedup: {original_count} topics → {len(topics)} new")
             result.topics_found = len(topics)
             logger.info(f"[1/4] Research done: {len(topics)} topics")
@@ -105,6 +119,7 @@ class UniversalContentPipeline:
                 raise ValueError("GenerationStrategy not set")
             
             posts = []
+            _stage_start = time.perf_counter()
             for topic in topics:
                 try:
                     post = await generation.generate_post(topic)
@@ -113,6 +128,7 @@ class UniversalContentPipeline:
                 except Exception as e:
                     logger.error(f"Generation failed: {e}")
                     result.errors.append(f"generation: {str(e)}")
+            result.stage_timings["writing"] = time.perf_counter() - _stage_start
             
             result.posts_generated = len(posts)
             logger.info(f"[2/4] Generation done: {len(posts)} posts")
@@ -123,12 +139,14 @@ class UniversalContentPipeline:
             if not media:
                 raise ValueError("MediaStrategy not set")
             
+            _stage_start = time.perf_counter()
             for post in posts:
                 try:
                     media_url = await media.select_media(post)
                     post["media_url"] = media_url
                 except Exception as e:
                     logger.warning(f"Media selection failed: {e}")
+            result.stage_timings["media"] = time.perf_counter() - _stage_start
             
             # 4. Publishing phase
             logger.info(f"[4/4] Publishing for {len(posts)} posts")
@@ -137,6 +155,7 @@ class UniversalContentPipeline:
                 raise ValueError("PublishingStrategy not set")
             
             published_count = 0
+            _stage_start = time.perf_counter()
             for post in posts:
                 try:
                     pub_result = await publishing.publish(post, post.get("media_url"))
@@ -145,6 +164,7 @@ class UniversalContentPipeline:
                 except Exception as e:
                     logger.error(f"Publishing failed: {e}")
                     result.errors.append(f"publishing: {str(e)}")
+            result.stage_timings["publishing"] = time.perf_counter() - _stage_start
             
             result.posts_published = published_count
             logger.info(f"[4/4] Publishing done: {published_count} published")
@@ -160,5 +180,8 @@ class UniversalContentPipeline:
             f"{result.topics_found} topics, {result.posts_generated} generated, "
             f"{result.posts_published} published, {len(result.errors)} errors"
         )
+        # Sprint 73.1: разбивка по стадиям
+        if result.stage_timings:
+            logger.info(f"Pipeline stage timings [{self.channel.name}]: {result.stage_summary()}")
         
         return result
