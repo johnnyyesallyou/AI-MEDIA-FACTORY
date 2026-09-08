@@ -1,2297 +1,302 @@
-﻿# AI Media Factory
+# AI Media Factory — Project Context
 
-Project Context
-
-Version: 1.0
-
-Status: Active Development
+**Last Updated:** 2026-09-08
+**Current Sprint:** 72.4 (completed)
+**Next Sprint:** 72.5 — GenericPublishingStrategy Integration
 
 ---
 
-# 1. Vision
+## What is this project?
 
-AI Media Factory is a modular AI-driven platform designed for fully autonomous creation, management, publishing, and optimization of multiple Telegram media channels.
-
-The long-term goal is to build a scalable media ecosystem where specialized AI agents cooperate to perform the complete content lifecycle without continuous human involvement.
-
-The platform must support:
-
-- Unlimited Telegram channels
-- Independent content styles
-- Multiple AI models
-- Local and cloud inference
-- Modular architecture
-- Horizontal scalability
-- Human approval workflows
-- Continuous learning from analytics
-
-The system is designed around independent components that communicate through well-defined interfaces.
+AI Media Factory is an automated content generation and publishing system that manages **14 digital media channels** across **Telegram** (13) and **VK** (1) platforms. It uses LLM-based content generation, intelligent topic selection, and multi-platform publishing to run professional media channels with minimal human intervention.
 
 ---
 
-# 2. Primary Objectives
+## Current State (Post Sprint 72.4)
 
-The project aims to automate the complete media production pipeline.
+### Production Numbers
+- **14 active channels** across 2 platforms
+- **8 content archetypes** with specialized strategies
+- **Universal Pipeline** end-to-end automation operational
+- **Publication Layer** implemented (Sprint 72)
+- **Real LLM generation** via Ollama (Russian language)
+- **Telegram publishing** with HTML source links validated
+- **VK publishing** operational
 
-Core objectives include:
-
-• Automated news discovery
-
-• Topic clustering
-
-• Duplicate removal
-
-• Topic scoring
-
-• Content planning
-
-• Brief generation
-
-• Draft generation
-
-• Image generation
-
-• Telegram publishing
-
-• Analytics collection
-
-• Performance evaluation
-
-• AI-assisted optimization
-
-No manual work should be required during normal operation except optional approval.
+### Last Validated Test (Sprint 72.4)
+- **Channel:** Новости 📰
+- **Result:** 6 posts published successfully
+- **Telegram message IDs:** 504, 505, 506, 507, 508, 509
+- **HTML source links:** Present in all posts (<a href="...">)
+- **Pipeline duration:** ~173 seconds for 6 topics
+- **DB status:** All posts marked published
 
 ---
 
-# 3. Current Development Phase
+## Architecture Overview
 
-Current Version
+### High-Level Flow
+Channel Profile
+↓
+Universal Pipeline
+Research → Decision → Writing → Evaluation → Media
+↓
+PublicationBuilder (applies archetype policies)
+↓
+Publication Contract (platform-independent)
+↓
+┌───────┴───────┐
+↓ ↓
+TelegramRenderer VKRenderer
+↓ ↓
+Telegram Publisher VK Publisher
+↓ ↓
+Database Update (status=published, message_id)
 
-0.2
+### Key Architectural Principle (Sprint 72)
 
-Current Phase
+> **Publication describes WHAT should be published. Renderer describes HOW it is represented on a platform.**
 
-Research Engine → Content Persistence
-
-Current State
-
-Implemented
-
-✓ Docker infrastructure
-
-✓ FastAPI backend
-
-✓ PostgreSQL
-
-✓ SQLAlchemy
-
-✓ Alembic
-
-✓ Redis
-
-✓ RSS collection
-
-✓ Topic deduplication
-
-✓ Topic scoring
-
-✓ Topic persistence
-
-✓ REST API
-
-✓ Channel management
-
-✓ Content entities
-
-✓ Metrics foundation
-
-In Progress
-
-• Writing Engine
-
-Planned
-
-• Brief Generator
-
-• Prompt Builder
-
-• Image Engine
-
-• Telegram Publisher
-
-• Analytics Engine
-
-• Recommendation Engine
+This separation allows:
+- Same content rendered differently per platform
+- Easy addition of new platforms
+- Archetype-specific formatting without code duplication
+- Natural editorial style (no rigid AI templates)
 
 ---
 
-# 4. High-Level Architecture
+## Content Archetypes
 
-The platform consists of multiple independent layers.
+Eight supported archetypes, each with specialized policies:
 
-Presentation Layer
+| Archetype | Source Link | Article Link | Media | Typical Use |
+|-----------|-------------|--------------|-------|-------------|
+| **news** | always | conditional | preferred | Breaking news, current events |
+| **educational** | optional | never | preferred | Tutorials, explainers |
+| **entertainment** | never | never | required | Memes, fun content |
+| **viral** | never | never | required | Shareable content |
+| **releases** | always | never | required | Product launches |
+| **reviews** | always | always | required | Product reviews |
+| **community** | never | never | optional | Discussions |
+| **aggregator** | always | always | preferred | Curated content |
 
-↓
-
-REST API
-
-↓
-
-Application Layer
-
-↓
-
-Business Services
-
-↓
-
-AI Engines
-
-↓
-
-Repository Layer
-
-↓
-
-Database
-
-↓
-
-Infrastructure
-
-Every layer has a single responsibility.
-
-Business logic must never exist inside API routes.
-
-Database logic must never exist inside AI engines.
-
-Repositories provide the only access to persistence.
-
-Services orchestrate business operations.
-
-AI engines generate intelligence but never perform persistence directly.
+**Policy Resolution:** Profile settings → Archetype defaults → Global defaults
 
 ---
 
-# 5. Design Principles
+## Platform Support
 
-The architecture follows these principles.
+### Telegram (13 channels)
+- Bot API integration
+- HTML parse mode with proper escaping
+- InlineKeyboardMarkup for "Читать полностью" button
+- Photo/video support
+- Rate limiting (1s between messages)
+- Clickable source links: <a href="url">Источник</a>
 
-1.
-
-Modularity
-
-Every component can be replaced independently.
-
-2.
-
-Loose Coupling
-
-Components communicate through interfaces.
-
-3.
-
-Single Responsibility
-
-Every module has exactly one responsibility.
-
-4.
-
-Dependency Injection
-
-Dependencies are injected rather than created directly.
-
-5.
-
-Testability
-
-Every business component should be unit-testable.
-
-6.
-
-Scalability
-
-The system must support multiple workers and multiple AI models.
-
-7.
-
-Maintainability
-
-Readable code is preferred over clever code.
-
-8.
-
-Documentation First
-
-Architecture documentation is part of the project itself.
-
-Any architectural change must also update documentation.
+### VK (1 channel — AI Media Factory)
+- wall.post API
+- Plain text messages (no HTML)
+- URL attachments
+- Media attachments
+- Source as text line: "Источник: TheVerge"
 
 ---
 
-# 6. Technology Stack
+## Production Path
 
-Backend
-
-FastAPI
-
-Python
-
-SQLAlchemy
-
-Alembic
-
-Pydantic
-
-PostgreSQL
-
-Redis
-
-Frontend
-
-Next.js (planned)
-
-React
-
-TypeScript
-
-TailwindCSS
-
-shadcn/ui
-
-AI
-
-Ollama
-
-DashScope
-
-Stable Diffusion
-
-Infrastructure
-
-Docker
-
-Docker Compose
-
-Git
-
-GitHub
-
-Future
-
-NATS
-
-Celery (optional)
-
-Prometheus
-
-Grafana
-
+### Successful Publication Flow
+automation_manager_v2.run_channel_now(channel_id)
+Load channel + profile from database
+Universal Pipeline executes stages:
+Research: fetch RSS topics
+Decision: select topics
+Writing: generate text via LLM
+Evaluation: score quality
+Media: select images (placeholder)
+Publishing Strategy:
+Create ContentORM (status=pending)
+Build Publication via PublicationBuilder
+Render via TelegramRenderer/VKRenderer
+Send to platform API
+Update ContentORM (status=published, message_id)
+Return success
 
 ---
 
-# 7. Project Directory Structure
+## File Structure
 
-The project follows a modular architecture.
-
-Each directory has a clearly defined responsibility.
 AI-MEDIA-FACTORY/
-
-├── backend/
-├── frontend/
-├── docker/
-├── docs/
-├── scripts/
-├── tests/
-├── .github/
-├── README.md
-├── PROJECT_CONTEXT.md
-├── STATUS.md
-├── TASK.md
-├── ROADMAP.md
-├── AI_CONTEXT.md
-└── MEMORY_PROTOCOL.md
-
----
-
-# 8. Backend Structure
-backend/
-
-app/
-
-api/
-
-core/
-
-db/
-
-engines/
-
-models/
-
-repositories/
-
-schemas/
-
-services/
-
-workers/
-
-utils/
-
-tests/
-
-
-Every directory has a single responsibility.
-
----
-
-# 9. Directory Responsibilities
-
-## api/
-
-Contains REST API endpoints.
-
-Responsibilities:
-
-- request validation
-
-- response serialization
-
-- authentication
-
-- routing
-
-Must NOT contain:
-
-- business logic
-
-- SQL
-
-- AI prompts
-
----
-
-## core/
-
-Contains application core.
-
-Includes:
-
-- configuration
-
-- dependency injection
-
-- startup
-
-- middleware
-
-- logging
-
-- settings
-
----
-
-## db/
-
-Contains persistence layer.
-
-Includes:
-
-- database session
-
-- migrations
-
-- initialization
-
-- connection management
-
----
-
-## models/
-
-Contains SQLAlchemy ORM models.
-
-Models describe database structure only.
-
-Business logic is prohibited.
-
----
-
-## schemas/
-
-Contains Pydantic schemas.
-
-Responsibilities:
-
-- request validation
-
-- response models
-
-- serialization
-
-No business logic.
-
----
-
-## repositories/
-
-Contains all database access.
-
-Repositories are the ONLY layer allowed to communicate with SQLAlchemy sessions.
-
-Responsibilities:
-
-- CRUD
-
-- filtering
-
-- pagination
-
-- persistence
-
-Repositories never call AI.
-
-Repositories never contain business logic.
-
----
-
-## services/
-
-Contains business logic.
-
-Responsibilities:
-
-- orchestration
-
-- validation
-
-- workflows
-
-- coordination
-
-Services may call repositories.
-
-Services may call AI engines.
-
-Services must never execute raw SQL.
-
----
-
-## engines/
-
-Contains AI logic.
-
-Responsibilities:
-
-- research
-
-- scoring
-
-- writing
-
-- image generation
-
-- evaluation
-
-AI engines must never directly access the database.
-
-Persistence always goes through Services.
-
----
-
-## workers/
-
-Background processing.
-
-Examples:
-
-- scheduled research
-
-- image generation
-
-- analytics
-
-- publishing
-
-Workers communicate through Services.
-
----
-
-## utils/
-
-Shared helper functions.
-
-Must not contain business logic.
-
-Examples:
-
-- hashing
-
-- parsing
-
-- date formatting
-
-- helper functions
-
----
-
-# 10. Layer Communication Rules
-
-Allowed
-
-API
-
-↓
-
-Services
-
-↓
-
-Repositories
-
-↓
-
-Database
-
-Services
-
-↓
-
-AI Engines
-
-Workers
-
-↓
-
-Services
-
-Forbidden
-
-API
-
-→ Database
-
-API
-
-→ SQLAlchemy
-
-AI Engine
-
-→ Database
-
-Repository
-
-→ AI Engine
-
-Models
-
-→ Services
-
-Schemas
-
-→ Database
-
-Violating these rules is considered an architectural error.
-
----
-
-# 11. Dependency Rules
-
-Higher layers may depend on lower layers.
-
-Lower layers must never depend on higher layers.
-
-Correct
-
-API
-
-↓
-
-Services
-
-↓
-
-Repositories
-
-↓
-
-Database
-
-Incorrect
-
-Repository
-
-↓
-
-API
-
-Incorrect
-
-Database
-
-↓
-
-AI Engine
-
----
-
-# 12. Code Organization Principles
-
-Every new module should follow existing architecture.
-
-Never duplicate functionality.
-
-Prefer extension over replacement.
-
-Reuse existing services whenever possible.
-
-Large files should be split into logical modules.
-
-Every public function should include:
-
-- type hints
-
-- docstring
-
-- meaningful naming
-
-Avoid global state whenever possible.
-
-
----
-
-# 13. AI System Overview
-
-The AI Media Factory is built around multiple specialized AI engines.
-
-Each engine has a single responsibility.
-
-The platform follows a pipeline architecture.
-
-Every stage receives structured input and produces structured output.
-
-No engine should perform responsibilities belonging to another engine.
-
----
-
-# 14. AI Engines
-
-Current and planned AI engines.
-
-Research Engine
-
-Status:
-Implemented
-
-Responsibilities:
-
-- Collect RSS feeds
-- Parse articles
-- Normalize content
-- Remove duplicates
-- Calculate topic score
-- Store research topics
-
-Input:
-
-RSS feeds
-
-Output:
-
-ResearchTopic
-
----
-
-Writing Engine
-
-Status:
-Planned
-
-Responsibilities:
-
-- Read approved research topics
-- Generate brief
-- Generate Telegram draft
-- Generate hashtags
-- Generate image prompt
-
-Input:
-
-ResearchTopic
-
-Output:
-
-DraftPost
-
----
-
-Image Engine
-
-Status:
-Planned
-
-Responsibilities:
-
-- Build Stable Diffusion prompt
-- Generate image
-- Store generated image
-- Return image path
-
-Input:
-
-DraftPost
-
-Output:
-
-GeneratedImage
-
----
-
-Publishing Engine
-
-Status:
-Planned
-
-Responsibilities:
-
-- Format Telegram message
-- Upload image
-- Publish post
-- Store Telegram message id
-
-Input:
-
-PublishedPost
-
-Output:
-
-TelegramPublication
-
----
-
-Analytics Engine
-
-Status:
-Planned
-
-Responsibilities:
-
-- Collect statistics
-- Calculate engagement
-- Detect successful posts
-- Produce recommendations
-
-Input:
-
-Telegram statistics
-
-Output:
-
-PerformanceReport
-
----
-
-Recommendation Engine
-
-Status:
-Planned
-
-Responsibilities:
-
-- Learn from analytics
-
-- Improve prompts
-
-- Improve posting schedule
-
-- Improve topic selection
-
-Input:
-
-Analytics
-
-Output:
-
-Recommendations
-
----
-
-# 15. AI Models Configuration
-
-Research Analysis
-
-Model
-
-qwen2.5-coder:3b
-
-Execution
-
-Local Ollama
-
-Status
-
-Primary Local Model
-
-Purpose
-
-Research analysis
-
-Topic processing
-
-Scoring support
-
-Writing
-
-Primary
-
-DashScope
-
-Model
-
-qwen-coder-plus
-
-Fallback
-
-Local Ollama
-
-Purpose
-
-Brief generation
-
-Draft generation
-
-Image Prompt Generation
-
-Image Generation
-
-Stable Diffusion
-
-Execution
-
-Local
-
-Purpose
-
-Telegram illustrations
-
-Future
-
-LLM Evaluator
-
-Fact Checker
-
-Prompt Optimizer
-
-Memory Engine
-
----
-
-# 16. AI Model Parameters
-
-Default Parameters
-
-temperature
-
-0.7
-
-top_p
-
-0.9
-
-max_tokens
-
-2048
-
-repeat_penalty
-
-1.1
-
-These parameters may be overridden for specific engines.
-
----
-
-# 17. Content Lifecycle
-
-Every topic moves through predefined states.
-
-research
-
-↓
-
-brief
-
-↓
-
-draft
-
-↓
-
-review
-
-↓
-
-approved
-
-↓
-
-published
-
-↓
-
-analytics
-
-↓
-
-learning
-
-No state may be skipped unless explicitly allowed.
-
-State transitions must be validated.
-
----
-
-# 18. Research Pipeline
-
-Current implementation.
-
-RSS Sources
-
-↓
-
-Download Articles
-
-↓
-
-Normalize Content
-
-↓
-
-Extract Metadata
-
-↓
-
-Deduplicate
-
-↓
-
-Score Topics
-
-↓
-
-Persist to PostgreSQL
-
-↓
-
-Status = research
-
-Current metrics
-
-RSS Sources
-
-7
-
-Topics Found
-
-76
-
-Duplicates Removed
-
-Implemented
-
-Persistence
-
-Implemented
-
-REST API
-
-Implemented
-
----
-
-# 19. Planned Writing Pipeline
-
-Research Topics
-
-↓
-
-Score Filter
-
-↓
-
-Generate Brief
-
-↓
-
-Generate Draft
-
-↓
-
-Generate Title
-
-↓
-
-Generate Tags
-
-↓
-
-Generate Image Prompt
-
-↓
-
-Status = draft
-
-Only topics above configured score threshold should continue.
-
----
-
-# 20. Planned Publishing Pipeline
-
-Draft
-
-↓
-
-Generate Image
-
-↓
-
-Telegram Formatting
-
-↓
-
-Telegram Bot API
-
-↓
-
-Publication
-
-↓
-
-Statistics Collection
-
-↓
-
-Status = published
-
----
-
-# 21. Workflow Rules
-
-Every stage must receive validated input.
-
-Every stage produces structured output.
-
-Every stage stores its status.
-
-Every stage can be restarted independently.
-
-No engine should directly invoke another engine.
-
-Coordination belongs to Services.
-
----
-
-# 22. AI Design Principles
-
-Every AI engine must be:
-
-Deterministic where possible.
-
-Replaceable.
-
-Independent.
-
-Observable.
-
-Testable.
-
-Configurable.
-
-Reusable.
-
-Prompts must be stored separately from source code whenever possible.
-
-Business logic must never exist inside prompts.
-
-
----
-
-# 23. Data Architecture Overview
-
-AI Media Factory uses PostgreSQL as the primary relational database.
-
-Database responsibility:
-
-- Store persistent application data
-- Maintain relationships between entities
-- Provide reliable state management
-- Support analytics and reporting
-
-All database operations must go through the Repository Layer.
-
-Direct database access from:
-
-- API layer
-- AI engines
-- Workers
-
-is prohibited.
-
----
-
-# 24. Core Database Entities
-
-The system is built around several core entities.
-
----
-
-## Channel
-
-Represents a Telegram media channel managed by the platform.
-
-Purpose:
-
-Stores channel configuration and AI behavior settings.
-
-Example fields:
-
-
-id
-name
-telegram_username
-description
-category
-language
-style_profile
-status
-created_at
-updated_at
-
-
-Relations:
-
-Channel
-
-has many
-
-ResearchTopics
-
-has many
-
-DraftPosts
-
-has many
-
-Publications
-
----
-
-## ResearchTopic
-
-Represents discovered information from external sources.
-
-Purpose:
-
-Temporary intelligence storage before content generation.
-
-Example fields:
-
-
-id
-channel_id
-title
-description
-content
-score
-sources
-hash
-status
-created_at
-updated_at
-
-
-Status examples:
-
-
-research
-selected
-rejected
-processed
-
-
----
-
-## SourceArticle
-
-Represents original external information.
-
-Purpose:
-
-Stores collected source material.
-
-Example fields:
-
-
-id
-url
-title
-description
-content
-source_name
-published_at
-hash
-created_at
-
-
----
-
-## DraftPost
-
-Represents generated Telegram content.
-
-Purpose:
-
-Stores AI-generated content before publishing.
-
-Example fields:
-
-
-id
-channel_id
-research_topic_id
-title
-body
-image_prompt
-tags
-status
-created_at
-updated_at
-
-
-Status examples:
-
-
-draft
-review
-approved
-published
-rejected
-
-
----
-
-## MediaAsset
-
-Stores generated images and media files.
-
-Example fields:
-
-
-id
-draft_post_id
-file_path
-type
-model
-prompt
-created_at
-
-
----
-
-## Publication
-
-Stores Telegram publication results.
-
-Example fields:
-
-
-id
-channel_id
-draft_post_id
-telegram_message_id
-published_at
-views
-likes
-shares
-
-
----
-
-## AnalyticsRecord
-
-Stores performance information.
-
-Example fields:
-
-
-id
-publication_id
-views
-engagement_rate
-shares
-comments
-score
-created_at
-
-
----
-
-# 25. Database Rules
-
-Database rules:
-
-1.
-
-Every table must have:
-
-- id
-- created_at
-
-2.
-
-Mutable entities should have:
-
-- updated_at
-
-3.
-
-Status fields must use controlled values.
-
-4.
-
-Database changes require:
-
-- migration
-- documentation update
-- testing
-
-5.
-
-Models describe structure only.
-
-Business logic belongs to Services.
-
----
-
-# 26. API Architecture Overview
-
-The backend exposes REST API using FastAPI.
-
-Base path:
-
-
-/api/v1/
-
-
-API responsibilities:
-
-- receive requests
-- validate input
-- call services
-- return responses
-
-API must not contain business logic.
-
----
-
-# 27. Current API Endpoints
-
-## Health
-
-GET
-
-
-/health
-
-
-Purpose:
-
-System health check.
-
----
-
-## Channels
-
-GET
-
-
-/api/v1/channels
-
-
-Returns available channels.
-
----
-
-GET
-
-
-/api/v1/channels/{channel_id}
-
-
-Returns channel details.
-
----
-
-POST
-
-
-/api/v1/channels/{channel_id}/run-research
-
-
-Starts research pipeline.
-
-Example response:
-
-```json
-{
-  "status": "started",
-  "topics_count": 76
-}
-Content
-
-GET
-
-/api/v1/content/
-
-Query parameters:
-
-channel_id
-status
-limit
-offset
-
-Example:
-
-/api/v1/content/?channel_id=1&status=research
-
-Example response:
-
-[
- {
-  "id":42,
-  "title":"New AI Model Released",
-  "score":8.5,
-  "status":"research"
- }
-]
-28. Writing Engine Contract
-
-Input:
-
-ResearchTopic
-
-Example:
-
-{
-"id":42,
-"title":"New ChatGPT Feature",
-"description":"OpenAI released...",
-"score":8.5,
-"sources":[
-"https://example.com"
-]
-}
-
-Output:
-
-DraftPost
-
-Example:
-
-{
-"title":"New AI breakthrough",
-"body":"Telegram formatted text",
-"image_prompt":"futuristic AI illustration",
-"tags":[
-"AI",
-"Technology"
-]
-}
-29. Business Rules
-
-Content lifecycle:
-
-Research
-
-↓
-
-Brief
-
-↓
-
-Draft
-
-↓
-
-Review
-
-↓
-
-Approved
-
-↓
-
-Published
-
-↓
-
-Analytics
-
-Topic priority:
-
-High priority:
-
-score > 7.0
-
-Medium priority:
-
-5.0 - 7.0
-
-Rejected:
-
-< 5.0
-
-Telegram rules:
-
-Maximum:
-
-1024 characters
-
-Media:
-
-1 image
-
-Links:
-
-1-2 links
-
-Content must be:
-
-readable
-fact checked
-relevant
-adapted to channel style
-30. Current Known Limitations
-
-Current limitations:
-
-Research pipeline is synchronous.
-
-Future:
-
-Background workers.
-
-Writing Engine is not implemented.
-
-Image generation pipeline is not implemented.
-
-Telegram publishing is not implemented.
-
-Advanced analytics is not implemented.
-
-Fact checking engine is not implemented.
-
-Prompt optimization is not implemented.
-
-31. Known Technical Issues
-
-Current known issues:
-
-UTF-8 encoding issues may appear with external RSS sources.
-
-Possible race conditions during parallel processing.
-
-Duplicate content prevention requires improvement.
-
-More database indexes may be required after scaling.
-
-32. Future Development Direction
-
-Short term:
-
-Implement:
-
-Writing Engine
-Brief Generator
-Prompt System
-Telegram Publisher
-
-Medium term:
-
-Implement:
-
-Multi-channel management
-Image pipeline
-Analytics
-
-Long term:
-
-Implement:
-
-Autonomous AI Manager
-Self optimization
-Multi-agent collaboration
-Revenue optimization
-
-
-## API Details
-
-Current endpoint:
-
-POST
-
-/api/v1/channels/{channel_id}/run-research
-
-
-Purpose:
-
-Starts Research Engine execution.
-
-Example response:
-
-status: started
-
-topics_count: 76
-
-
----
-
-GET
-
-/api/v1/content/
-
-
-Query parameters:
-
-channel_id
-
-status
-
-limit
-
-offset
-
-
-Purpose:
-
-Returns stored content topics.
-
-
----
-
-# 28. Writing Engine Contract
-
-Input object:
-
-ResearchTopic
-
-
-Required fields:
-
-id
-
-title
-
-description
-
-score
-
-sources
-
-
-Output object:
-
-DraftPost
-
-
-Required fields:
-
-title
-
-body
-
-image_prompt
-
-tags
-
-
-The Writing Engine must never access the database directly.
-
-The Writing Engine communicates through Services.
-
----
-
-# 29. Business Rules
-
-Content lifecycle:
-
-Research
-
-↓
-
-Brief
-
-↓
-
-Draft
-
-↓
-
-Review
-
-↓
-
-Approved
-
-↓
-
-Published
-
-↓
-
-Analytics
-
-
----
-
-Topic priority rules:
-
-High priority:
-
-score greater than 7.0
-
-
-Medium priority:
-
-score from 5.0 to 7.0
-
-
-Rejected:
-
-score below 5.0
-
-
----
-
-Telegram content rules:
-
-Maximum length:
-
-1024 characters
-
-
-Media:
-
-One image per post
-
-
-Links:
-
-One or two links
-
-
-Content requirements:
-
-- readable
-- fact checked
-- relevant
-- adapted to channel style
-
-
----
-
-# 30. Current Known Limitations
-
-Current limitations:
-
-1.
-
-Research pipeline works synchronously.
-
-Future improvement:
-
-Background workers.
-
-
-2.
-
-Writing Engine is not implemented.
-
-
-3.
-
-Image generation pipeline is not implemented.
-
-
-4.
-
-Telegram publishing is not implemented.
-
-
-5.
-
-Advanced analytics is not implemented.
-
-
-6.
-
-Fact checking engine is not implemented.
-
-
-7.
-
-Prompt optimization is not implemented.
-
-
----
-
-# 31. Known Technical Issues
-
-Current known issues:
-
-UTF-8 encoding problems may appear with some RSS sources.
-
-
-Possible race conditions during parallel processing.
-
-
-Duplicate detection requires additional optimization.
-
-
-Database indexes may require optimization after scaling.
-
-
----
-
-# 32. Future Development Direction
-
-Short term:
-
-Implement:
-
-- Writing Engine
-- Brief Generator
-- Prompt System
-- Telegram Publisher
-
-
-Medium term:
-
-Implement:
-
-- Multi-channel management
-- Image generation pipeline
-- Analytics system
-
-
-Long term:
-
-Implement:
-
-- Autonomous AI Manager
-- Self optimization
-- Multi-agent collaboration
-- Revenue optimization
-
-
----
-
-# 33. Documentation Update Rules
-
-Any developer or AI agent modifying the project must update documentation.
-
-Required updates:
-
-Code changes:
-
-Update relevant technical documentation.
-
-
-Architecture changes:
-
-Update architecture documents.
-
-
-New features:
-
-Update PROJECT_CONTEXT.md.
-
-
-Completed tasks:
-
-Update STATUS.md.
-
-
----
-
-# 34. AI Development Rules
-
-AI agents working on this project must:
-
-- Read AI_CONTEXT.md first
-- Read STATUS.md before coding
-- Read TASK.md before starting work
-- Preserve existing architecture
-- Avoid unnecessary refactoring
-- Update documentation after changes
-
----
-
-# End of Project Context
-
-
----
-
-# Real Project Architecture (Verified)
-
-The following structure represents the actual implementation.
-
-## Root Architecture
-
-
-AI-MEDIA-FACTORY
-
-│
-
-├── backend/
-
-│   └── app/
-
-│       └── api/
-
-│           └── v1/
-
-│
-
-├── core/
-
-│
-
-├── engines/
-
-│
-
-├── infrastructure/
-
-│
-
-├── automation/
-
-│
-
-├── connectors/
-
-│
-
+├── core/models/
+│ ├── publication.py # Publication Contract (Sprint 72.1)
+│ ├── publication_builder.py # PublicationBuilder (Sprint 72.2)
+│ ├── renderers/
+│ │ ├── telegram_renderer.py # TelegramRenderer (Sprint 72.3)
+│ │ └── vk_renderer.py # VKRenderer (Sprint 72.3)
+│ ├── channel_profile_orm.py
+│ ├── channel_orm.py
+│ └── content_orm.py
+├── backend/engines/
+│ ├── news_strategies.py # NewsPublishingStrategy ✅ integrated
+│ ├── generic_strategies.py # GenericPublishingStrategy ⚠️ TODO 72.5
+│ ├── telegram_publisher.py
+│ ├── vk_publisher.py
+│ ├── rss_fetcher.py
+│ ├── llm_post_generator.py
+│ └── deduplicator.py
+├── backend/automation/
+│ ├── automation_manager_v2.py
+│ ├── universal_pipeline.py
+│ └── scheduler.py
 └── docs/
-
-
----
-
-# Backend API Layer
-
-
-Location:
-
-
-backend/app/api/v1/
-
-
-Responsibilities:
-
-
-- REST endpoints
-- request validation
-- API routing
-- response handling
-
-
-Current modules:
-
-
-- channels.py
-- content.py
-- research.py
-- workflows.py
-- dashboard.py
-- analytics.py
-- automation.py
-
-
-API layer must not contain business logic.
-
+├── STATUS.md
+├── ROADMAP.md
+├── ARCHITECTURE.md
+├── TASK.md
+└── PROJECT_CONTEXT.md # This file
 
 ---
 
-# Core Application Layer
+## Source of Truth
 
+### For Current Development
+1. **STATUS.md** — project state, completed sprints, current limitations
+2. **ROADMAP.md** — development phases and milestones
+3. **TASK.md** — current backlog and next sprint
+4. **ARCHITECTURE.md** — system design and components (detailed)
+5. **AI_CONTEXT.md** — AI-assisted development rules
 
-Location:
+### For Code
+- **Local repository** — source of truth
+- **Docker containers** — running environment
+- **PostgreSQL database** — content and channel data
 
-
-core/
-
-
-Responsibilities:
-
-
-Database:
-
-- database connection
-- ORM models
-
-
-Repositories:
-
-- database operations
-
-
-Workflows:
-
-- workflow execution
-
-
-Policies:
-
-- business rules
-
-
-Prompt management:
-
-- prompt tracking
-- prompt lifecycle
-
-
-Structure:
-
-
-core/
-
-├── models/
-
-├── repositories/
-
-├── workflows/
-
-├── policies/
-
-└── prompts/
-
+### For Configuration
+- **channel.content_profile["sources"]** — production sources
+- ⚠️ channel.sources — legacy, NOT production source of truth
 
 ---
 
-# AI Engines Layer
+## Development Workflow
 
+### Sprint Cycle
+1. **Plan** — review TASK.md, define sprint goals
+2. **Implement** — write code, test locally
+3. **Test** — run on actual channels (not mocks)
+4. **Fix** — resolve issues found in testing
+5. **Commit** — push to git with descriptive message
+6. **Document** — update STATUS.md, ROADMAP.md, TASK.md
 
-Location:
-
-
-engines/
-
-
-## Research Engine
-
-
-Status:
-
-Implemented
-
-
-Location:
-
-
-engines/research/
-
-
-Components:
-
-
-- RSS sources
-- extractor
-- deduplicator
-- scorer
-- models
-
-
-Responsibilities:
-
-
-- collect information
-- normalize content
-- remove duplicates
-- calculate topic score
-- create research topics
-
-
+### Testing Strategy
+- Manual testing for each sprint on real channels
+- Verify database updates (status=published, message_id set)
+- Check published content quality
+- Document test results in STATUS.md
 
 ---
 
+## Technical Debt
 
-## Writing Engine
+### High Priority
+- ⚠️ **GenericPublishingStrategy** not using Publication Layer (Sprint 72.5)
+- ⚠️ **No observability** — no metrics, monitoring, alerting (Sprint 73)
+- ⚠️ **No retry logic** — transient failures cause permanent failures (Sprint 74)
 
+### Medium Priority
+- ⚠️ Legacy engines/research/engine.py — unused, should be removed
+- ⚠️ Old channel.sources field — use content_profile["sources"]
+- ⚠️ Synchronous VK publishing — should be async
+- ⚠️ Scheduler get_next_run() complexity
 
-Status:
-
-
-Implemented Skeleton
-
-
-
-Location:
-
-
-engines/writing/
-
-
-Components:
-
-
-- engine.py
-- models.py
-- prompt_manager.py
-- styles/
-
-
-Responsibilities:
-
-
-- generate content drafts
-- manage writing prompts
-- apply channel styles
-
-
-
-Next task:
-
-Integrate with Research Pipeline.
-
-
+### Low Priority
+- ⚠️ Image generation (currently placeholders)
+- ⚠️ Video support (not implemented)
+- ⚠️ Multi-language (Russian only currently)
+- ⚠️ Advanced deduplication (semantic similarity)
 
 ---
 
+## Key Decisions
 
-## Telegram Publisher
+### Publication Layer (Sprint 72)
+**Decision:** Separate content contract from platform rendering
 
+**Rationale:**
+- One Publication, multiple platform renderings
+- Archetype-specific formatting without code duplication
+- Easy to add new platforms (just add a renderer)
 
-Status:
+### Archetype-Based Defaults
+**Decision:** Use archetype to determine default policies
 
+**Rationale:**
+- Different content types have different formatting needs
+- Avoid hardcoding in engines
+- Profile can override archetype defaults
 
-Partial Implementation
+### Russian Language Generation
+**Decision:** Use Ollama (llama3.1:8b) for Russian text
 
+**Rationale:**
+- Target audience is Russian-speaking
+- Natural text without translation artifacts
+- Local execution (no API costs)
 
-Location:
+### Natural Editorial Style
+**Decision:** Avoid rigid AI-looking templates
 
-
-engines/telegram/
-
-
-Responsibilities:
-
-
-- Telegram API communication
-- publishing messages
-
-
-
----
-
-
-## Evaluation Engine
-
-
-Location:
-
-
-engines/evaluator/
-
-
-Status:
-
-
-Foundation
-
-
-Purpose:
-
-
-- evaluate generated content
-- quality scoring
-
-
+**Rationale:**
+- User should see "normal media channel post"
+- Not "AI wrote a post using a template"
+- Platform-specific rendering handles formatting
 
 ---
 
+## Known Limitations
 
-## Fact Checker
+### Current
+- Image generation uses placeholders (not real generation)
+- Video support not implemented
+- Single language (Russian)
+- No retry logic for transient failures
+- No metrics or observability
+- GenericPublishingStrategy not on Publication Layer yet
 
-
-Location:
-
-
-engines/fact_checker/
-
-
-Status:
-
-
-Foundation
-
-
-Purpose:
-
-
-- verify information
-- improve reliability
-
-
+### Planned
+- Image generation (future sprint)
+- Observability (Sprint 73)
+- Reliability improvements (Sprint 74)
+- Discovery Engine (Sprint 75+)
 
 ---
 
-# Architecture Summary
+## Changelog
 
+### Sprint 72.4 (Current) ✅
+- NewsPublishingStrategy integrated with Publication Layer
+- DB updates working (status=published, telegram_message_id)
+- 6 posts published with message IDs 504-509
+- HTML source links in all posts
 
-Current system:
+### Sprint 72.1-72.3 ✅
+- Publication Contract defined
+- PublicationBuilder created with archetype defaults
+- TelegramRenderer + VKRenderer created
+- HTML escaping bug fixed
 
+### Sprint 71 ✅
+- VK integration complete
+- 14 channels active across 2 platforms
+- VK post status updates working
 
-API
+### Sprint 70 ✅
+- Generic LLM generation for all 8 archetypes
+- Russian language output via Ollama
+- Natural text formatting
+- Source normalization
 
-↓
-
-Core Services
-
-↓
-
-Repositories
-
-↓
-
-Database
-
-
-
-AI processing:
-
-
-Core Workflow
-
-↓
-
-AI Engines
-
-↓
-
-Generated Content
-
-
-
-Future:
-
-
-Event Bus based multi-agent architecture.
-
-
-
----
-
-# End Verified Architecture
-
+### Sprint 69 ✅
+- Telegram publishing integration
+- DB persistence (status, telegram_message_id)
+- Scheduler with cron jobs
+- Error handling and recovery

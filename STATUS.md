@@ -1,242 +1,175 @@
-# AI Media Factory — Project Status
+# AI Media Factory — Status
 
-> Last updated: 2026-09-01
-> Current Phase: **PHASE 3 — Smart Channel Creation**
-> Current Phase: **OBSERVATION PERIOD (Day 1 of 14)**
-
----
-
-## 🎯 Current Focus
-
-**Sprint 68.1: Theme Classification (LLM)**
-- Create `.github/workflows/ci.yml`
-- Ruff lint on every push
-- Unit tests (without Docker/Ollama)
-- CI tests on every push
-
-**Next:** Sprint 66.6 (Async Tests Stabilization) → Sprint 66.7 (GitHub Actions CI)
+**Last Updated:** 2026-09-08 15:12
+**Current Sprint:** 72.4 (completed)
+**Next Sprint:** 72.5 — GenericPublishingStrategy Integration
 
 ---
 
-## ✅ Completed Sprints
+## Current State
 
-### Sprint 65 — Smart Channel Intelligence ✅ CLOSED
+### Production System
+- **14 active channels** across Telegram and VK platforms
+- **8 archetypes**: news, educational, entertainment, viral, releases, reviews, community, aggregator
+- **Universal Pipeline** end-to-end: Research → Decision → Writing → Evaluation → Media → Publication → Rendering → Publishing
+- **Publication Contract** with archetype-based policies
+- **Real LLM generation** via Ollama (Russian language)
+- **Deduplication** working correctly
+- **Publication duration**: 280-330 seconds per channel (10 topics × 30s LLM)
 
-| Step | Status | Result |
-|------|--------|--------|
-| 65.1 Foundation | ✅ | ChannelIntent/Strategy/Capability + 11 domains + TopicClassifier |
-| 65.2 Wizard API | ✅ | `/wizard/suggest` for any topic (no more 400 errors) |
-| 65.3 Profiles Registry | ✅ | 7 new profiles (technology/ai/automotive/science/gaming/business/general) |
-| 65.4 StrategyPreview + Persist | ✅ | UI for editing strategy + publishing_mode/frequency persist end-to-end |
-| 65.5 Publishing Mode Selector | ✅ | Inline edit in Channels page (auto/approval_required/manual) |
+### Platform Support
+- **Telegram**: 13 channels with bot tokens
+- **VK**: 1 channel (AI Media Factory)
 
-**E2E verified:** Create channel → edit strategy → persist → GET returns correct publishing_mode/frequency
-
----
-
-### Sprint 66 — Production Hardening (IN PROGRESS)
-
-| Step | Status | Result |
-|------|--------|--------|
-| 66.1 Connection Pool | ✅ | Pool size 5→20, max_overflow 10→30, timeout 30→60, pool_pre_ping |
-| 66.2 Pool Monitoring | ✅ | `GET /api/health/db-pool` + Prometheus gauges (db_pool_size/checkedout/overflow) |
-| 66.3 Task Timeout | ✅ | `TASK_TIMEOUT=300s` + `asyncio.wait_for` wrapper (prevents worker hangs) |
-| 66.4 Structured Logging | ✅ | JSON logs (logs/app.log, debug.log, errors.log) + StructuredFormatter |
-| 66.4 PortableJSONB | ✅ | SQLite + PostgreSQL support (12 models migrated) |
-| 66.4 Pydantic V2 | ✅ | `ConfigDict` migration (0 deprecation warnings) |
-| 66.4 Test Infrastructure | ✅ | pytest-asyncio + event loop fixtures + conftest.py |
-| 66.5 Pipeline Failures | ✅ | pipeline_failures table + ErrorLogger + /failures API (8 endpoints) + worker integration |
-| 66.6 Async Tests | ✅ | 63/63 unit passed (1.67s), pytest-asyncio auto mode, integration markers |
-| 66.7 GitHub Actions CI | ✅ | .github/workflows/ci.yml + requirements-test.txt |
+### Recent Test Results (Sprint 72.4)
+- **Channel**: Новости 📰 (24df0f84-46c2-4df4-ab39-d76881b35438)
+- **Posts published**: 6 posts
+- **Status**: All posts marked as published in database
+- **Telegram message IDs**: 504, 505, 506, 507, 508, 509
+- **HTML source links**: <a href> tags present in all posts
+- **Pipeline duration**: ~173 seconds
 
 ---
 
-### Sprint 67 — Channel Scaling Architecture ✅ CLOSED
+## Completed Sprints
 
-| Step | Status | Result |
-|------|--------|--------|
-| 67.1 Channel Archetypes | ✅ | 8 archetypes (news/releases/educational/viral/reviews/community/aggregator) + ArchetypeDefaults |
-| 67.2 Channel Profile ORM | ✅ | ChannelProfileORM (12 fields) + Pydantic V2 + CRUD + assign endpoint |
-| 67.3 Universal Pipeline | ✅ | UniversalContentPipeline (research→generation→media→publish) + Protocol strategies |
-| 67.4 Strategy Registry | ✅ | 8 archetypes registered (NEWS specialized + 7 generic) |
-| 67.5 Channel Templates | ✅ | 6 YAML templates + from-template + assign (E2E: Gaming News from news template) |
+### Sprint 67-68: Core Infrastructure
+- ✅ Universal Pipeline architecture
+- ✅ 8 archetypes with specialized strategies
+- ✅ Channel Profile system
+- ✅ Content deduplication
 
-**Note:** Performance framework created but not yet integrated into production engines. Real LLM generation happens in `automation/jobs/`, not `backend/engines/`.
+### Sprint 69: Pilot Infrastructure
+- ✅ Telegram publishing integration
+- ✅ Database persistence (status, telegram_message_id)
+- ✅ Error handling and recovery
+- ✅ Scheduler with cron jobs
 
----
+### Sprint 70: Generic LLM Generation
+- ✅ LLM-based text generation for all 8 archetypes
+- ✅ Russian language output via Ollama
+- ✅ Natural text formatting (no template headers)
+- ✅ Source attribution handling
 
-## 🧪 Test Results
+### Sprint 71: VK + Universal Publishing
+- ✅ VK API integration (AI Media Factory channel)
+- ✅ VK wall.post publishing
+- ✅ Multi-platform support (Telegram + VK)
+- ✅ Correct publication status tracking
 
-### Unit Tests
-✅ 63/63 passed (APP_ENV=test, SQLite)
-✅ 39/39 CI tests passed (tests/ci/)
-⏭️ 7 skipped (@pytest.mark.integration)
-⏭️ 2 skipped (requires Ollama LLM)
-
-### Integration Tests (require Docker + Ollama)
-⏭️ automation_manager (async event loop)
-⏭️ post_generation_service (LLM calls)
-
-**Total:** 102 tests green, 0 failures in CI mode
-
----
-
-## 🏗 Architecture Status
-
-### Production Components
-- ✅ FastAPI backend (Uvicorn)
-- ✅ PostgreSQL (primary DB)
-- ✅ Redis (queue/cache)
-- ✅ Qdrant (vector DB)
-- ✅ MinIO (object storage)
-- ✅ Nginx (reverse proxy)
-- ✅ Prometheus + Grafana (monitoring)
-- ✅ Open WebUI (LLM interface)
-
-### Performance Infrastructure (Created, Not Fully Integrated)
-- ✅ LLM Profiler (decorator ready)
-- ✅ Cache Layer (Memory + Redis backends)
-- ✅ Rate Limiter (sliding window + circuit breaker)
-- ✅ Connection Pool (optimized)
-- ✅ Structured Logging (JSON)
-
-### Missing for Scale
-- ❌ Universal Pipeline (Sprint 67.3)
-- ❌ Channel Profiles/Archetypes (Sprint 67.1-67.2)
-- ❌ Strategy Registry (Sprint 67.4)
-- ❌ Network Dashboard (Sprint 71)
-- ❌ Cross-Channel Intelligence (Sprint 72)
+### Sprint 72: Editorial / Publication Layer
+- ✅ **72.1** Publication Contract (core/models/publication.py)
+  - MediaAsset, FormattingOptions, Publication dataclasses
+  - Platform-independent contract
+- ✅ **72.2** PublicationBuilder (core/models/publication_builder.py)
+  - Archetype-based defaults for 8 archetypes
+  - Smart policy resolution (profile > archetype > defaults)
+  - Source/article/media policies
+- ✅ **72.3** Platform Renderers (core/models/renderers/)
+  - TelegramRenderer: HTML source links, InlineKeyboardMarkup
+  - VKRenderer: Plain text, URL attachments
+  - Platform-specific rendering from Publication
+- ✅ **72.4** NewsPublishingStrategy Integration
+  - Builder + Renderer pipeline
+  - DB updates after publication (status=published)
+  - telegram_message_id persisted
+  - Rendered Publication text sent to Telegram
+  - Fixed: DetachedInstanceError, return value issues
 
 ---
 
-## 📊 Key Metrics
+## Architecture Overview
+Channel Profile
+↓
+Research (RSS + Topic Extraction)
+↓
+Decision (Content Selection)
+↓
+Writing (LLM Generation)
+↓
+Evaluation (Quality Check)
+↓
+Media (Image/Video Selection)
+↓
+PublicationBuilder
+↓
+Publication Contract
+↓
+Platform Renderer (Telegram/VK)
+↓
+Publishing (API Call)
+↓
+Database Update (status, message_id)
 
-| Metric | Current | Target (Sprint 69) |
-|--------|---------|-------------------|
-| Channels | 16 (test) | 10 (pilot) |
-| Test Coverage | 102/102 passed | 150+ tests |
-| API Latency (p95) | ~200ms | <100ms |
-| LLM Generation | ~300s | <45s (with cache) |
-| Publish Success Rate | ~95% | >99% |
-| Error Tracking | Docker logs | Pipeline failures table |
-
----
-
-## 🚧 Known Issues
-
-1. **Async tests hang** in CI (automation_manager, worker lifecycle) — need event loop fix
-2. **Performance components not integrated** — LLMProfiler/CacheLayer exist but not used in real engines
-3. **No error tracking** — pipeline failures only visible in Docker logs (Sprint 66.5 will fix)
-4. **Manual scaling** — each new topic requires manual pipeline configuration (Sprint 67 will fix)
-
----
-
-## 📅 Recent Commits (Last 10)
-d2b5e95 Sprint 66.4 final: mark LLM-dependent tests as @pytest.mark.integration
-f5aee4a Sprint 66.1-66.2: Connection pool hardening + monitoring
-74e3450 fix(sprint-65.4): persist wizard publishing settings and fix StrategyPreview create flow
-
----
-
-
-
-## 📊 Day 1 Status (2 сентября 2026)
-
-**Pilot-ready каналов:** 13 из 16
-- ✅ Новости 📰 (telegram, auto)
-- ✅ Auto News Daily (telegram, auto)
-- ✅ Anime news (telegram, auto)
-- ✅ Anime News Daily (telegram, auto)
-- ✅ Manga Releases Tracker (telegram, approval_required)
-- ✅ Манга — новые главы (telegram, approval_required)
-- ✅ Movie & Series News (telegram, auto)
-- ✅ Tech News Today (telegram, auto)
-- ✅ AI News Daily (telegram, auto)
-- ✅ Entertainment Memes (telegram, auto)
-- ✅ Gaming News Hub (telegram, approval_required)
-- ✅ Science Facts (telegram, auto)
-- ✅ Space & Science Daily (telegram, auto)
-
-**Отключены:**
-- ❌ Metrics Collector (internal, is_active=False)
-- ❌ Gaming News Universal (telegram, is_active=False, no BotToken)
-- ❌ AI Media Factory (vk, is_active=False, no BotToken)
-
-**Verified:**
-- ✅ Tech News Today: 13 posts, 13 с telegram_message_id (100%)
-- ✅ Anime News Daily: 7 posts, 6 с telegram_message_id (86%)
-- ✅ Universal Pipeline работает через cron schedule
-- ✅ Dedup фильтрует уже опубликованные topics
-- ✅ telegram_message_id сохраняется в БД
-
-**Next Checkpoint:** 5 сентября 2026, 16:00 (Day 3)
-
-## 🔍 OBSERVATION PERIOD (7-14 days)
-
-**Статус:** Активное наблюдение за пилотом (начало: 2026-09-02)
-
-**Что делаем:**
-- Наблюдаем 14 каналов (13 Telegram + 1 VK)
-- Собираем метрики по каждому каналу
-- НЕ меняем архитектуру, pipeline, prompts
-- Исправляем только критические баги
-
-**Критерии успеха:**
-- Publish success rate > 95%
-- Approval rate > 70% (для approval_required каналов)
-- Pipeline failures < 5%
-- Нет критических ошибок в логах
-
-**Что собираем:**
-- Количество generated/published/failed/rejected постов
-- Conversion rate: sources → topics → posts
-- LLM quality (фактические ошибки, галлюцинации, стиль)
-- Source quality (какие RSS дают 0 topics)
-- Telegram API errors
-
-**Следующий шаг:** Sprint 70 — Pilot Analysis (Go/Fix/Stop decision)
-
-## 🎯 Next Steps
-
-1. **OBSERVATION (7-14 дней)** — собираем метрики, не меняем систему
-2. **Sprint 70.1** — Pilot Analysis: метрики по каждому каналу
-3. **Sprint 70.2** — Source Quality Analysis: conversion funnels
-4. **Sprint 70.3** — LLM Quality Assessment: категории проблем A-G
-5. **Sprint 70.4** — Channel Rating: Go/Fix/Stop decision
-6. **Sprint 71** — Scale to 25 channels (только если 70.4 = GO)
-
-**PHASE 3 goal:** User writes "Хочу канал про котов" → AI → profile → sources → ready to publish
+### Key Principle
+> **Publication describes what should be published. Renderer describes how it is represented on a platform.**
 
 ---
 
-## 📚 Documentation
+## Current Limitations
 
-- `ROADMAP.md` — 10-phase product roadmap (Sprint 66 → Sprint 75+)
-- `CHANNEL_CATALOG.md` — Strategic map of future channel network (Tier 1-3)
-- `SPRINT_66_4_COMPLETION.md` — Detailed Sprint 66.4 implementation
-- `SPRINT_66_4_FINAL.md` — Final test report (63/63 unit + 39/39 CI)
+### Not Yet Implemented
+- ❌ GenericPublishingStrategy not yet migrated to Publication Layer
+- ❌ Other archetype strategies still use old text formatting
+- ❌ No observability/metrics collection
+- ❌ No retry logic for transient errors
+- ❌ No health checks for Telegram/VK APIs
 
----
-
-## 🔑 Key Decisions
-
-1. **Universal Pipeline over separate pipelines** — один движок для всех каналов через Strategy Registry (вместо anime/manga/news pipelines)
-2. **Archetypes as foundation** — 8 архетипов покрывают все типы каналов
-3. **YAML Templates** — декларативное описание шаблонов, легко добавлять новые
-4. **Profile assignment** — один profile может использоваться многими каналами
-5. **PortableJSONB** — SQLite for testing, PostgreSQL for production (single codebase)
-2. **Rate Limiting** — Decorator-based, applied to 8 critical POST endpoints
-3. **Task Timeout** — 300s hard limit via `asyncio.wait_for`
-4. **Connection Pool** — Size 20, max_overflow 30 (supports 16+ active channels)
-5. **Test Strategy** — Unit (SQLite) + Integration (PostgreSQL) separation
+### Technical Debt
+- Legacy engines/research/engine.py (unused)
+- Old channel.sources field (use content_profile["sources"])
+- Synchronous VK publishing (should be async)
+- Scheduler get_next_run() complexity
 
 ---
 
-## 🏆 Achievements
+## Next Steps
 
-- ✅ **Smart Wizard** — AI-powered channel creation for any topic
-- ✅ **Publishing Mode Control** — auto/approval_required/manual per channel
-- ✅ **Production Hardening** — Connection pool, timeouts, structured logging
-- ✅ **102 Tests Passing** — Unit + CI tests green
-- ✅ **Rate Limiting** — API protected from DDoS
-- ✅ **PortableJSONB** — Cross-database compatibility
+### Immediate (Sprint 72.5)
+- Migrate GenericPublishingStrategy to Publication Layer
+- Apply PublicationBuilder + Renderer to all archetypes
+- Test all 14 channels with new Publication flow
+
+### Short-term (Sprint 73-74)
+- **73**: Observability — metrics, monitoring, alerting
+- **74**: Reliability — retries, timeouts, health checks, dead-letter queue
+
+### Long-term (Sprint 75+)
+- Discovery Engine (Subscribe.ru integration)
+- Learning Loop (analytics-driven content optimization)
+- Smart Scaling (10 → 25 → 50 → 100 channels)
+
+---
+
+## File Structure
+AI-MEDIA-FACTORY/
+├── core/models/
+│ ├── publication.py # Publication Contract
+│ ├── publication_builder.py # PublicationBuilder
+│ └── renderers/
+│ ├── telegram_renderer.py # TelegramRenderer
+│ └── vk_renderer.py # VKRenderer
+├── backend/engines/
+│ ├── news_strategies.py # NewsPublishingStrategy (integrated)
+│ ├── generic_strategies.py # GenericPublishingStrategy (TODO)
+│ ├── telegram_publisher.py # Telegram API client
+│ └── vk_publisher.py # VK API client
+├── backend/automation/
+│ ├── automation_manager_v2.py # Pipeline orchestration
+│ └── universal_pipeline.py # Universal Pipeline
+└── docs/
+├── STATUS.md # This file
+├── ROADMAP.md # Development roadmap
+├── ARCHITECTURE.md # System architecture
+└── TASK.md # Current backlog
+
+---
+
+## Source of Truth
+
+For current development context:
+1. **STATUS.md** — project state (this file)
+2. **PROJECT_CONTEXT.md** — architectural context
+3. **ARCHITECTURE.md** — system design
+4. **TASK.md** — current backlog
+5. **AI_CONTEXT.md** — AI-assisted development rules

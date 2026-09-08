@@ -1,128 +1,250 @@
-﻿# AI Media Factory
+# AI Media Factory - AI-Assisted Development Context
 
-# AI Agent Context
-
-Version: 1.0
-
-Purpose:
-
-This file is the first file every AI agent must read before working on the project.
-
+**Last Updated:** 2026-09-08
+**Current Sprint:** 72.4 (completed)
+**Next Sprint:** 72.5 - GenericPublishingStrategy Integration
 
 ---
 
-# Project Identity
+## Quick Reference
 
-Name:
+### Current State
+- **Sprint:** 72.4 completed
+- **Next:** 72.5 - migrate GenericPublishingStrategy to Publication Layer
+- **Status:** 14 channels active, Publication Layer implemented
+- **Last Test:** 6 posts published (msg_id 504-509) with HTML source links
 
-AI Media Factory
-
-
-Type:
-
-Autonomous AI Media Platform
-
-
-Main Goal:
-
-Create and operate multiple Telegram media channels using AI agents.
-
+### Source of Truth (read these first)
+1. **STATUS.md** - project state and completed sprints
+2. **ROADMAP.md** - development phases and milestones
+3. **TASK.md** - current backlog and next sprint
+4. **ARCHITECTURE.md** - system design (detailed)
+5. **PROJECT_CONTEXT.md** - project overview and quick start
 
 ---
 
-# AI Agent Rules
+## Key Architectural Concepts
 
+### Publication Layer (Sprint 72) - MOST IMPORTANT
 
-Before modifying code:
+**The core principle:**
+> Publication describes WHAT should be published. Renderer describes HOW it is represented on a platform.
 
+**Components:**
+- Publication (core/models/publication.py) - platform-independent content contract
+- PublicationBuilder (core/models/publication_builder.py) - builds Publication from content dict
+- TelegramRenderer (core/models/renderers/telegram_renderer.py) - renders for Telegram
+- VKRenderer (core/models/renderers/vk_renderer.py) - renders for VK
 
-1. Read AI_CONTEXT.md
+**Why this matters:**
+- One Publication can be rendered differently per platform
+- Archetype-specific formatting without code duplication
+- Easy to add new platforms (just add a renderer)
+- Natural editorial style (no rigid AI templates)
 
-2. Read STATUS.md
+### Archetype-Based Policies
 
-3. Read TASK.md
+**8 archetypes:** news, educational, entertainment, viral, releases, reviews, community, aggregator
 
-4. Read PROJECT_CONTEXT.md
+**Policies:**
+- source_link: always | optional | never
+- article_link: always | conditional | never
+- media_policy: required | preferred | optional | none
+- max_length, max_paragraphs, emojis, allow_bullets
 
-5. Check relevant documentation in docs/
+**Policy Resolution:** Profile settings > Archetype defaults > Global defaults
 
+### Universal Pipeline
 
----
-
-
-# Architecture Rules
-
-
-AI agents MUST:
-
-
-- Preserve existing architecture
-- Avoid unnecessary refactoring
-- Use existing modules
-- Update documentation after changes
-- Add tests for new functionality
-
-
----
-
-
-# Forbidden Actions
-
-
-AI agents MUST NOT:
-
-
-- Rewrite architecture without approval
-- Remove working modules
-- Duplicate existing functionality
-- Move business logic into API routes
-- Access database directly from AI engines
-
+**Stages:**
+1. Research (RSS fetching)
+2. Decision (topic selection)
+3. Writing (LLM generation via Ollama, llama3.1:8b)
+4. Evaluation (quality scoring)
+5. Media (image/video selection - currently placeholder)
+6. Publication (PublicationBuilder)
+7. Publishing (platform API)
 
 ---
 
+## Development Rules
 
-# Current Development Philosophy
+### When Working on Publication Layer
 
+**DO THIS:**
+- Use PublicationBuilder to create platform-independent Publication
+- Use Renderer to transform Publication for specific platform
+- Publisher sends rendered result to platform API
 
-Priority:
+**DON'T DO THIS:**
+- Don't put platform-specific logic in PublicationBuilder
+- Don't add platform-specific fields to Publication dataclass
+- Use platform_metadata dict for platform-specific data instead
 
-Stability > Features
+### When Working on Publishing Strategies
 
+**DO THIS:**
+1. Use PublicationBuilder + Renderer (don't format text manually)
+2. Save content_id BEFORE db.close() to avoid DetachedInstanceError
+3. Use content_id in all post-close operations
+4. Always update database after successful publication (status=published, message_id)
 
-The project must become reliable before expansion.
+**DON'T DO THIS:**
+- Don't format text manually - let Renderer do it
+- Don't access content.id after db.close() (DetachedInstanceError!)
+- Don't forget to update database after publication
 
+### When Working on Engines
+
+**DO THIS:**
+- Engines return structured data (dicts), not formatted strings
+- PublicationBuilder handles formatting downstream
+
+**DON'T DO THIS:**
+- Don't format output in engines
+- Don't add emoji/templates in engine output
+
+### When Working with Sources
+
+**DO THIS:**
+- Use channel.content_profile["sources"] for production sources
+- Each source is a dict: {name, url, type, source_type}
+
+**DON'T DO THIS:**
+- Don't use legacy channel.sources field
+- Production source of truth is content_profile["sources"]
 
 ---
 
-# Technology
+## Common Tasks
 
+### Adding New Archetype
+1. Add to ARCHETYPE_DEFAULTS in publication_builder.py
+2. Define policies: source_link, article_link, media_policy, max_length, etc.
+3. Test with sample content
+4. Document in ARCHITECTURE.md
 
-Backend:
+### Adding New Platform
+1. Create renderer in core/models/renderers/
+2. Create publisher in backend/engines/
+3. Integrate into publishing strategy
+4. Test end-to-end
 
-Python
-
-FastAPI
-
-
-AI:
-
-Ollama
-
-
-Database:
-
-SQLite currently
-
-PostgreSQL planned
-
-
-Containers:
-
-Docker
-
+### Debugging Publication Issues
+1. Check Publication object (text, source, article_url)
+2. Check Renderer output (rendered text, parse_mode)
+3. Check database (status, telegram_message_id, draft_text)
 
 ---
 
-# End AI Context
+## Testing Checklist
 
+### Before Committing
+- Code compiles without errors (python -m py_compile)
+- Manual test on real channel (not mock)
+- Database updated correctly (status=published, message_id set)
+- Published content looks correct
+- No regressions in existing channels
+- Documentation updated (STATUS.md, TASK.md)
+
+### Sprint Completion
+- All sprint tasks completed
+- Tested on multiple channels (3-5 minimum)
+- No critical bugs or regressions
+- STATUS.md updated with sprint results
+- ROADMAP.md updated if phase completed
+- TASK.md updated with next sprint
+- ARCHITECTURE.md updated if architecture changed
+- Commit message describes what was done and why
+
+---
+
+## Known Issues
+
+### Resolved (Historical)
+- DetachedInstanceError in NewsPublishingStrategy (Sprint 72.4)
+  - Fix: Save content_id = content.id before db.close()
+- VK post status not updating (Sprint 71)
+  - Fix: Added row.status = "published" in VK publishing path
+- Telegram 401 Unauthorized for 3 channels (Sprint 70)
+  - Fix: Updated bot tokens and chat_ids
+- Pydantic ValidationError for ChannelScheduleResponse (Sprint 70.5)
+  - Fix: Changed next_run: datetime to next_run: Optional[Any]
+- HTML escaping bug in TelegramRenderer (Sprint 72.3)
+  - Fix: Escape main text BEFORE adding source line
+
+### Open (Current)
+- GenericPublishingStrategy not using Publication Layer (Sprint 72.5)
+- No metrics or observability (Sprint 73)
+- No retry logic for transient errors (Sprint 74)
+- Pipeline reports "0 published" even when posts succeed (cosmetic - return value issue)
+
+---
+
+## File Locations Quick Reference
+
+### Publication Layer
+- core/models/publication.py - Publication Contract
+- core/models/publication_builder.py - PublicationBuilder + ARCHETYPE_DEFAULTS
+- core/models/renderers/telegram_renderer.py - TelegramRenderer
+- core/models/renderers/vk_renderer.py - VKRenderer
+
+### Publishing Strategies
+- backend/engines/news_strategies.py - NewsPublishingStrategy (integrated)
+- backend/engines/generic_strategies.py - GenericPublishingStrategy (TODO Sprint 72.5)
+
+### Publishers
+- backend/engines/telegram_publisher.py - Telegram API client
+- backend/engines/vk_publisher.py - VK API client
+
+### Engines
+- backend/engines/rss_fetcher.py - RSS fetching
+- backend/engines/llm_post_generator.py - LLM text generation
+- backend/engines/deduplicator.py - URL-based deduplication
+
+### Pipeline
+- backend/automation/universal_pipeline.py - Universal Pipeline
+- backend/automation/automation_manager_v2.py - Orchestration
+- backend/automation/scheduler.py - Cron jobs
+
+### Database Models
+- core/models/content_orm.py - Content
+- core/models/channel_orm.py - Channel
+- core/models/channel_profile_orm.py - ChannelProfile
+
+---
+
+## Questions?
+
+If you're unsure about something:
+1. Check STATUS.md for current state
+2. Check ARCHITECTURE.md for design details
+3. Check TASK.md for known issues and next sprint
+4. Look at recent commits for examples
+5. Test locally before making changes
+6. When in doubt, ask for clarification
+
+---
+
+## Changelog
+
+### Sprint 72.4 (Current)
+- NewsPublishingStrategy integrated with Publication Layer
+- DB updates working correctly (status=published, telegram_message_id)
+- 6 posts published successfully (msg_id 504-509)
+- HTML source links present in all posts
+
+### Sprint 72.1-72.3
+- Publication Contract defined
+- PublicationBuilder created with archetype-based defaults
+- TelegramRenderer and VKRenderer created
+- HTML escaping bug fixed
+
+### Sprint 71
+- VK integration complete
+- 14 channels active across 2 platforms
+
+### Sprint 70
+- Generic LLM generation for all 8 archetypes
+- Russian language output via Ollama
+- Natural text formatting (no template headers)
