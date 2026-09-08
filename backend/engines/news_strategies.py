@@ -9,6 +9,9 @@ from core.database import SessionLocal
 from core.models.content_orm import ContentORM
 from core.models.channel_orm import ChannelORM
 
+from core.models.publication_builder import PublicationBuilder
+from core.models.renderers import TelegramRenderer
+
 logger = logging.getLogger(__name__)
 
 
@@ -170,6 +173,38 @@ class NewsPublishingStrategy:
             db.commit()
             db.refresh(content)
             logger.info(f"Content saved: id={content.id}, status={status}, headline={content.headline[:50]}")
+            
+            # Sprint 72.4: Build Publication and render for Telegram
+            try:
+                builder = PublicationBuilder()
+                profile = self.profile
+                channel = db.query(ChannelORM).filter(ChannelORM.id == channel_id).first()
+                
+                publication = builder.build(
+                    post=post,
+                    profile=profile,
+                    channel=channel
+                )
+                
+                renderer = TelegramRenderer(source_emoji="🔗")
+                render_result = renderer.render(publication)
+                
+                # Обновляем draft_text с отрендеренным текстом
+                content.draft_text = render_result.text
+                
+                # Сохраняем metadata для telegram_publisher
+                if not hasattr(content, '_render_metadata'):
+                    content._render_metadata = {}
+                content._render_metadata['parse_mode'] = render_result.parse_mode
+                content._render_metadata['reply_markup'] = render_result.reply_markup
+                content._render_metadata['disable_web_page_preview'] = render_result.disable_web_page_preview
+                
+                db.commit()
+                logger.info(f"Sprint 72.4: Publication built and rendered for telegram")
+            except Exception as e:
+                logger.error(f"Sprint 72.4: Builder/Renderer failed: {e}")
+                # Fallback: используем оригинальный content
+                pass
         except Exception as e:
             logger.exception(f"Failed to save content: {e}")
             try:
@@ -217,18 +252,55 @@ class NewsPublishingStrategy:
             
             # Формируем текст сообщения
             text = f"{post.get('content', '')}"
-            if post.get('source'):
-                text += f"\n\nИсточник: {post['source']}"
+            # Sprint 72.4: Источник добавляется TelegramRenderer
             
             # Отправляем
             if media_url:
                 result = await publisher.send_photo(media_url, caption=text)
             else:
-                result = await publisher.send_message(text)
+                    # Sprint 72.4: Передаем render metadata
+                parse_mode = None
+                reply_markup = None
+                disable_web_page_preview = False
+            
+                if hasattr(content, '_render_metadata'):
+                    metadata = content._render_metadata
+                    parse_mode = metadata.get('parse_mode')
+                    reply_markup = metadata.get('reply_markup')
+                    disable_web_page_preview = metadata.get('disable_web_page_preview', False)
+            
+                result = await publisher.send_message(
+                    text,
+                    parse_mode=parse_mode,
+                    reply_markup=reply_markup,
+                    disable_web_page_preview=disable_web_page_preview
+                )
             
             if result.get("success"):
                 message_id = result.get("message_id")
                 logger.info(f"Published to Telegram: message_id={message_id}")
+                
+                # Sprint 72.4: Обновляем БД с telegram_message_id и status
+                try:
+                    from datetime import datetime as _dt
+                    db2 = SessionLocal()
+                    try:
+                        row = db2.query(ContentORM).filter(ContentORM.id == content.id).first()
+                        if row:
+                            row.telegram_message_id = str(message_id)
+                            row.status = "published"
+                            row.published_at = _dt.utcnow()
+                            db2.commit()
+                            logger.info(f"Sprint 72.4: Updated DB - telegram_message_id={message_id}, status=published")
+                        else:
+                            logger.error(f"Content row not found: {content.id}")
+                    except Exception as e:
+                        logger.error(f"Failed to update DB: {e}")
+                        db2.rollback()
+                    finally:
+                        db2.close()
+                except Exception as e:
+                    logger.error(f"DB session error: {e}")
                 
                 # Sprint 69.15 fix: сохраняем telegram_message_id и published_at
                 # Получаем content.id из созданной записи
