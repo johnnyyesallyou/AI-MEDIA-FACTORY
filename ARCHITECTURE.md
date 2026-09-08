@@ -1,426 +1,670 @@
-# Архитектура AI Media Factory
+# AI Media Factory — System Architecture
 
-## Обзор
-
-AI Media Factory — это автономная фабрика управления медиа-каналами в Telegram, VK и (в будущем) Dzen.
-
-**Ключевая идея:**
-\\\
-Пользователь создаёт канал → указывает тему → подключает платформу → нажимает START
-→ система сама исследует, создаёт, публикует, собирает статистику и оптимизирует.
-\\\
+**Last Updated:** __2026-09-08__
+**Version:** 2.0 (Post Sprint 72)
 
 ---
 
-## Текущая архитектура (после Sprint 53)
+## Architecture Overview
 
-\\\
-┌─────────────────────────────────────────────────────────────────┐
-│                        CHANNELS (БД)                             │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │  ChannelORM                                                │ │
-│  │  ├── id, name, platform                                    │ │
-│  │  ├── profile_id (ссылка на шаблон)                         │ │
-│  │  ├── content_profile (JSONB - эффективная конфигурация)    │ │
-│  │  │    ├── profile_key: "manga_releases"                    │ │
-│  │  │    ├── content_type: "manga"                            │ │
-│  │  │    ├── topic: "new_chapters"                            │ │
-│  │  │    ├── sources: ["remanga", "mangadex"]                 │ │
-│  │  │    └── job_type: "manga_pipeline"                       │ │
-│  │  ├── bot_token, chat_id (Telegram)                         │ │
-│  │  └── vk_access_token, vk_group_id (VK)                     │ │
-│  └───────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            │ resolve_channel_profile()
-                            ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                    CHANNEL PROFILES (code)                       │
-│  engines/channel_profiles.py                                     │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │  PROFILES = {                                              │ │
-│  │      "manga_releases": {                                   │ │
-│  │          "content_type": "chapter_release",                │ │
-│  │          "sources": ["remanga", "mangadex"],               │ │
-│  │          "image_policy": {...},                            │ │
-│  │          "publishing_policy": {...},                       │ │
-│  │          "formatting_profile": {...},                      │ │
-│  │      },                                                    │ │
-│  │      "anime_news": {...},                                  │ │
-│  │      "ai_news": {...},                                     │ │
-│  │  }                                                         │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│  + _deep_merge(profile, overrides) для эффективной конфигурации│
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            │ job_type dispatch
-                            ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                    PIPELINE JOBS (orchestration)                 │
-│  backend/automation/jobs/                                        │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐           │
-│  │ MangaPipeline│ │ AnimePipeline│ │ NewsPipeline │           │
-│  │ Job          │ │ Job          │ │ Job          │           │
-│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘           │
-│         │                │                │                     │
-│         ↓                ↓                ↓                     │
-│  Research→Enrich   Research→Publish   Research→Publish          │
-│  →Image→Publish                                                   │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                    RESEARCH + KNOWLEDGE                          │
-│  engines/                                                        │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │  MangaResearchJob → MangaKnowledgeEngine → MangaTitle     │ │
-│  │  AnimeResearchJob → AnimeKnowledgeEngine → AnimeEpisode   │ │
-│  │  NewsResearchJob  → NewsKnowledgeEngine  → NewsArticle    │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│  + CrossSourceEnricher (manga: remanga+mangadex+readmanga)     │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                    SOURCE REGISTRY (Sprint 53) ⭐                │
-│  engines/source_registry.py                                      │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │  @dataclass SourceDefinition:                              │ │
-│  │      id, name, content_types, topics, languages,           │ │
-│  │      adapter, capabilities                                 │ │
-│  │                                                            │ │
-│  │  SourceRegistry.get_sources_for(content_type, topic, lang)│ │
-│  │  → возвращает список подходящих источников                 │ │
-│  └───────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            ↓
+### High-Level Architecture
 
-┌─────────────────────────────────────────────────────────────────┐
-│                    FORMATTER LAYER (Sprint 54) ⭐                │
-│  engines/formatters/                                             │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │  get_formatter(content_type, topic) → BaseFormatter        │ │
-│  │                                                            │ │
-│  │  MangaFormatter          NewsFormatter      AnimeFormatter   │ │
-│  │  (chapter_line + RU/EN)  (source_line +     (season_line +  │ │
-│  │                          translate RU)      aliases.en/ja) │ │
-│  │                                                            │ │
-│  │  Shared utilities:                                         │ │
-│  │  - format_hashtag()   - smart_truncate()                   │ │
-│  │  - translate_to_russian() (Ollama gemma2:9b)               │ │
-│  │  - unescape()         - has_cyrillic()                     │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│  Formatter принимает Knowledge Object + FormatContext            │
-│  и возвращает Publication (унифицированная структура)            │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                    PUBLISHING LAYER                              │
-│  engines/publishing/                                             │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │  get_publisher_for_channel(channel) → BasePublisher        │ │
-│  │                                                            │ │
-│  │  TelegramPlatformPublisher    VKPlatformPublisher           │ │
-│  │       ↓                            ↓                        │ │
-│  │  TelegramPublisher (API)      VK API                        │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│  + TelegraphPublisher для Telegraph страниц                   │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                    PLATFORMS                                     │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                      │
-│  │ Telegram │  │    VK    │  │  Dzen    │ (planned)             │
-│  └──────────┘  └──────────┘  └──────────┘                      │
-└─────────────────────────────────────────────────────────────────┘
-\\\
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                     Channel Profile                         │
+│  (archetype, sources, publishing policies, media policies) │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Universal Pipeline                        │
+│  Research → Decision → Writing → Evaluation → Media        │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  PublicationBuilder                         │
+│         (applies archetype policies, builds Publication)    │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Publication Contract                       │
+│   (text, media, source, article_url, formatting, metadata) │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+              ▼                         ▼
+┌──────────────────────┐    ┌──────────────────────┐
+│  TelegramRenderer    │    │    VKRenderer        │
+│  - HTML source links │    │  - Plain text        │
+│  - InlineKeyboard    │    │  - URL attachments   │
+│  - parse_mode=HTML   │    │  - Media attachments │
+└──────────┬───────────┘    └──────────┬───────────┘
+           │                           │
+           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐
+│  Telegram Publisher  │    │    VK Publisher      │
+│  (Bot API)           │    │  (wall.post API)     │
+└──────────┬───────────┘    └──────────┬───────────┘
+           │                           │
+           └─────────────┬─────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Database Update                          │
+│          (status=published, message_id tracking)            │
+└─────────────────────────────────────────────────────────────┘
+Component Details
+1. Channel Profile
 
----
+Purpose: Defines channel configuration and editorial policies.
 
-## Принципы архитектуры
+Location: core/models/channel_profile_orm.py
 
-### 1. Profile ≠ источник истины
+Key Fields:
 
-\\\python
-# НЕПРАВИЛЬНО:
-channel → profile → всё определяется профилем
+archetype — content type (news, educational, entertainment, etc.)
+content_profile — JSON configuration including sources and content settings
+publishing — JSON publishing policies
+media — JSON media policies
+learning — JSON learning parameters
 
-# ПРАВИЛЬНО:
-channel → profile (template) + overrides (content_profile JSONB)
-            ↓
-      effective config (merged)
-\\\
+Production content sources are stored in:
 
-**Реализация:** \
-esolve_channel_profile()\ делает \_deep_merge(profile, overrides)\
+channel.content_profile["sources"]
 
-### 2. SourceDefinition = dataclass (не ORM)
+The legacy channel.sources field is not the production source of truth for the Universal Pipeline.
 
-Источники — это **capabilities системы**, не пользовательские данные.
+2. Universal Pipeline
 
-\\\python
-@dataclass(frozen=True)
-class SourceDefinition:
-    id: str
-    content_types: tuple
-    topics: tuple
-    languages: tuple
-    adapter: str
-    capabilities: tuple
-\\\
+Purpose: Orchestrates the complete content production lifecycle.
 
-**Почему не ORM?** Потому что \
-emanga\, \nilist\, \habr\ — это не редактируемые пользователем объекты. Позже, если понадобится UI для custom RSS, можно добавить DB-модель.
+Production Path:
 
-### 3. AI отвечает за интеллектуальные операции, не за инфраструктуру
+automation_manager_v2.run_channel_now(channel_id)
+        ↓
+ChannelTask
+        ↓
+UniversalContentPipeline
+        ↓
+StrategyRegistry
+        ↓
+Research
+        ↓
+Decision
+        ↓
+Writing
+        ↓
+Evaluation
+        ↓
+Revision
+        ↓
+Re-evaluation
+        ↓
+Media
+        ↓
+Publication
+        ↓
+Platform Publishing
 
-\\\
-┌─────────────────────────────────────┐
-│  RULES / CONFIG (детерминировано)  │
-│  • Что искать → Source Registry    │
-│  • Где искать → content_type       │
-│  • Формат     → channel_profile    │
-│  • Расписание → schedule           │
-└─────────────────────────────────────┘
-                  ↓
-┌─────────────────────────────────────┐
-│  AI (интеллектуальные операции)    │
-│  • Translation (EN→RU)             │
-│  • Summarization (RSS→summary)     │
-│  • Hallucination filtering         │
-│  • Channel suggestion (wizard)     │
-│  • Learning Loop (паттерны)        │
-└─────────────────────────────────────┘
-\\\
+Main locations:
 
-### 4. Content Formatter Layer (планируется в Sprint 54) ⭐
+backend/automation/automation_manager_v2.py
+backend/engines/universal_pipeline.py
+backend/engines/generic_strategies.py
+backend/engines/news_strategies.py
 
-\\\
-СЕЙЧАС (архитектурный долг):
-MangaPublishJob._build_publication() → сам решает формат
-NewsPublishJob._build_publication()  → сам решает формат
+The Universal Pipeline supports multiple content archetypes through strategy-based processing.
 
-БУДЕТ:
-Knowledge Object → Formatter → Publication → Publisher
-\\\
+3. Publication Layer — Sprint 72
 
----
+The Publication Layer separates editorial content from platform-specific rendering.
 
+3.1 Publication Contract
 
-### 5. Content Formatter Layer (реализовано в Sprint 54)
+Location:
 
-**Раньше:**
-MangaPublishJob._build_publication() → сам решает формат
-NewsPublishJob._build_publication() → сам решает формат
+core/models/publication.py
 
-**Сейчас:**
-Knowledge Object + FormatContext → Formatter → Publication → Publisher
+The contract contains:
 
-**Преимущества:**
-- Формат определяется `channel_profile`, а не job
-- Новые типы контента = новые formatter-ы
-- Shared utilities (translate, smart_truncate, format_hashtag)
-- Testable (formatter можно тестировать отдельно)
+@dataclass
+class Publication:
+    text: str
+    media: List[MediaAsset]
+    source: Optional[str]
+    source_url: Optional[str]
+    article_url: Optional[str]
+    formatting: FormattingOptions
+    platform_metadata: Dict[str, Any]
 
-## Data Flow: создание и публикация поста
+Supporting models:
 
-### Manga channel
+MediaAsset
+FormattingOptions
+Key Principle
 
-\\\
-1. Scheduler (каждые 30 мин)
-   ↓
-2. MangaPipelineJob.run()
-   ↓
-3. MangaResearchJob
-   - SourceRegistry.get_sources_for("manga", "new_chapters")
-   - → ["remanga", "mangadex", "readmanga"]
-   - Fetch chapters from each source
-   ↓
-4. MangaKnowledgeEngine
-   - Dedup by canonical_url
-   - Create MangaTitle + MangaChapter
-   ↓
-5. CrossSourceEnricher
-   - Merge descriptions, genres, covers
-   ↓
-6. MangaImageJob
-   - Download covers from ReManga/MangaDex
-   ↓
-7. MangaPublishJob
-   - resolve_channel_profile(channel) → manga_releases config
-   - TelegraphPublisher.upload_images_to_telegraph(preview_pages)
-   - TelegramPlatformPublisher.publish(publication)
-   ↓
-8. Telegram: @manga_new_chapters
-   - Обложка + RU/EN названия
-   - Описание + жанры
-   - Telegraph страница с 5 preview pages
-   - Кнопки: "Читать на Telegraph" + "Читать на сайте"
-\\\
+Publication describes WHAT should be published, not HOW it is rendered.
 
-### News channel
+This allows the same publication object to be rendered differently for Telegram, VK, and future platforms.
 
-\\\
-1. Scheduler (каждые 30 мин)
-   ↓
-2. NewsPipelineJob.run()
-   ↓
-3. NewsResearchJob
-   - Fetch RSS: habr, vc, techcrunch, theverge
-   - Dedup by canonical_url
-   - Create NewsArticle
-   ↓
-4. NewsPublishJob
-   - _translate_to_russian() через gemma2:9b
-   - resolve_channel_profile() → ai_news config
-   - PublicationImageResolver (og:image)
-   ↓
-5. Telegram: @news_bot_ag
-   - Заголовок на русском (переведён)
-   - Описание на русском (переведено)
-   - Картинка с источника
-   - Telegraph страница
-   - Кнопки
-\\\
+3.2 PublicationBuilder
 
-### Anime channel
+Location:
 
-\\\
-1. Scheduler (каждые 30 мин)
-   ↓
-2. AnimePipelineJob.run()
-   ↓
-3. AnimeResearchJob
-   - AniList API + MyAnimeList
-   - Create AnimeEpisode
-   ↓
-4. AnimePublishJob
-   - _translate_to_russian() через gemma2:9b
-   - Real key visual (не AI-generated)
-   ↓
-5. Telegram: @Anime_news_ai
-   - Key visual
-   - RU описание + теги
-   - Ссылка на AniList
-\\\
+core/models/publication_builder.py
 
----
+Purpose: Converts generated content into the canonical Publication contract.
 
-## Технологии
+Responsibilities:
 
-### Backend
-- **FastAPI** — REST API
-- **SQLAlchemy** — ORM
-- **PostgreSQL** — БД (JSONB для content_profile)
-- **APScheduler** — cron jobs
-- **httpx/requests** — HTTP клиенты
+Apply archetype-based defaults
+Apply profile-level overrides
+Resolve source attribution
+Resolve article-link policy
+Resolve media policy
+Build media assets
+Apply formatting constraints
+Policy Resolution
+Profile settings
+       ↓
+Archetype defaults
+       ↓
+Global defaults
 
-### AI/ML
-- **Ollama + gemma2:9b** — перевод, evaluation
-- **Ollama + qwen2.5:0.5b** — fast model для простых задач
+The visible publication format is therefore controlled by metadata and policies rather than hard-coded text templates.
 
-### Publishing
-- **Telegram Bot API** — публикация в Telegram
-- **VK API** — публикация в VK
-- **Telegraph API** — Telegraph страницы
+Editorial Principle
 
-### Источники
-- **ReManga API** — манга (RU)
-- **MangaDex API** — манга (EN)
-- **ReadManga** — манга (RU)
-- **AniList GraphQL API** — аниме
-- **MyAnimeList API** — аниме
-- **RSS feeds** — новости (habr, vc, techcrunch, theverge)
+The platform should standardize the internal publication contract, not force every channel to use identical visible text.
 
----
+For example, a news channel may use source attribution while an entertainment channel may not. An article link may be rendered as a button on Telegram while being represented as an attachment on VK.
 
-## Структура проекта
+4. Platform Renderers
 
-\\\
-AI-MEDIA-FACTORY/
-├── backend/
-│   ├── app/
-│   │   ├── api/v1/              # REST endpoints
-│   │   │   ├── channels.py
-│   │   │   ├── sources.py       # Sprint 53 ⭐
-│   │   │   ├── templates.py
-│   │   │   └── router.py
-│   │   └── services/
-│   ├── automation/
-│   │   ├── jobs/                # Pipeline jobs
-│   │   │   ├── manga_pipeline_job.py
-│   │   │   ├── manga_publish_job.py
-│   │   │   ├── anime_pipeline_job.py
-│   │   │   ├── anime_publish_job.py
-│   │   │   ├── news_pipeline_job.py
-│   │   │   └── news_publish_job.py
-│   │   └── scheduler.py         # Cron jobs
-│   └── core/
-│       ├── models/
-│       │   ├── channel_orm.py
-│       │   ├── content_orm.py
-│       │   ├── channel_profile_orm.py
-│       │   └── __init__.py
-│       └── database.py
-├── engines/
-│   ├── source_registry.py       # Sprint 53 ⭐
-│   ├── channel_profiles.py      # PROFILES dict + resolve_channel_profile()
-│   ├── publishing/
-│   │   ├── factory.py           # get_publisher_for_channel()
-│   │   ├── telegram_publisher_adapter.py
-│   │   └── vk_publisher.py
-│   ├── telegraph/
-│   │   └── publisher.py         # upload_images_to_telegraph()
-│   ├── source_adapters/
-│   │   ├── manga_registry.py
-│   │   ├── anime_registry.py
-│   │   ├── remanga_adapter.py
-│   │   ├── mangadex_adapter.py
-│   │   └── anilist_adapter.py
-│   └── evaluator/
-│       └── engine.py            # LLM evaluation
-├── scripts/                     # Utility scripts
-└── status.md                    # Project status
-\\\
+Location:
 
----
+core/models/renderers/
 
-## Следующие архитектурные шаги
+Renderers transform a platform-independent Publication into platform-specific output.
 
-### Sprint 54: Formatter Layer (самый важный)
+4.1 TelegramRenderer
 
-**Проблема:** формат поста захардкожен в publish_job-ах.
+Output includes:
 
-**Решение:**
-\\\python
-# engines/formatters/base.py
-class BaseFormatter(ABC):
-    @abstractmethod
-    def format(self, knowledge_object, channel_config) -> Publication:
-        pass
+rendered text
+parse_mode
+reply_markup
+media information
+web preview configuration
 
-# engines/formatters/manga_formatter.py
-class MangaFormatter(BaseFormatter):
-    def format(self, manga_title: MangaTitle, channel_config) -> Publication:
-        # Формат: обложка + RU/EN название + описание + Telegraph + кнопки
-        ...
+Current features:
 
-# engines/formatters/formatter_registry.py
-def get_formatter(content_type: str, topic: str) -> BaseFormatter:
-    # manga/new_chapters → MangaFormatter
-    # anime/news → AnimeFormatter
-    # news/technology → NewsFormatter
-    ...
-\\\
+HTML source links
+HTML escaping
+Читать полностью inline button when article_url is available
+media support
+platform-specific formatting
 
-**Результат:**
-- Формат определяется \channel_profile\, а не job-ом
-- Новые типы контента = новые formatter-ы (не jobs)
-- Основа для Sprint 55 (Wizard)
+Example source representation:
 
-### Sprint 55+: Wizard, One-Click START, Learning Loop
+<a href="https://example.com">Источник</a>
+4.2 VKRenderer
 
-(см. status.md для деталей)
+Output includes:
+
+plain text message
+media attachments
+article URL / attachment information
+
+Current principles:
+
+no Telegram-specific HTML
+platform-native text representation
+media attachments
+article link fallback
+5. Publishing Strategies
+
+Publishing strategies connect the editorial pipeline with the Publication Layer and platform publishers.
+
+5.1 NewsPublishingStrategy
+
+Location:
+
+backend/engines/news_strategies.py
+
+Status: Integrated — Sprint 72.4
+
+Current flow:
+
+Generated post
+      ↓
+ContentORM
+      ↓
+PublicationBuilder
+      ↓
+Publication
+      ↓
+TelegramRenderer / VKRenderer
+      ↓
+Platform Publisher
+      ↓
+Database status update
+      ↓
+success result
+
+The Sprint 72.4 integration has been validated with real Telegram publications.
+
+Verified result:
+
+published = 6
+telegram_message_id = 504–509
+status = published
+5.2 GenericPublishingStrategy
+
+Location:
+
+backend/engines/generic_strategies.py
+
+Status: Next integration step.
+
+Sprint 72.5 will migrate GenericPublishingStrategy to the same Publication Layer:
+
+Generic post
+      ↓
+PublicationBuilder
+      ↓
+Publication
+      ↓
+TelegramRenderer / VKRenderer
+      ↓
+Publisher
+      ↓
+Database
+
+The goal is to remove duplicated platform formatting logic from individual publishing strategies.
+
+6. Platform Publishers
+6.1 Telegram Publisher
+
+Location:
+
+backend/engines/telegram_publisher.py
+
+API: Telegram Bot API
+
+Current capabilities include:
+
+send_message
+send_photo
+HTML parsing
+reply markup
+web preview control
+message ID tracking
+rate limiting
+sanitization
+6.2 VK Publisher
+
+Location:
+
+backend/engines/vk_publisher.py
+
+API: VK API / wall.post
+
+Current capabilities include:
+
+text publication
+media attachments
+VK post ID tracking
+platform-specific publication
+7. Content Engines
+7.1 Research
+
+Primary RSS infrastructure:
+
+backend/engines/rss_fetcher.py
+
+Research receives source configuration from the channel profile and produces topics for downstream processing.
+
+Capabilities include:
+
+RSS parsing
+topic extraction
+freshness filtering
+source handling
+error handling
+7.2 Decision
+
+Responsible for selecting and prioritizing topics.
+
+Current mechanisms include:
+
+URL-based deduplication
+relevance / priority processing
+existing-content checks
+7.3 Writing
+
+Location:
+
+backend/engines/llm_post_generator.py
+
+Primary local model:
+
+llama3.1:8b
+
+Current goals:
+
+Russian-language generation
+natural editorial text
+archetype-aware generation
+length control
+source-aware content generation
+
+Source attribution is increasingly handled by the Publication Layer rather than being hard-coded into LLM prompts.
+
+7.4 Evaluation
+
+Responsible for quality evaluation before publication.
+
+The broader pipeline supports:
+
+quality scoring
+fact evaluation
+revision
+re-evaluation
+7.5 Media
+
+Responsible for media selection/generation.
+
+Media requirements are controlled by channel/archetype policy.
+
+The Publication Layer receives normalized media assets before rendering.
+
+8. Database Layer
+8.1 ContentORM
+
+Location:
+
+core/models/content_orm.py
+
+Important fields include:
+
+id
+channel_id
+headline
+draft_text
+source_url
+status
+telegram_message_id
+published_at
+quality/fact fields
+media references
+
+The database remains the source of truth for content lifecycle state.
+
+8.2 ChannelORM
+
+Contains channel/platform configuration including:
+
+channel identity
+platform
+Telegram credentials
+VK configuration
+profile relationship
+active state
+8.3 ChannelProfileORM
+
+Location:
+
+core/models/channel_profile_orm.py
+
+Contains:
+
+archetype
+theme
+niche
+audience
+language
+tone
+content configuration
+research configuration
+media configuration
+publishing configuration
+learning configuration
+9. Data Flow
+Successful News Publication
+1. automation_manager_v2.run_channel_now(channel_id)
+                    ↓
+2. Load Channel + Channel Profile
+                    ↓
+3. Universal Pipeline
+                    ↓
+4. Research
+                    ↓
+5. Decision
+                    ↓
+6. Writing
+                    ↓
+7. Evaluation / Revision
+                    ↓
+8. Media
+                    ↓
+9. NewsPublishingStrategy
+                    ↓
+10. PublicationBuilder
+                    ↓
+11. Publication
+                    ↓
+12. TelegramRenderer / VKRenderer
+                    ↓
+13. Platform Publisher
+                    ↓
+14. Database Update
+                    ↓
+15. status = published
+                    ↓
+16. platform message/post ID persisted
+10. Design Principles
+1. Separation of Concerns
+Publication
+    = WHAT to publish
+
+Renderer
+    = HOW to represent it on a platform
+
+Publisher
+    = HOW to communicate with the platform API
+2. Natural Editorial Style
+
+The system should avoid rigid AI-looking templates.
+
+Preferred approach:
+
+[media]
+
+Natural short text.
+
+Optional source attribution.
+Optional full-article link.
+
+The exact visible structure depends on archetype and channel profile.
+
+3. Archetype-Based Configuration
+
+Different archetypes may have different:
+
+source policies
+media requirements
+article-link policies
+formatting rules
+length limits
+paragraph limits
+emoji preferences
+4. Platform Independence
+
+The same Publication can be rendered for:
+
+Telegram
+VK
+Future platforms
+
+without changing the editorial generation layer.
+
+5. Database as Source of Truth
+
+Publication lifecycle is persisted in the database.
+
+Important final state:
+
+status = published
+platform message/post ID = persisted
+published_at = persisted
+11. Current Supported Archetypes
+
+The platform currently defines eight core content archetypes:
+
+News
+Releases
+Educational
+Entertainment
+Viral
+Reviews
+Community
+Aggregator
+
+Generic strategies allow the Universal Pipeline to support non-news archetypes without creating an entirely separate pipeline for each one.
+
+12. Current Platform State
+
+As of Sprint 72:
+
+Channels:             14
+Telegram channels:    13
+VK channels:           1
+
+Universal Pipeline:   operational
+Generic LLM:          operational
+Deduplication:        operational
+Telegram publishing:  operational
+VK publishing:        operational
+Publication Contract: operational
+PublicationBuilder:   operational
+TelegramRenderer:     operational
+VKRenderer:            operational
+
+Sprint 72.4 validated the complete News publishing path with real Telegram publications.
+
+13. Performance Characteristics
+
+Observed Universal Pipeline duration is approximately:
+
+100–330 seconds
+
+depending on:
+
+number of topics
+RSS response time
+LLM generation time
+evaluation/revision
+publishing workload
+
+LLM generation is currently one of the dominant latency sources.
+
+14. Security Considerations
+API Credentials
+
+Platform credentials must not be committed to source control.
+
+They are stored through the application's channel configuration and runtime environment.
+
+Rate Limiting
+
+Telegram publication is rate-limited.
+
+VK rate limiting requires further hardening.
+
+Input Validation
+
+The system validates:
+
+source URLs
+RSS input
+generated content
+platform publication data
+15. Technical Debt / Known Follow-Up Work
+
+The following areas should not be confused with the production Universal Pipeline:
+
+Legacy Research Path
+engines/research/engine.py
+
+This is an older research path and should not become the production source architecture.
+
+Legacy Channel Sources
+channel.sources
+
+Production source configuration uses:
+
+channel.content_profile["sources"]
+Scheduler
+
+The scheduler contains legacy job-ID assumptions that should be reviewed during reliability/observability work.
+
+VK Async Publishing
+
+VK publishing paths should be reviewed to ensure all network operations are fully asynchronous.
+
+16. Roadmap
+Sprint 72.5 — Generic Publishing Integration
+Migrate GenericPublishingStrategy to PublicationBuilder
+Use TelegramRenderer
+Use VKRenderer
+Remove duplicated formatting logic
+Validate non-news archetypes
+Sprint 72.6 — 14-Channel Regression
+Run all active channels
+Verify publication status
+Verify platform IDs
+Verify source/article-link policies
+Verify media policies
+Sprint 72.7 — Editorial QA
+Validate natural Russian-language output
+Remove rigid AI-looking structures
+Validate paragraph/length policies
+Validate source attribution
+Validate article-link behavior
+Sprint 73 — Observability
+Pipeline duration per stage
+Posts/hour per channel
+Success/failure rates
+LLM latency
+Telegram/VK health
+Structured metrics
+Sprint 74 — Reliability
+Retry policies
+Exponential backoff
+Timeouts
+Circuit breakers
+Dead-letter handling
+Automatic recovery
+Sprint 75+ — Discovery Engine
+Source discovery
+RSS validation
+Source scoring
+Source Registry
+Subscribe.ru discovery integration
+Later — Learning and Smart Scaling
+Analytics-driven optimization
+A/B testing
+Learning Loop
+Multi-platform expansion
+Smart channel scaling
+Pilot network expansion
+References
+STATUS.md — current project state
+ROADMAP.md — development roadmap
+TASK.md — current backlog
+PROJECT_CONTEXT.md — project context
+AI_CONTEXT.md — AI-assisted development context
