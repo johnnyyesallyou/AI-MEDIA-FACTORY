@@ -152,11 +152,11 @@ AI-MEDIA-FACTORY/
 ├── backend/engines/
 │ ├── news_strategies.py # NewsPublishingStrategy (integrated)
 │ ├── generic_strategies.py # GenericPublishingStrategy (TODO)
+│ ├── universal_pipeline.py # Universal Pipeline
 │ ├── telegram_publisher.py # Telegram API client
 │ └── vk_publisher.py # VK API client
 ├── backend/automation/
-│ ├── automation_manager_v2.py # Pipeline orchestration
-│ └── universal_pipeline.py # Universal Pipeline
+│ └── automation_manager_v2.py # Pipeline orchestration
 └── docs/
 ├── STATUS.md # This file
 ├── ROADMAP.md # Development roadmap

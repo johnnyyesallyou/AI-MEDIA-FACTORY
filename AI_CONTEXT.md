@@ -203,7 +203,7 @@
 - backend/engines/deduplicator.py - URL-based deduplication
 
 ### Pipeline
-- backend/automation/universal_pipeline.py - Universal Pipeline
+- backend/engines/universal_pipeline.py - Universal Pipeline
 - backend/automation/automation_manager_v2.py - Orchestration
 - backend/automation/scheduler.py - Cron jobs
 
