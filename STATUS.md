@@ -16,6 +16,12 @@
 - ⚠️ ~10 min per channel (10 topics × LLM) — see Sprint 73 for metrics
 - ⚠️ Known degradations: VK_TOKEN not set (1 channel), AniList 403 / ReadManga 402 (sources)
 
+### Sprint 73.1 — Timing Instrumentation (completed)
+- ✅ `PipelineResult.stage_timings` + лог с процентами по стадиям (research/writing/media/publishing)
+- ✅ Таблица `pipeline_run_metrics` (ORM: `core/models/pipeline_run_metrics_orm.py`), метрики пишутся после каждого прогона
+- ✅ API: `GET /api/v1/metrics/pipeline/{channel_id}`, `/summary/all`, `/slowest/top`
+- 📊 Первый вывод: **~92% времени пайплайна — LLM-генерация (writing)**, research ~3%, publishing ~4%
+
 ### Production System
 - **14 active channels** across Telegram and VK platforms
 - **8 archetypes**: news, educational, entertainment, viral, releases, reviews, community, aggregator

@@ -25,6 +25,7 @@ from .health import router as health_router
 from .failures import router as failures_router
 from .profiles import router as profiles_router
 from .pipeline import router as pipeline_router
+from .pipeline_metrics import router as pipeline_metrics_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -57,5 +58,6 @@ api_v1_router.include_router(failures_router)
 api_v1_router.include_router(profiles_router)
 api_v1_router.include_router(pipeline_router)
 api_v1_router.include_router(pilot_metrics_router)
+api_v1_router.include_router(pipeline_metrics_router)
 
 
