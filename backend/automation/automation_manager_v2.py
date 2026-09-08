@@ -84,6 +84,10 @@ class AutomationManagerV2:
         self.retry_policy = RetryPolicy(max_retries=3, backoff_factor=2.0)
         self.rate_limit_policy = RateLimitPolicy()
         self.error_handling_policy = ErrorHandlingPolicy()
+
+        # Sprint 72.6: глобальный лимит параллелизма — все каналы делят один
+        # Ollama (max_concurrent=1), поэтому выполняем не более N задач разом
+        self.global_concurrency = asyncio.Semaphore(3)
         
         logger.info("AutomationManager v2 initialized")
     
@@ -330,19 +334,24 @@ class AutomationManagerV2:
             return None
 
     async def _execute_task(self, task: ChannelTask):
-        """Sprint 66.3: Executes task with timeout protection."""
+        """Sprint 66.3: Executes task with timeout protection.
+
+        Sprint 72.6: семафор применяется ВНЕ wait_for — ожидание в очереди
+        параллелизма не расходует таймаут задачи.
+        """
         logger.info(f"Executing task {task.task_id} with timeout={TASK_TIMEOUT}s")
-        try:
-            await asyncio.wait_for(
-                self._execute_task_internal(task),
-                timeout=TASK_TIMEOUT
-            )
-        except asyncio.TimeoutError:
-            logger.error(f"Task {task.task_id} timed out after {TASK_TIMEOUT}s")
-            task.status = TaskStatus.FAILED
-            task.error = f"Timeout after {TASK_TIMEOUT}s"
-            self._record_pipeline_failure(task, "timeout", task.error)
-            task.finished_at = datetime.utcnow()
+        async with self.global_concurrency:
+            try:
+                await asyncio.wait_for(
+                    self._execute_task_internal(task),
+                    timeout=TASK_TIMEOUT
+                )
+            except asyncio.TimeoutError:
+                logger.error(f"Task {task.task_id} timed out after {TASK_TIMEOUT}s")
+                task.status = TaskStatus.FAILED
+                task.error = f"Timeout after {TASK_TIMEOUT}s"
+                self._record_pipeline_failure(task, "timeout", task.error)
+                task.finished_at = datetime.utcnow()
 
     async def _execute_task_internal(self, task: ChannelTask):
         """Выполняет задачу для канала."""
