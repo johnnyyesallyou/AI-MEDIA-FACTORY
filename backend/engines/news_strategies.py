@@ -172,6 +172,7 @@ class NewsPublishingStrategy:
             db.add(content)
             db.commit()
             db.refresh(content)
+            content_id = content.id  # Sprint 72.4 fix: save before db.close()
             logger.info(f"Content saved: id={content.id}, status={status}, headline={content.headline[:50]}")
             
             # Sprint 72.4: Build Publication and render for Telegram
@@ -191,6 +192,7 @@ class NewsPublishingStrategy:
                 
                 # Обновляем draft_text с отрендеренным текстом
                 content.draft_text = render_result.text
+                rendered_text = render_result.text  # Sprint 72.4 fix: save for Telegram
                 
                 # Сохраняем metadata для telegram_publisher
                 if not hasattr(content, '_render_metadata'):
@@ -228,7 +230,7 @@ class NewsPublishingStrategy:
                         from datetime import datetime as _dt
                         db2 = SessionLocal()
                         try:
-                            row = db2.query(ContentORM).filter(ContentORM.id == content.id).first()
+                            row = db2.query(ContentORM).filter(ContentORM.id == content_id).first()
                             if row:
                                 row.telegram_message_id = str(vk_result.get("message_id"))
                                 row.published_at = _dt.utcnow()
@@ -251,7 +253,7 @@ class NewsPublishingStrategy:
             publisher = TelegramPublisher(bot_token, chat_id)
             
             # Формируем текст сообщения
-            text = f"{post.get('content', '')}"
+            text = rendered_text  # Sprint 72.4 fix: use rendered Publication text
             # Sprint 72.4: Источник добавляется TelegramRenderer
             
             # Отправляем
@@ -281,11 +283,11 @@ class NewsPublishingStrategy:
                 logger.info(f"Published to Telegram: message_id={message_id}")
                 
                 # Sprint 72.4: Обновляем БД с telegram_message_id и status
-                logger.info(f"Sprint 72.4: Attempting to update DB for content {content.id}")
+                logger.info(f"Sprint 72.4: Attempting to update DB for content {content_id}")
                 try:
                     from datetime import datetime as _dt
                     db2 = SessionLocal()
-                    row = db2.query(ContentORM).filter(ContentORM.id == content.id).first()
+                    row = db2.query(ContentORM).filter(ContentORM.id == content_id).first()
                     if row:
                         row.telegram_message_id = str(message_id)
                         row.status = "published"
@@ -293,7 +295,7 @@ class NewsPublishingStrategy:
                         db2.commit()
                         logger.info(f"Sprint 72.4: Updated DB - telegram_message_id={message_id}, status=published")
                     else:
-                        logger.error(f"Content row not found: {content.id}")
+                        logger.error(f"Content row not found: {content_id}")
                     db2.close()
                 except Exception as e:
                     logger.error(f"Sprint 72.4: DB update failed: {e}", exc_info=True)
