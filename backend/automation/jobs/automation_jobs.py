@@ -2,18 +2,16 @@ from typing import Any
 import logging
 from datetime import datetime
 
-
 from core.database import SessionLocal
+
 from core.repositories.content_repository import ContentRepository
 from core.repositories.channel_repository import ChannelRepository
 from core.models.channel_schedule_orm import ChannelScheduleORM
 from core.models.content_orm import ContentORM
 
-
 from engines.writing.engine import WritingEngine
 from engines.writing.models import ContentBrief
 from engines.writing.output_guard import OutputGuard
-
 
 from engines.evaluator.engine import LLMEvaluatorEngine
 from engines.telegram.engine import TelegramEngine
@@ -23,12 +21,7 @@ import time
 import uuid
 from core.models.execution_log_orm import ExecutionLogORM
 
-
-from backend.automation.config import TELEGRAM_AI_EXPERT
-
-
 logger = logging.getLogger(__name__)
-
 
 
 
@@ -37,6 +30,9 @@ class PipelineLogger:
         self.execution_id = execution_id or str(uuid.uuid4())
         self.channel_id = channel_id
         self.db = SessionLocal()
+
+        # Sprint 75.1 (WIP reverted): Profile loading будет реализован через
+        # единый runtime-контракт (profile_config.py) в рамках Sprint 75.1.
         self.start_time = None
         self.log_id = None
 
@@ -85,9 +81,22 @@ class ResearchJob:
         try:
             repo = ContentRepository(db)
 
+            # Sprint 75.1: единый runtime-контракт — Profile → Pipeline behavior
+            from backend.automation.profile_config import load_profile_config
+            profile_cfg = load_profile_config(db, channel)
+            logger.info(
+                "ResearchJob profile source=%s name=%s sources=%s freshness=%s",
+                profile_cfg["source"], profile_cfg["profile_name"],
+                len(profile_cfg["sources"]) if profile_cfg["sources"] else None,
+                profile_cfg["freshness_hours"],
+            )
+
             engine = ResearchEngine()
 
-            research_result = engine.run(channel=channel)
+            research_result = engine.run(
+                channel=channel,
+                sources_override=profile_cfg["sources"],
+            )
 
             topics = research_result.get("topics", [])
 
@@ -156,7 +165,6 @@ class ResearchJob:
 
             p_logger.finish("failed", error_message=error_msg)
 
-
             return {
                 "status": "failed",
                 "error": str(e)
@@ -164,12 +172,6 @@ class ResearchJob:
 
         finally:
             db.close()
-        return {
-        "status":"ok",
-        "published":published,
-        "failed":failed
-        }
-
 
 class DecisionJob:
 
@@ -183,25 +185,24 @@ class DecisionJob:
         }
 
 
-
 """
 WritingJob — генерирует контент из research items.
 
 Использует WritingEngine v2 с полным Production Pipeline:
   Model Selector → Prompt Builder → LLM → Fact Guard → Validators → Output Guard
+
+Sprint 75.1 (WIP reverted): Profile-aware конфигурация (audience/tone/length)
+подается через единый runtime-контракт backend.automation.profile_config
+(StyleProfile / ChannelProfileORM → legacy TELEGRAM_AI_EXPERT fallback).
 """
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
-from sqlalchemy.orm import Session
 from core.repositories.content_repository import ContentRepository
 from engines.writing.engine import WritingEngine
 from engines.writing.models import ContentBrief
-from engines.writing.styles.profiles import TELEGRAM_AI_EXPERT
-
 
 logger = logging.getLogger(__name__)
-
 
 class WritingJob:
     """Генерирует контент из research items."""
@@ -219,7 +220,21 @@ class WritingJob:
         logger.info("WritingJob started (v2 with full pipeline)")
         
         db = SessionLocal()
+
         repo = ContentRepository(db)
+        
+        # Sprint 75.1: единый runtime-контракт — Profile → Pipeline behavior.
+        # Profile = primary, TELEGRAM_AI_EXPERT = legacy fallback only.
+        from backend.automation.profile_config import load_profile_config
+        profile_cfg = load_profile_config(db, channel)
+        style_profile = profile_cfg["style_profile"]
+        logger.info(
+            "WritingJob profile source=%s name=%s audience=%s tone=%s length=%s",
+            profile_cfg["source"], profile_cfg["profile_name"],
+            (profile_cfg["audience"] or "")[:60],
+            (profile_cfg["tone"] or "")[:60],
+            profile_cfg["content_length"],
+        )
         
         # Получаем research items
         items = repo.list_all(status="research", limit=50)
@@ -232,21 +247,21 @@ class WritingJob:
             try:
                 logger.info(f"Processing item={item.id} headline={item.headline[:50]}")
                 
-                # Создаём brief
+                # Создаём brief (Sprint 75.1: параметры из Profile, fallback legacy)
                 brief = ContentBrief(
                     topic=item.headline,
-                    audience=TELEGRAM_AI_EXPERT.get("audience", "IT аудитория Telegram"),
+                    audience=style_profile.get("audience", "IT аудитория Telegram"),
                     goal="Объяснить новость, дать контекст и показать практическое значение.",
-                    tone=TELEGRAM_AI_EXPERT.get("tone", "экспертный"),
-                    length_chars=1500,
+                    tone=style_profile.get("tone", "экспертный"),
+                    length_chars=style_profile.get("length_chars", 1200),
                     call_to_action="Что думаете? Поделитесь мнением.",
                     key_facts=[item.source_text or item.headline],
                     platform="telegram"
                 )
                 
-                # Генерируем через WritingEngine v2
+                # Генерируем через WritingEngine v2 (Sprint 75.1: style_profile из Profile)
                 writer = WritingEngine()
-                result = await writer.generate(brief, style_profile=TELEGRAM_AI_EXPERT)
+                result = await writer.generate(brief, style_profile=style_profile)
                 
                 generated_text = result.get("generated_text", "")
                 draft = result.get("draft")
@@ -301,7 +316,6 @@ class WritingJob:
         status = "ok" if failed == 0 else "partial" if processed > 0 else "failed"
         return {"status": status, "items_processed": processed, "failed": failed}
 
-
 class EvaluatorJob:
 
     async def run(self, channel=None, execution_id: str = None) -> dict[str, Any]:
@@ -319,6 +333,17 @@ class EvaluatorJob:
             logger.info("Evaluation queue size=%s", len(items))
             evaluator = LLMEvaluatorEngine()
 
+            # Sprint 75.1: стиль-aware критерии оценки — target_style из Profile,
+            # чтобы аналитические/развлекательные профили не оценивались по жесткому
+            # Telegram expert IT канону.
+            from backend.automation.profile_config import load_profile_config
+            profile_cfg = load_profile_config(db, channel)
+            target_style = profile_cfg["target_style"]
+            logger.info(
+                "EvaluatorJob profile source=%s name=%s target_style=%s",
+                profile_cfg["source"], profile_cfg["profile_name"], target_style[:80],
+            )
+
             for item in items:
                 try:
                     if not item.draft_text:
@@ -328,7 +353,7 @@ class EvaluatorJob:
                     result = await evaluator.evaluate(
                         source_facts=(item.source_text or item.headline),
                         generated_post=item.draft_text,
-                        target_style="Telegram expert IT channel"
+                        target_style=target_style
                     )
                     logger.info("Evaluated item=%s score=%s approved=%s", item.id, result.overall, result.is_approved)
                     item.quality_score = result.overall
@@ -365,7 +390,6 @@ class EvaluatorJob:
             return {"status": "failed", "error": error_msg}
         finally:
             db.close()
-
 
 
 
@@ -446,7 +470,6 @@ class ImageJob:
             return {"status": "failed", "error": str(e)}
         finally:
             db.close()
-
 
 class PublishJob:
     """
