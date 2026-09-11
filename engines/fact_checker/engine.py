@@ -11,7 +11,7 @@ class FactCheckerEngine:
     
     def __init__(self, llm_client):
         self.llm_client = llm_client
-        self.system_prompt = \"\"\"
+        self.system_prompt = """
 Ты — строгий фактчекер системы AI-MEDIA-FACTORY. 
 Твоя задача — проверить сгенерированный пост на соответствие исходным фактам.
 
@@ -27,17 +27,17 @@ class FactCheckerEngine:
 - Если все проверки пройдены успешно — статус "Approved", оценка 90-100.
 
 Верни строго JSON в формате FactCheckResult.
-\"\"\"
+"""
 
     async def check(self, source_facts: Dict[str, Any], generated_post: str) -> FactCheckResult:
-        \"\"\"
+        """
         Проверяет пост на основе сигнатуры исходных фактов.
         
         :param source_facts: Словарь с ключами 'entities', 'numbers', 'headline', 'facts'
         :param generated_post: Текст сгенерированного поста
         :return: FactCheckResult
-        \"\"\"
-        user_prompt = f\"\"\"
+        """
+        user_prompt = f"""
 <SOURCE_DATA>
 Headline: {source_facts.get('headline', 'N/A')}
 Entities: {source_facts.get('entities', [])}
@@ -50,7 +50,7 @@ Facts: {source_facts.get('facts', [])}
 </GENERATED_POST>
 
 Проведи 5 проверок и верни оценку в формате JSON.
-\"\"\"
+"""
         
         # В реальной реализации здесь будет вызов LLM:
         # result = await self.llm_client.generate_structured(
