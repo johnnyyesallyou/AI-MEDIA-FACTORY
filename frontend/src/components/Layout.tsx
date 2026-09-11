@@ -5,7 +5,7 @@ import {
   BarChart3, Brain, FolderOpen, Link2, ScrollText, Wand2, 
   Users, Cog, Menu, X 
 , Workflow } from 'lucide-react';
-import { DollarSign, Sparkles, FlaskConical, ClipboardCheck } from 'lucide-react';
+import { DollarSign, Sparkles, FlaskConical, ClipboardCheck, Gauge } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -13,6 +13,7 @@ const navItems = [
   { path: '/wizard', label: 'Create Channel', icon: Wand2 },
   { path: '/generate', label: 'Post Generator', icon: Sparkles },
   { path: '/review', label: 'Review Queue', icon: ClipboardCheck },
+  { path: '/pipeline', label: 'Pipeline Metrics', icon: Gauge },
   { path: '/content', label: 'Content', icon: FileText },
   { path: '/ai', label: 'AI Models', icon: Bot },
   { path: '/automation', label: 'Automation', icon: Settings },

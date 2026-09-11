@@ -181,6 +181,16 @@ export const channelControlAPI = {
   getPublishingMode: (channelId: string) => apiClient.get(`/dashboard/${channelId}/publishing-mode`),
 };
 
+// Pipeline Metrics API (Sprint 73.1-73.4)
+export const pipelineMetricsAPI = {
+  summary: () => apiClient.get('/metrics/pipeline/summary/all'),
+  slowest: (limit: number = 5) => apiClient.get('/metrics/pipeline/slowest/top', { params: { limit } }),
+  channel: (channelId: string, limit: number = 10) => apiClient.get(`/metrics/pipeline/${channelId}`, { params: { limit } }),
+  healthOverview: (windowHours: number = 24) => apiClient.get('/metrics/pipeline/health/overview', { params: { window_hours: windowHours } }),
+  alerts: (windowHours: number = 24) => apiClient.get('/metrics/pipeline/alerts', { params: { window_hours: windowHours } }),
+  trends: (hours: number = 24) => apiClient.get('/metrics/pipeline/trends', { params: { hours } }),
+};
+
 export default apiClient;
 
 
@@ -208,3 +218,6 @@ export const aiAPISafe = {
   },
   updateRouting: aiAPI.updateRouting,
 };
+
+// Sprint 74.2: экспорт базового клиента для reliability-виджета
+export default apiClient;

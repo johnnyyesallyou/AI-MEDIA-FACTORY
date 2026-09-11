@@ -20,6 +20,7 @@ import ChannelWizard from './pages/ChannelWizard';
 import PostGenerator from './pages/PostGenerator';
 import ChannelAnalytics from './pages/ChannelAnalytics';
 import ReviewQueue from './pages/ReviewQueue';
+import PipelineDashboard from './pages/PipelineDashboard';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
           <Route path="generate" element={<PostGenerator />} />
           <Route path="channels/:id/analytics" element={<ChannelAnalytics />} />
           <Route path="review" element={<ReviewQueue />} />
+          <Route path="pipeline" element={<PipelineDashboard />} />
           <Route path="content" element={<Content />} />
           <Route path="ai" element={<AIModels />} />
           <Route path="automation" element={<Automation />} />
