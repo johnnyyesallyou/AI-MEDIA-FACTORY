@@ -180,19 +180,18 @@ def test_ab_writing_different_styles(session, _isolated_db):
         "backend.automation.jobs.automation_jobs.WritingEngine",
         return_value=_StubWriter(),
     ):
-        # Sprint 75.2 finding: WritingJob.list_all НЕ фильтрует по каналу —
-        # прогон обрабатывает items ВСЕХ каналов со style_profile ТЕКУЩЕГО
-        # канала. Проверяем A/B: прогон с профилем A даёт analytical/2500,
-        # прогон с профилем B — casual/800 (для одного и того же item!).
+        # Sprint 75.3 FIX: WritingJob теперь фильтрует по channel_id — прогон
+        # канала A обрабатывает ТОЛЬКО items канала A (со стилем профиля A),
+        # прогон канала B — только items B (со стилем B).
         asyncio.run(WritingJob().run(channel=_get_channel(session, "ch-ab-a"), execution_id="exec-ab-wa"))
         run_a = list(captured)
-        for it in session.query(ContentORM).all():
-            it.status = "research"
-            it.draft_text = None
-        session.commit()
         captured.clear()
         asyncio.run(WritingJob().run(channel=_get_channel(session, "ch-ab-b"), execution_id="exec-ab-wb"))
         run_b = list(captured)
+
+    # Каждый прогон обрабатывает только СВОЙ item
+    assert [t[0] for t in run_a] == ["AB topic ch-ab-a"]
+    assert [t[0] for t in run_b] == ["AB topic ch-ab-b"]
 
     def _snap(run, topic):
         return next(t for t in run if t[0] == topic)
@@ -202,9 +201,6 @@ def test_ab_writing_different_styles(session, _isolated_db):
     # A/B: ОДИН И ТОТ ЖЕ item получает разное поведение от разных профилей
     assert a[1] == "analytical" and a[2] == 2500 and a[3] == "Analytical Deep Dive"
     assert b[1] == "casual" and b[2] == 800 and b[3] == "Casual Manga Buzz"
-    # items канала B в прогоне A тоже получили стиль A (задокументированный сайд-эффект)
-    b_in_a = _snap(run_a, "AB topic ch-ab-b")
-    assert b_in_a[1] == "analytical"
 
 
 # ============ A/B: Evaluation behavior ============
@@ -244,24 +240,21 @@ def test_ab_evaluation_target_style(session, _isolated_db):
         "backend.automation.jobs.automation_jobs.LLMEvaluatorEngine",
         return_value=_StubEvaluator(),
     ):
-        # Sprint 75.2 finding: EvaluatorJob тоже обрабатывает items всех каналов
-        # (list_all без фильтра по каналу) — см. WritingJob A/B комментарий.
+        # Sprint 75.3 FIX: фильтр по channel_id — прогон канала A оценивает
+        # только items A, канал B — только items B.
         asyncio.run(EvaluatorJob().run(channel=_get_channel(session, "ch-ab-a"), execution_id="exec-ab-ea"))
         run_a = list(captured)
-        for it in session.query(ContentORM).all():
-            it.status = "draft"
-            it.evaluation = None
-        session.commit()
         captured.clear()
         asyncio.run(EvaluatorJob().run(channel=_get_channel(session, "ch-ab-b"), execution_id="exec-ab-eb"))
         run_b = list(captured)
 
-    # target_style одного item'а различается между профилями A и B
-    a_style = next(s for s in run_a if "Analytical Deep Dive" in s)
-    b_style = next(s for s in run_b if "Casual Manga Buzz" in s)
+    # Каждый прогон — ровно один item (изоляция каналов работает)
+    assert len(run_a) == 1 and len(run_b) == 1
+    a_style = run_a[0]
+    b_style = run_b[0]
     assert a_style != b_style
-    assert "analytical" in a_style and "2500" in a_style
-    assert "casual" in b_style and "800" in b_style
+    assert "Analytical Deep Dive" in a_style and "analytical" in a_style and "2500" in a_style
+    assert "Casual Manga Buzz" in b_style and "casual" in b_style and "800" in b_style
 
 
 # ============ Инвариант: одинаковый профиль → одинаковое поведение ============

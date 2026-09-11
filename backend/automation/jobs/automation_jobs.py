@@ -237,7 +237,12 @@ class WritingJob:
         )
         
         # Получаем research items
-        items = repo.list_all(status="research", limit=50)
+        # Sprint 75.3: только items ЭТОГО канала (иначе чужие items получают
+        # style_profile текущего канала).
+        items = repo.list_all(
+            status="research", limit=50,
+            channel_id=getattr(channel, "id", None) if channel else None,
+        )
         logger.info(f"Writing queue size: {len(items)}")
         
         processed = 0
@@ -329,7 +334,11 @@ class EvaluatorJob:
 
         try:
             repo = ContentRepository(db)
-            items = repo.list_all(status="draft", limit=50)
+            # Sprint 75.3: только items ЭТОГО канала
+            items = repo.list_all(
+                status="draft", limit=50,
+                channel_id=getattr(channel, "id", None) if channel else None,
+            )
             logger.info("Evaluation queue size=%s", len(items))
             evaluator = LLMEvaluatorEngine()
 
@@ -413,8 +422,11 @@ class ImageJob:
 
             repo = ContentRepository(db)
 
-            # Берём approved посты БЕЗ image_url
-            items = repo.list_all(status="approved", limit=10)
+            # Берём approved посты БЕЗ image_url (Sprint 75.3: только этого канала)
+            items = repo.list_all(
+                status="approved", limit=10,
+                channel_id=getattr(channel, "id", None) if channel else None,
+            )
             items = [i for i in items if not getattr(i, 'image_url', None)]
 
             logger.info(f"Items without images: {len(items)}")
@@ -546,9 +558,12 @@ class PublishJob:
             channel_repo = ChannelRepository(db)
 
             # Получаем одобренные посты для публикации
+            # Sprint 75.3: только items ЭТОГО канала (чужие approved посты
+            # публиковались с credentials текущего канала!)
             items = content_repo.list_all(
                 status="approved",
-                limit=min(10, remaining)
+                limit=min(10, remaining),
+                channel_id=getattr(channel, "id", None) if channel else None,
             )
             logger.info("Publish queue size=%s", len(items))
 

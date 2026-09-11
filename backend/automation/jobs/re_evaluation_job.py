@@ -27,8 +27,11 @@ class ReEvaluationJob:
         try:
             repo = ContentRepository(db)
 
-            # Берём revised посты (draft с revision_count > 0)
-            items = repo.list_all(status="draft", limit=10)
+            # Берём revised посты (Sprint 75.3: только этого канала)
+            items = repo.list_all(
+                status="draft", limit=10,
+                channel_id=getattr(channel, "id", None) if channel else None,
+            )
             items = [i for i in items if (i.revision_count or 0) > 0]
 
             logger.info(f"Items for re-evaluation: {len(items)}")
