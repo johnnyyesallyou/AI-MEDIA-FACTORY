@@ -277,17 +277,22 @@ class TestSourceRepository:
 
 @pytest.fixture
 def db_session():
-    """Fixture for database session."""
-    from core.database import SessionLocal, Base, engine
+    """Fixture for database session (in-memory SQLite for isolation)."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from core.models.base import Base
 
-    # Create tables
+    # Use isolated in-memory SQLite to avoid:
+    # - UniqueViolation (table not cleaned between tests)
+    # - CircularDependencyError (assets/content FK cycle in postgres)
+    engine = create_engine("sqlite:///:memory:", echo=False)
     Base.metadata.create_all(bind=engine)
 
-    session = SessionLocal()
+    TestSession = sessionmaker(bind=engine)
+    session = TestSession()
     yield session
     session.close()
 
-    # Drop tables
     Base.metadata.drop_all(bind=engine)
 
 
