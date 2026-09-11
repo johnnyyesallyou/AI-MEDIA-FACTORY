@@ -73,3 +73,89 @@ def validate_sources(source_ids: List[str]):
         "invalid": invalid,
         "all_valid": len(invalid) == 0,
     }
+
+
+# ---------------------------------------------------------------------------
+# Sprint 76.1: Source Discovery — scoring, рекомендации, RSS-валидация
+# ---------------------------------------------------------------------------
+
+class RecommendSource(BaseModel):
+    source_id: str
+    name: str
+    score: float
+    content_type: str
+    capabilities: List[str]
+    matched_capabilities: List[str]
+    reason: str
+
+
+class DiscoverRecommendResponse(BaseModel):
+    content_type: str
+    topic: Optional[str] = None
+    language: Optional[str] = None
+    results: List[RecommendSource]
+
+
+class FeedValidationResponse(BaseModel):
+    url: str
+    is_valid: bool
+    feed_type: str
+    title: Optional[str] = None
+    item_count: int = 0
+    error: Optional[str] = None
+
+
+class DiscoverValidateRequest(BaseModel):
+    urls: List[str]
+
+
+class DiscoverValidateResponse(BaseModel):
+    results: List[FeedValidationResponse]
+
+
+@router.get("/discover/recommend", response_model=DiscoverRecommendResponse)
+def discover_recommend(
+    content_type: str = Query(..., description="Content type (e.g. 'news', 'manga', 'anime')"),
+    topic: Optional[str] = Query(None, description="Topic filter"),
+    language: Optional[str] = Query(None, description="Language filter"),
+    top_k: Optional[int] = Query(None, ge=1, le=30, description="Limit results"),
+):
+    """Автоматические рекомендации источников под content_type (source scoring)."""
+    from engines.source_scoring import SourceDiscoveryEngine
+    results = SourceDiscoveryEngine.recommend(
+        content_type=content_type, topic=topic, language=language, top_k=top_k,
+    )
+    return DiscoverRecommendResponse(
+        content_type=content_type,
+        topic=topic,
+        language=language,
+        results=[
+            RecommendSource(
+                source_id=r.source_id,
+                name=r.name,
+                score=r.score,
+                content_type=r.content_type,
+                capabilities=list(r.capabilities),
+                matched_capabilities=list(r.matched_capabilities),
+                reason=r.reason,
+            )
+            for r in results
+        ],
+    )
+
+
+@router.post("/discover/validate", response_model=DiscoverValidateResponse)
+def discover_validate(req: DiscoverValidateRequest):
+    """Проверить список URL как RSS/Atom фиды."""
+    from engines.source_validation import validate_feed
+    results = [validate_feed(url) for url in req.urls]
+    return DiscoverValidateResponse(
+        results=[FeedValidationResponse(
+            url=r.url,
+            is_valid=r.is_valid,
+            feed_type=r.feed_type,
+            title=r.title,
+            item_count=r.item_count,
+            error=r.error,
+        ) for r in results],
+    )
