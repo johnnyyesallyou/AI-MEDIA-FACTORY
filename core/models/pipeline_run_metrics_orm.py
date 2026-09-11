@@ -34,6 +34,14 @@ class PipelineRunMetrics(Base):
     errors_count = Column(Integer, default=0)
     success = Column(String, default="true")  # "true"/"false" (portable bool-as-string)
 
+    # Sprint 73.3: агрегированные LLM-метрики прогона
+    llm_calls = Column(Integer, default=0)
+    llm_errors = Column(Integer, default=0)
+    llm_latency_ms = Column(Integer, default=0)
+    tokens_in = Column(Integer, default=0)
+    tokens_out = Column(Integer, default=0)
+    llm_model = Column(String, nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     __table_args__ = (

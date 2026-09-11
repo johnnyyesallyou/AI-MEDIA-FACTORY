@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { dashboardAPI, channelsAPI, aiAPI } from '../api/client';
+import ReliabilityWidget from '../components/ReliabilityWidget';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
@@ -58,6 +59,8 @@ const Dashboard: React.FC = () => {
           </div>
         ))}
       </div>
+
+      <ReliabilityWidget />
 
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
         <h2 className="text-xl font-bold text-white mb-4">System Health</h2>
