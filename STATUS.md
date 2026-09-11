@@ -1,8 +1,8 @@
 # AI Media Factory — Status
 
-**Last Updated:** 2026-09-11 (Sprint 75.4 — Sprint 60 flake fix, regression green)
-**Current Sprint:** 75.4 (completed)
-**Next Sprint:** Sprint 76+ — Discovery Engine (Subscribe.ru integration; см. коллизию нумерации ниже)
+**Last Updated:** 2026-09-11 (Sprint 76.1 Source Discovery completed)
+**Current Sprint:** 76.1 (completed)
+**Next Sprint:** 76.2 — Smart Source Selection (topic-based matching, quality metrics, diversity optimization, source rotation)
 
 > ⚠️ **Нумерационная заметка:** ROADMAP.md резервировал «Sprint 75» под Фазу 10 «Discovery Engine»
 > (75.1 Source Discovery / 75.2 Smart Source Selection). Эти номера были заняты фактически
@@ -13,6 +13,14 @@
 ---
 
 ## Current State
+
+### Sprint 76.1 — Source Discovery (completed, 2026-09-11)
+- ✅ `engines/source_scoring.py` — детерминированный скоринг источников (0..100): content_type 40, topic 20, language 10, capabilities 20 (по CAPABILITY_RELEVANCE), rate_limit headroom 10, penalty −15 за requires_api_key. `SourceDiscoveryEngine.recommend(content_type, topic, language, top_k)` — ранжированные рекомендации.
+- ✅ `engines/source_validation.py` — RSS/Atom валидация: `validate_feed(url, fetch=None)` (fetch инжектируется для тестов, default httpx). Детект rss/atom/html, title, item_count, graceful error на сетевых сбоях.
+- ✅ API (`backend/app/api/v1/sources.py`): `GET /sources/discover/recommend?content_type=&topic=&language=&top_k=` и `POST /sources/discover/validate` `{urls:[...]}`.
+- ✅ Тесты: `tests/test_source_discovery.py` — **16 passed** (скоринг, рекомендации, RSS/Atom/HTML/network-fail, httpx default, оба эндпоинта без реальной сети).
+- ✅ Полный регресс: **181 passed, 2 skipped, 0 failed** (165 + 16 Discovery).
+- ⏭️ Осталось (Sprint 76.2): Subscribe.ru discovery-интеграция, topic-based matching, quality metrics, diversity, source rotation.
 
 ### Sprint 75.4 — Sprint 60 flake fix + regression green (completed, 2026-09-11)
 - ✅ Закрыты 2 известных pre-existing Sprint 60 фейла (`test_generate_news_post`, `test_generate_manga_post_no_video`): это были integration-тесты, требующие живого Ollama (`host.docker.internal:11434`, 503 при его отсутствии). Навешен маркер `requires_llm` (= `skipif(APP_ENV=="test")`, Sprint 66.4), который был создан для таких тестов, но на эти два пропущен.

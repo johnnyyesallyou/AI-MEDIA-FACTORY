@@ -1,18 +1,18 @@
 # AI Media Factory - AI-Assisted Development Context
 
 **Last Updated:** 2026-09-11
-**Current Sprint:** 75.4 (completed) — Sprint 60 flake fix, regression green
-**Next Sprint:** 76+ (Discovery Engine — дед: ROADMAP «Sprint 75» занят серией 75.x channel-profile)
+**Current Sprint:** 76.1 (completed) — Source Discovery (scoring + RSS validation + recommendations)
+**Next Sprint:** 76.2 — Smart Source Selection
 
 ---
 
 ## Quick Reference
 
 ### Current State
-- **Sprint:** 75.4 completed
-- **Next:** Sprint 76+ (Discovery Engine) — серия 75.x занята Channel Profile runtime config
-- **Status:** Channel Profile runtime config + A/B tests + cross-channel fix + Sprint 60 flakes closed
-- **Last Test:** full regression 165 passed, 2 skipped (LLM-dependent integration), 0 failed
+- **Sprint:** 76.1 completed
+- **Next:** Sprint 76.2 Smart Source Selection
+- **Status:** Sprint 60 closed; Channel Profile series done; Source Discovery (scoring + RSS validation + recommend API) live
+- **Last Test:** full regression 181 passed, 2 skipped (LLM integration), 0 failed
 
 ### Source of Truth (read these first)
 1. **STATUS.md** - project state and completed sprints
