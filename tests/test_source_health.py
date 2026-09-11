@@ -277,10 +277,14 @@ class TestSourceHealthChecker:
 @pytest.fixture
 def db_session():
     """Fixture for database session."""
-    from core.database import SessionLocal, Base, engine
+    from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Base, engine
 
     Base.metadata.create_all(bind=engine)
-    session = SessionLocal()
+    engine = create_engine('sqlite:///:memory:')
+    Base.metadata.create_all(engine)
+    TestSession = sessionmaker(bind=engine)
+    session = TestSession()
     yield session
     session.close()
     Base.metadata.drop_all(bind=engine)
