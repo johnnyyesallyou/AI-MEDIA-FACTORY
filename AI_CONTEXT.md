@@ -1,18 +1,18 @@
 # AI Media Factory - AI-Assisted Development Context
 
-**Last Updated:** 2026-09-09
-**Current Sprint:** 74.2 (completed)
-**Next Sprint:** 74.3 - Channel Pause (channel-wide pause on 429 + self-healing integration + frontend status)
+**Last Updated:** 2026-09-11
+**Current Sprint:** 75.3 (completed) — Channel Profile runtime config series
+**Next Sprint:** 76+ (Discovery Engine — дед: ROADMAP «Sprint 75» занят серией 75.x channel-profile)
 
 ---
 
 ## Quick Reference
 
 ### Current State
-- **Sprint:** 74.2 completed
-- **Next:** 74.3 - Channel Pause (channel-wide pause on 429 + self-healing integration)
-- **Status:** 14 channels active, Reliability Layer (retry + circuit breaker + DLQ + self-healing) implemented
-- **Last Test:** reliability regression 40 passed (18 Sprint 74.1 + 22 Sprint 74.2)
+- **Sprint:** 75.3 completed
+- **Next:** Sprint 76+ (Discovery Engine) — серия 75.x занята Channel Profile runtime config
+- **Status:** Channel Profile as runtime config source (75.1) + A/B behavior tests (75.2) + cross-channel isolation fix (75.3)
+- **Last Test:** full regression 165 passed, 2 known Sprint 60 fails; profile tests 14 passed
 
 ### Source of Truth (read these first)
 1. **STATUS.md** - project state and completed sprints
