@@ -1,18 +1,18 @@
 # AI Media Factory - AI-Assisted Development Context
 
-**Last Updated:** 2026-09-08
-**Current Sprint:** 72.4 (completed)
-**Next Sprint:** 72.5 - GenericPublishingStrategy Integration
+**Last Updated:** 2026-09-09
+**Current Sprint:** 74.2 (completed)
+**Next Sprint:** 74.3 - Channel Pause (channel-wide pause on 429 + self-healing integration + frontend status)
 
 ---
 
 ## Quick Reference
 
 ### Current State
-- **Sprint:** 72.4 completed
-- **Next:** 72.5 - migrate GenericPublishingStrategy to Publication Layer
-- **Status:** 14 channels active, Publication Layer implemented
-- **Last Test:** 6 posts published (msg_id 504-509) with HTML source links
+- **Sprint:** 74.2 completed
+- **Next:** 74.3 - Channel Pause (channel-wide pause on 429 + self-healing integration)
+- **Status:** 14 channels active, Reliability Layer (retry + circuit breaker + DLQ + self-healing) implemented
+- **Last Test:** reliability regression 40 passed (18 Sprint 74.1 + 22 Sprint 74.2)
 
 ### Source of Truth (read these first)
 1. **STATUS.md** - project state and completed sprints
@@ -176,7 +176,6 @@
 ### Open (Current)
 - GenericPublishingStrategy not using Publication Layer (Sprint 72.5)
 - No metrics or observability (Sprint 73)
-- No retry logic for transient errors (Sprint 74)
 - Pipeline reports "0 published" even when posts succeed (cosmetic - return value issue)
 
 ---
@@ -207,10 +206,19 @@
 - backend/automation/automation_manager_v2.py - Orchestration
 - backend/automation/scheduler.py - Cron jobs
 
+### Reliability (Sprint 74)
+- backend/core/reliability.py - retry engine, CircuitBreaker (CLOSED/OPEN/HALF_OPEN), registry get_breaker(), channel pause, alert-disable
+- backend/core/rate_limiter.py - rate limiting / throttle (compatibility proxy → reliability breaker)
+- backend/core/dead_letter.py - Dead-Letter Queue (pipeline_failures)
+- backend/core/self_healing.py - SelfHealingWorker (re-publish from DLQ)
+- backend/app/api/v1/reliability.py - /api/v1/reliability/* endpoints
+- backend/core/error_taxonomy.py - error classification
+
 ### Database Models
 - core/models/content_orm.py - Content
 - core/models/channel_orm.py - Channel
 - core/models/channel_profile_orm.py - ChannelProfile
+- core/models/pipeline_failure_orm.py - PipelineFailure (base for DLQ)
 
 ---
 
@@ -228,7 +236,27 @@ If you're unsure about something:
 
 ## Changelog
 
-### Sprint 72.4 (Current)
+### Sprint 74.2 (Current) ✅
+- Unified CircuitBreaker (CLOSED/OPEN/HALF_OPEN) in reliability.py + registry get_breaker()
+- Publisher / Self-Healing / Rate limiter use the same breaker (single source of truth)
+- Channel-wide pause on 429 (pause_channel / ChannelPausedError)
+- Alert-disable on CONFIGURATION errors (401/403 → is_active=False)
+- /api/v1/circuit-breakers → unified breaker (primary) + rate_limit_stats (auxiliary)
+- Tests 22/22 passed (test_reliability_74_2.py)
+
+### Sprint 74.1 ✅
+- Retry engine (with_retry / @retry_async), exponential backoff, Retry-After (429)
+- VK error classification (error_code → ErrorType)
+- Dead-Letter Queue (dead_letter.py) on pipeline_failures
+- Integrated into telegram_publisher.py / vk_publisher.py
+- Tests 18 passed (test_reliability.py)
+
+### Sprint 73 ✅
+- Pipeline observability (stage timing, posts/hour, success/failure rates)
+- LLM metrics (latency, token usage, model performance)
+- /metrics/pipeline endpoints + frontend dashboard
+
+### Sprint 72.4
 - NewsPublishingStrategy integrated with Publication Layer
 - DB updates working correctly (status=published, telegram_message_id)
 - 6 posts published successfully (msg_id 504-509)
