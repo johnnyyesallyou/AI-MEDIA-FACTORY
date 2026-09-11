@@ -26,8 +26,11 @@ class RevisionJob:
         try:
             repo = ContentRepository(db)
 
-            # Берём rejected посты с reason
-            items = repo.list_all(status="needs_revision", limit=10)
+            # Берём rejected посты с reason (Sprint 75.3: только этого канала)
+            items = repo.list_all(
+                status="needs_revision", limit=10,
+                channel_id=getattr(channel, "id", None) if channel else None,
+            )
             items = [i for i in items if getattr(i, 'last_revision_reason', None)]
 
             logger.info(f"Items for revision: {len(items)}")
