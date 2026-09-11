@@ -1,73 +1,112 @@
 # AI Media Factory — Current Tasks
 
-**Last Updated:** 2026-09-08
-**Current Sprint:** 72.4 (completed)
-**Next Sprint:** 72.5
+**Last Updated:** 2026-09-09
+**Current Sprint:** 74.5 — Reliability Dashboard + Alerting (completed)
+**Next Sprint:** Sprint 75+ — Discovery Engine
 
 ---
 
 ## Current Focus
 
-### ✅ Sprint 72.4: NewsPublishingStrategy Integration (COMPLETED)
-- [x] PublicationBuilder integrated into NewsPublishingStrategy
-- [x] TelegramRenderer applied to news posts
-- [x] DB updates after publication (status=published, telegram_message_id)
-- [x] Rendered Publication text sent to Telegram
-- [x] Fixed: DetachedInstanceError
-- [x] Fixed: publish() return value
-- [x] **Test Result:** 6 posts published, msg_id 504-509
+### ✅ Sprint 74.1: Reliability — Retry Logic + Dead-Letter Queue (COMPLETED, 2026-09-09)
+- [x] `backend/core/reliability.py`: `with_retry()` / `@retry_async`, exponential backoff + jitter, per-platform политики (telegram/vk/external_api)
+- [x] Retry только для TRANSIENT/NETWORK; PERMANENT/CONFIGURATION — fail fast; Retry-After (429) учитывается
+- [x] `VKError` (error_code → ErrorType): flood/rate limit → retry, auth/params → fail fast
+- [x] Интеграция в `telegram_publisher.py` и `vk_publisher.py`
+- [x] `backend/core/dead_letter.py`: DLQ на `pipeline_failures` (enqueue/list/requeue/due_for_retry/stats)
+- [x] API `/api/v1/reliability/*` (dead-letters CRUD + stats + circuit-breakers), роутер подключён
+- [x] Тесты `tests/test_reliability.py`: 18 passed; imports backend.main OK
 
 ---
 
 ## Next Sprint
 
-### 🔄 Sprint 72.5: GenericPublishingStrategy Integration (NEXT)
+### ✅ Sprint 74.2: Circuit Breaker + Rate Limit Integration (COMPLETED, 2026-09-09)
+**Goal:** Предотвращение каскадных сбоев — circuit breaker вокруг Telegram/VK API + интеграция rate limiter с retry-политиками
 
-**Goal:** Migrate GenericPublishingStrategy to Publication Layer
+**Architecture Decision:** Один unified CircuitBreaker (CLOSED/OPEN/HALF_OPEN) в `backend/core/reliability.py`, единый реестр `CircuitBreakerRegistry` / `get_breaker()` — один источник истины. Publisher + Self-Healing используют один registry.
 
 **Tasks:**
-- [ ] Integrate PublicationBuilder into GenericPublishingStrategy
-- [ ] Apply TelegramRenderer for Telegram channels
-- [ ] Apply VKRenderer for VK channels
-- [ ] Test with different archetypes (educational, entertainment, viral)
-- [ ] Verify DB updates (status=published, telegram_message_id/vk_post_id)
-- [ ] Test 3-5 channels with new Publication flow
+- [x] Circuit Breaker (closed/open/half-open) per-platform в `backend/core/reliability.py`
+- [x] Автоматическое отключение канала при CONFIGURATION-ошибках (alert_disable) через error_logger
+- [x] Self-healing worker: периодический `due_for_retry()` → повторная публикация из DLQ
+- [x] Rate limiter ↔ retry: при 429 пауза на весь канал (не только запрос)
+- [x] DLQ-виджет в dashboard (frontend)
+- [x] Валидация: полный regression 22/22 passed, без зависаний и таймаутов (исправлен тест test_429_pauses_whole_channel через injected `sleep=fake_sleep`)
+
+**Architecture Details:**
+- ✅ `backend/core/reliability.py`: CircuitBreaker (CLOSED/OPEN/HALF_OPEN), регистр `get_breaker(platform)`, компаньон-прокси — один источник истины
+- ✅ `telegram_publisher.py`, `vk_publisher.py`, `self_healing.py` — через `get_breaker(platform)` (один registry)
+- ✅ Self-Healing: `SelfHealingWorker` читает `due_for_retry()` из DLQ, переотправляет content payload, уважает circuit breaker (OPEN → skip) и channel pause (skip). Лимит 5 попыток, backoff 15 мин
+- ✅ Self-Healing в фоне при старте backend (`backend/main.py` lifespan), API `POST /api/v1/reliability/self-healing/run`, `GET /api/v1/reliability/self-healing/status`
+- ✅ API `/api/v1/circuit-breakers`: unified breaker (primary source), `rate_limit_stats` (auxiliary diagnostics, не breaker state), `channel_pauses`
+- ✅ `backend/core/rate_limiter.py`: compatibility proxy → `get_breaker(platform)` (без самостоятельного decision-making breaker)
+- ✅ `/rate-limits` endpoint **не создаём** (оставляем за ненадобностью)
 
 **Success Criteria:**
-- GenericPublishingStrategy uses PublicationBuilder
-- All archetypes render through platform-specific Renderer
-- DB correctly updated after publication
-- No regressions in existing channels
+- [x] Circuit breaker открывается после N подряд TRANSIENT-файлов и не долбит API
+- [x] Посты из DLQ переотправляются автоматически (self-healing) или вручную через API
+- [x] 0 каскадных флуд-блокировок при прогоне всех каналов
 
-**Estimated Time:** 2-3 hours
+---
+
+### ✅ Sprint 74.3: Channel Pause (COMPLETED, 2026-09-09)
+**Goal:** При 429 канал ставится на паузу; Automation Manager + Scheduler не запускают дорогой pipeline (Research → LLM → Evaluation) для канала на паузе
+
+**Tasks:**
+- [x] `channel_pause_key(channel)` / `channel_paused_for(channel)` в `reliability.py` — UUID канала → ключ паузы (`chat_id`/`vk_group_id`)
+- [x] `automation_manager_v2._execute_task_internal`: скип канала на паузе до запуска пайплайна
+- [x] `scheduler.run_channel_automation`: ранний exit `skipped: channel_paused`
+- [x] Тесты `tests/test_reliability_74_3.py`: 12/12 passed
+
+**Success Criteria:**
+- [x] Канал на паузе (429) не запускает Research → LLM → Evaluation
+- [x] После истечения паузы канал снова обрабатывается
+- [x] Circuit breaker и pause согласованы (оба через reliability)
+
+---
+
+### ✅ Sprint 74.4: DLQ / Health Checks (COMPLETED, 2026-09-09)
+**Goal:** Автоматическая запись в DLQ при исчерпании retry + health checks API + ручное управление паузой
+
+**Tasks:**
+- [x] `backend/core/health.py` — `check_telegram`, `check_vk`, `check_all` с латентностью
+- [x] `GET /api/v1/reliability/health` endpoint
+- [x] DLQ auto-enqueue в `telegram_publisher.py` (`_enqueue_dlq`) и `vk_publisher.py` (`_enqueue_dlq_vk`)
+- [x] Manual pause API: `POST .../pause`, `POST .../resume`, `GET .../pause`
+- [x] `reset_channel_pauses(channel_id=None)` — снятие паузы одного канала
+- [x] Тесты `tests/test_reliability_74_4.py`: 12/12 passed
+
+**Success Criteria:**
+- [x] При исчерпании retry контент автоматически попадает в DLQ (self-healing)
+- [x] Health check endpoint возвращает статус + латентность для telegram/vk
+- [x] Оператор может вручную поставить/снять паузу с канала через API
+
+---
+
+### ✅ Sprint 74.5: Reliability Dashboard + Alerting (COMPLETED, 2026-09-09)
+**Goal:** Расширить frontend-виджет + добавить Telegram-алерты при критических событиях
+
+**Tasks:**
+- [x] `ReliabilityWidget.tsx` — Health Check button, detailed pause list, DLQ by_channel
+- [x] `backend/core/alerts.py` — `send_alert()` + 3 event types (breaker opened, channel disabled, DLQ exhausted)
+- [x] Wired into `CircuitBreaker._open()`, `_alert_disable_channel()`, `SelfHealingWorker._process_one()`
+- [x] Env config: `ALERT_ENABLED`, `ALERT_TELEGRAM_BOT_TOKEN`, `ALERT_TELEGRAM_CHAT_ID`
+
+**Success Criteria:**
+- [x] Оператор видит состояние API (health check) в dashboard
+- [x] Критические события приходят в Telegram (opt-in)
+- [x] 64 reliability tests pass без warnings
 
 ---
 
 ## Short-term Backlog
 
-### Sprint 72.6: 14-Channel Regression
-- [ ] Run all 14 channels with Publication Layer
-- [ ] Verify consistent formatting across archetypes
-- [ ] Fix any archetype-specific issues
-- [ ] Document archetype-specific behavior
+### Follow-ups (из 73.3)
+- [ ] Единый `execution_id`: ChannelTask.execution_id (uuid) vs pipeline execution_id — пробросить task id в pipeline вместо генерации второго
+- [ ] Инструментация остальных Ollama call-sites (evaluator, image_prompt, formatters, jobs) — сейчас метрики покрывают только production writing path
+- [ ] LLM-метрики в summary-агрегатах `/metrics/pipeline/summary/all`
 
-### Sprint 72.7: Naturalness / Formatting QA
-- [ ] Review published content quality
-- [ ] Adjust archetype defaults based on feedback
-- [ ] Fine-tune source/article link policies
-- [ ] Create regression test suite (50-100 examples)
-
-### Sprint 73: Observability
-- [ ] Stage-by-stage timing instrumentation
-- [ ] Metrics collection (posts/hour, success rate, latency)
-- [ ] Dashboard implementation
-- [ ] Alert system for failures
-
-### Sprint 74: Reliability
-- [ ] Retry logic with exponential backoff
-- [ ] Circuit breakers for Telegram/VK APIs
-- [ ] Dead-letter queue for failed posts
-- [ ] Health checks and self-healing
 
 ---
 
@@ -98,7 +137,6 @@
 ### High Priority
 - [ ] **GenericPublishingStrategy migration** — currently not using Publication Layer
 - [ ] **Observability gap** — no metrics or monitoring
-- [ ] **No retry logic** — transient failures cause permanent failures
 
 ### Medium Priority
 - [ ] **Legacy engines/research/engine.py** — unused, should be removed
@@ -125,7 +163,6 @@
 ### Open
 - ⚠️ GenericPublishingStrategy not using Publication Layer
 - ⚠️ No metrics or observability
-- ⚠️ No retry logic for transient errors
 - ⚠️ Pipeline reports "0 published" even when posts succeed (cosmetic)
 
 ---

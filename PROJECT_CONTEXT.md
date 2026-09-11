@@ -1,8 +1,8 @@
 # AI Media Factory — Project Context
 
-**Last Updated:** 2026-09-08
-**Current Sprint:** 72.4 (completed)
-**Next Sprint:** 72.5 — GenericPublishingStrategy Integration
+**Last Updated:** 2026-09-09
+**Current Sprint:** 74.2 (completed)
+**Next Sprint:** 74.3 — Channel Pause (channel-wide pause on 429 + self-healing integration + frontend status)
 
 ---
 
@@ -12,13 +12,14 @@ AI Media Factory is an automated content generation and publishing system that m
 
 ---
 
-## Current State (Post Sprint 72.4)
+## Current State (Post Sprint 74.2)
 
 ### Production Numbers
 - **14 active channels** across 2 platforms
 - **8 content archetypes** with specialized strategies
 - **Universal Pipeline** end-to-end automation operational
 - **Publication Layer** implemented (Sprint 72)
+- **Reliability Layer** implemented (Sprint 74): retry + circuit breaker + DLQ + self-healing
 - **Real LLM generation** via Ollama (Russian language)
 - **Telegram publishing** with HTML source links validated
 - **VK publishing** operational
@@ -30,6 +31,11 @@ AI Media Factory is an automated content generation and publishing system that m
 - **HTML source links:** Present in all posts (<a href="...">)
 - **Pipeline duration:** ~173 seconds for 6 topics
 - **DB status:** All posts marked published
+
+### Reliability Regression (Sprint 74.2)
+- **tests/test_reliability.py** — 18 passed (retry policies, VK classification, DLQ)
+- **tests/test_reliability_74_2.py** — 22 passed (circuit breaker, channel pause, self-healing)
+- **Total:** 40 passed, no hangs / timeouts
 
 ---
 
@@ -200,7 +206,6 @@ AI-MEDIA-FACTORY/
 ### High Priority
 - ⚠️ **GenericPublishingStrategy** not using Publication Layer (Sprint 72.5)
 - ⚠️ **No observability** — no metrics, monitoring, alerting (Sprint 73)
-- ⚠️ **No retry logic** — transient failures cause permanent failures (Sprint 74)
 
 ### Medium Priority
 - ⚠️ Legacy engines/research/engine.py — unused, should be removed
@@ -258,21 +263,38 @@ AI-MEDIA-FACTORY/
 - Image generation uses placeholders (not real generation)
 - Video support not implemented
 - Single language (Russian)
-- No retry logic for transient failures
 - No metrics or observability
 - GenericPublishingStrategy not on Publication Layer yet
 
 ### Planned
 - Image generation (future sprint)
-- Observability (Sprint 73)
-- Reliability improvements (Sprint 74)
 - Discovery Engine (Sprint 75+)
+- Learning Loop (Sprint 76+)
+- Smart Scaling (Sprint 77+)
 
 ---
 
 ## Changelog
 
-### Sprint 72.4 (Current) ✅
+### Sprint 74.2 (Current) ✅
+- Unified CircuitBreaker (CLOSED/OPEN/HALF_OPEN) + registry get_breaker() — single source of truth
+- Publisher / Self-Healing / Rate limiter share one breaker
+- Channel-wide pause on 429; alert-disable on CONFIGURATION errors
+- /api/v1/circuit-breakers → unified breaker (primary) + rate_limit_stats (auxiliary)
+- Tests 22/22 passed (test_reliability_74_2.py)
+
+### Sprint 74.1 ✅
+- Retry engine (with_retry / @retry_async), exponential backoff, Retry-After (429)
+- VK error classification; Dead-Letter Queue on pipeline_failures
+- Integrated into telegram_publisher.py / vk_publisher.py
+- Tests 18 passed (test_reliability.py)
+
+### Sprint 73 ✅
+- Pipeline observability (stage timing, posts/hour, success/failure rates)
+- LLM metrics (latency, token usage, model performance)
+- /metrics/pipeline endpoints + frontend dashboard
+
+### Sprint 72.4 ✅
 - NewsPublishingStrategy integrated with Publication Layer
 - DB updates working (status=published, telegram_message_id)
 - 6 posts published with message IDs 504-509

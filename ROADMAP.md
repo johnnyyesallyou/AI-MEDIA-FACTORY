@@ -160,13 +160,14 @@ Phase 12: Smart Scaling → Future (Sprint 77+)
 - Model performance
 - Rate limiting
 
-#### 73.3 Platform Health
-- Telegram API health
-- VK API health
-- RSS source health
-- Network latency
+### Sprint 73.3 Metrics Quality ✅ (2026-09-09)
+- Сквозной `execution_id` (pipeline → pipeline_run_metrics), совместим с execution_logs
+- LLM-метрики: `core/metrics/llm_metrics.py` (LLMMetricsCollector, ContextVar, изоляция между параллельными каналами)
+- Инструментирован production writing path (`llm_post_generator.py`): llm_calls, llm_latency_ms, tokens_in/out, llm_model, llm_errors
+- Миграция `002_add_llm_metrics.py` (6 колонок), применена к прод-Postgres
+- API: блок `llm` в `/metrics/pipeline/*`; тесты `tests/test_llm_metrics.py`
 
-#### 73.4 Dashboard
+#### 73.4 Dashboard ✅→NEXT (см. TASK.md — перенесён как следующий спринт)
 - Real-time metrics dashboard
 - Channel health overview
 - Alert system
