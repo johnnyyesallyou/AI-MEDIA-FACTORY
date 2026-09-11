@@ -1,8 +1,8 @@
 # AI Media Factory — Status
 
-**Last Updated:** 2026-09-11 (Sprint 76.1 Source Discovery completed)
-**Current Sprint:** 76.1 (completed)
-**Next Sprint:** 76.2 — Smart Source Selection (topic-based matching, quality metrics, diversity optimization, source rotation)
+**Last Updated:** 2026-09-11 (Sprint 76.2 Smart Source Selection completed)
+**Current Sprint:** 76.2 (completed)
+**Next Sprint:** 76.3 — Source Discovery (Subscribe.ru discovery-интеграция) [Discovery Engine Phase 10]
 
 > ⚠️ **Нумерационная заметка:** ROADMAP.md резервировал «Sprint 75» под Фазу 10 «Discovery Engine»
 > (75.1 Source Discovery / 75.2 Smart Source Selection). Эти номера были заняты фактически
@@ -13,6 +13,15 @@
 ---
 
 ## Current State
+
+### Sprint 76.2 — Smart Source Selection (completed, 2026-09-11)
+- ✅ `engines/source_selection.py` — `SmartSourceSelector` компонует скоринг (76.1) с: качеством (`QualityRegistry`: acc/fail → adjustment после ≥3 попыток, target rate 0.7, clamp −10..+8), ротацией (`selection_count` → penalty 3/использование), diversity (штраф за редундантный coverage-caps+language), topic-based matching (встроен в base score).
+- ✅ Поправлен `CAPABILITY_RELEVANCE` (anime `episodes/covers/descriptions/genres`, news `articles/summaries/covers`) — скор теперь соответствует реальным capability источников.
+- ✅ API (`sources.py`): `GET /sources/discover/select`, `POST /sources/metrics`, `POST /sources/select/record-pick`. Заметка: `GET /discover/select` (двухсегментный) — т.к. `GET /sources/{source_id}` перехватывал бы односегментный `/select`.
+- ✅ Тесты: `tests/test_source_selection.py` — **13 passed** (registry, порядок, diversity ru+en, rotation-альтернация, quality-падение ненадёжного, API). Discovery+Selection вместе **29 passed**.
+- ✅ Полный регресс: **194 passed, 2 skipped, 0 failed** (181 + 13 Selection).
+- ℹ️ QualityRegistry — in-memory (runtime); персистентность в БД — отдельный шаг.
+- ⏭️ Осталось (Sprint 76.3): Subscribe.ru discovery-интеграция.
 
 ### Sprint 76.1 — Source Discovery (completed, 2026-09-11)
 - ✅ `engines/source_scoring.py` — детерминированный скоринг источников (0..100): content_type 40, topic 20, language 10, capabilities 20 (по CAPABILITY_RELEVANCE), rate_limit headroom 10, penalty −15 за requires_api_key. `SourceDiscoveryEngine.recommend(content_type, topic, language, top_k)` — ранжированные рекомендации.

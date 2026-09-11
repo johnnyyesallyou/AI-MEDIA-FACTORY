@@ -1,18 +1,18 @@
 # AI Media Factory - AI-Assisted Development Context
 
 **Last Updated:** 2026-09-11
-**Current Sprint:** 76.1 (completed) — Source Discovery (scoring + RSS validation + recommendations)
-**Next Sprint:** 76.2 — Smart Source Selection
+**Current Sprint:** 76.2 (completed) — Smart Source Selection (quality/rotation/diversity)
+**Next Sprint:** 76.3 — Source Discovery (Subscribe.ru integration)
 
 ---
 
 ## Quick Reference
 
 ### Current State
-- **Sprint:** 76.1 completed
-- **Next:** Sprint 76.2 Smart Source Selection
-- **Status:** Sprint 60 closed; Channel Profile series done; Source Discovery (scoring + RSS validation + recommend API) live
-- **Last Test:** full regression 181 passed, 2 skipped (LLM integration), 0 failed
+- **Sprint:** 76.2 completed
+- **Next:** Sprint 76.3 Source Discovery (Subscribe.ru integration)
+- **Status:** Source Discovery (scoring+RSS validation) → Smart Source Selection (quality/rotation/diversity) live; regression green
+- **Last Test:** full regression 194 passed, 2 skipped (LLM integration), 0 failed
 
 ### Source of Truth (read these first)
 1. **STATUS.md** - project state and completed sprints
