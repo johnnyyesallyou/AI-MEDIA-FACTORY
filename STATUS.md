@@ -1,18 +1,22 @@
 # AI Media Factory — Status
 
-**Last Updated:** 2026-09-11 (Sprint 75.3 cross-channel isolation fix completed)
-**Current Sprint:** 75.3 (completed)
-**Next Sprint:** Sprint 76+ — Discovery Engine (Subscribe.ru integration; см. коллизию нумерации с 75.x в заметке ниже)
+**Last Updated:** 2026-09-11 (Sprint 75.4 — Sprint 60 flake fix, regression green)
+**Current Sprint:** 75.4 (completed)
+**Next Sprint:** Sprint 76+ — Discovery Engine (Subscribe.ru integration; см. коллизию нумерации ниже)
 
 > ⚠️ **Нумерационная заметка:** ROADMAP.md резервировал «Sprint 75» под Фазу 10 «Discovery Engine»
 > (75.1 Source Discovery / 75.2 Smart Source Selection). Эти номера были заняты фактически
 > реализованной серией **«Sprint 75.x — Channel Profile как runtime config source»**
 > (75.1 профиль→поведение, 75.2 A/B-тесты, 75.3 изоляция каналов). Discovery Engine при этом
-> сдвинут на будущее (Sprint 76+); ROADMAP требует ревизии — см. STATUS/ROADMAP sync.
+> сдвинут на будущее (Sprint 76+); ROADMAP синхронизирован (09.09).
 
 ---
 
 ## Current State
+
+### Sprint 75.4 — Sprint 60 flake fix + regression green (completed, 2026-09-11)
+- ✅ Закрыты 2 известных pre-existing Sprint 60 фейла (`test_generate_news_post`, `test_generate_manga_post_no_video`): это были integration-тесты, требующие живого Ollama (`host.docker.internal:11434`, 503 при его отсутствии). Навешен маркер `requires_llm` (= `skipif(APP_ENV=="test")`, Sprint 66.4), который был создан для таких тестов, но на эти два пропущен.
+- ✅ Полный регресс: **165 passed, 2 skipped, 0 failed** (2 скипа — LLM-dependent integration; при наличии Ollama и non-test APP_ENV выполняются реально).
 
 ### Sprint 75.3 — Cross-channel isolation fix (completed, 2026-09-11)
 - ✅ **Production-баг (из Sprint 75.2 finding) исправлен:** `WritingJob`, `EvaluatorJob`, `ImageJob`, `PublishJob`, `RevisionJob`, `ReEvaluationJob` получали items ВСЕХ каналов (`repo.list_all(status=...)` без фильтра), из-за чего прогон канала A генерировал/оценивал/публиковал драфты канала B со стилем профиля A (и публиковал чужие approved с credentials канала A).
