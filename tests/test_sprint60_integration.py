@@ -82,6 +82,7 @@ class TestPostGenerationService:
     Запускаются только если доступен LLM.
     """
     
+    @requires_llm
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_generate_news_post(self):
@@ -132,6 +133,7 @@ class TestPostGenerationService:
         finally:
             db.close()
     
+    @requires_llm
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_generate_manga_post_no_video(self):
