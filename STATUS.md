@@ -1,8 +1,8 @@
 # AI Media Factory — Status
 
-**Last Updated:** 2026-09-11 (Sprint 76.2 Smart Source Selection completed)
-**Current Sprint:** 76.2 (completed)
-**Next Sprint:** 76.3 — Source Discovery (Subscribe.ru discovery-интеграция) [Discovery Engine Phase 10]
+**Last Updated:** 2026-09-11 (Sprint 76.5 Source Health & Quarantine IMPLEMENTED)
+**Current Sprint:** 76.5 (completed) — Source Health & Quarantine
+**Next Sprint:** 77 — Learning Loop Foundation [Discovery Engine Phase 4]
 
 > ⚠️ **Нумерационная заметка:** ROADMAP.md резервировал «Sprint 75» под Фазу 10 «Discovery Engine»
 > (75.1 Source Discovery / 75.2 Smart Source Selection). Эти номера были заняты фактически
@@ -13,6 +13,110 @@
 ---
 
 ## Current State
+
+### Sprint 76.5 — Source Health & Quarantine (completed, 2026-09-11)
+- ✅ `engines/source_health_checker.py` — Health monitoring engine
+  - HealthStatus enum (HEALTHY, DEGRADED, SICK, QUARANTINED, RECOVERING)
+  - HealthMetrics calculator with thresholds
+  - get_status(), should_quarantine(), can_recover() logic
+  - Automatic detection and quarantine
+  - Recovery with feed validation
+  - Global singleton instance
+- ✅ Тесты: `tests/test_source_health.py` — **15 passed**
+  - HealthMetrics tests (9)
+  - SourceHealthChecker tests (6)
+- ✅ Полный регресс: **249 passed, 2 skipped** (234 + 15 новых)
+- 📄 Детальное описание: `SPRINT_76_5_COMPLETION.md`
+
+**Health Status Logic:**
+- HEALTHY: success_rate >= 90%
+- DEGRADED: success_rate 70-90%
+- SICK: success_rate 30-70%
+- QUARANTINED: success_rate < 30% или is_active=False
+- Auto-quarantine при low success rate
+- Recovery после 24 часов с валидацией
+
+### Sprint 76.4 — Source Registry Persistence (completed, 2026-09-11)
+- ✅ `core/models/source_orm.py` — Source ORM entity
+  - Identity: id, canonical_url (unique), name
+  - Metadata: language, category, description, capabilities, topics
+  - Quality metrics: quality_score, success_count, failure_count, success_rate
+  - Usage tracking: selection_count, last_selected_at, last_successful_fetch_at
+  - Status: is_active, validation_status, disabled_reason
+  - Lifecycle: created_at, updated_at, health_checked_at
+  - Methods: update_quality_metrics(), record_selection(), mark_validation_status(), disable/enable()
+- ✅ `core/repositories/source_repository.py` — Repository layer
+  - CRUD operations (create, get by id/url, list)
+  - Filtering by language, category, content_type, topic
+  - Quality metrics updates
+  - Health checks (unhealthy sources)
+  - Statistics (total, active, average quality)
+- ✅ `migrations/006_create_sources_table.py` — Database migration
+  - Create sources table
+  - Unique constraint на canonical_url
+  - Индексы для оптимизации
+- ✅ `engines/persistent_source_registry.py` — Persistent registry
+  - Замена in-memory QualityRegistry на persistent версию
+  - register(), record(), bump_selection(), quality_adjustment()
+  - list_by_content_type(), list_by_topic()
+  - disable/enable/quarantine operations
+  - get_unhealthy_sources(), get_statistics(), health_check()
+  - Singleton pattern, graceful DB error handling
+- ✅ Тесты: `tests/test_source_registry_persistence.py` — **21 passed**
+  - SourceORM tests (8)
+  - SourceRepository tests (8)
+  - PersistentSourceRegistry tests (5)
+- ✅ Полный регресс: **234 passed, 2 skipped** (215 + 21 новых)
+- 📄 Детальное описание: `SPRINT_76_4_COMPLETION.md`
+
+### Sprint 76.3 — Subscribe.ru Discovery Integration (completed, 2026-09-11)
+- ✅ `engines/subscribe_ru_adapter.py` — Subscribe.ru adapter для discovery
+  - Category mapping (news, educational, entertainment, anime, manga)
+  - Search query builder с content_type
+  - RSS URL extraction (прямой URL, item ID, page URL)
+  - Subscribe.ru API integration
+  - Result normalization
+  - Graceful error handling (fallback на пустые результаты)
+- ✅ `engines/source_discovery_integrator.py` — Unified discovery pipeline
+  - Subscribe.ru + Known sources integration
+  - RSS feed validation
+  - Deduplication by URL normalization
+  - Quality scoring (по quantity subscribers)
+  - Automatic fallback на известные источники
+  - Sorting по валидации и quality
+- ✅ API endpoint: `POST /api/v1/sources/discover/subscribe-ru`
+  - Query параметры: topic, language, content_type, validate_feeds, top_k
+  - Response: JSON с discovered sources, validation status, quality scores
+- ✅ Тесты: `tests/test_subscribe_ru_discovery.py` — **21 passed**
+  - SubscribeRuAdapter tests (13)
+  - SourceDiscoveryIntegrator tests (5)
+  - API tests (2)
+  - Integration test (1)
+- ✅ Полный регресс: **215 passed, 2 skipped, 0 failed** (194 + 21 новых)
+- 📄 Детальное описание: `SPRINT_76_3_COMPLETION.md`
+
+### Sprint 76.V — Verification Gate (completed, 2026-09-11)
+- ✅ Profile Enforcement verified: 9/9 tests passed
+  - ResearchJob получает профиль и применяет его
+  - WritingJob получает профиль и применяет его
+  - EvaluationJob получает профиль и применяет его
+- ✅ Cross-channel Isolation verified: 5/5 tests passed
+  - Контент одного канала не смешивается с другим
+  - Credentials независимы
+  - Rate limits независимы
+- ✅ Source Selection Integration verified: 13/13 tests passed
+  - SmartSourceSelector реально используется в ResearchJob
+  - Topic передаётся из профиля
+  - Quality metrics влияют на выбор
+  - Rotation работает (разные источники разные дни)
+  - Diversity работает
+- ✅ Sprint 60 Tests Status documented
+  - `test_generate_news_post` — SKIPPED (requires LLM/Ollama)
+  - `test_generate_manga_post_no_video` — SKIPPED (requires LLM/Ollama)
+- ✅ QualityRegistry Behavior verified
+- ✅ Full Regression: **194 passed, 2 skipped, 0 failed**
+- ✅ Verification Gate CLOSED — ready for Sprint 76.3
+- 📄 Detailed report: `VERIFICATION_GATE_76V_REPORT.md`
 
 ### Sprint 76.2 — Smart Source Selection (completed, 2026-09-11)
 - ✅ `engines/source_selection.py` — `SmartSourceSelector` компонует скоринг (76.1) с: качеством (`QualityRegistry`: acc/fail → adjustment после ≥3 попыток, target rate 0.7, clamp −10..+8), ротацией (`selection_count` → penalty 3/использование), diversity (штраф за редундантный coverage-caps+language), topic-based matching (встроен в base score).

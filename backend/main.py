@@ -18,21 +18,21 @@ from backend.automation.scheduler import automation_scheduler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 AI Media Factory Dashboard starting...", flush=True)
-    
+    print("[*] AI Media Factory Dashboard starting...", flush=True)
+
     # Безопасный асинхронный запуск планировщика в фоне
     asyncio.create_task(automation_scheduler.start())
-    print("🚀 Automation scheduler task created in background", flush=True)
+    print("[*] Automation scheduler task created in background", flush=True)
 
     # Sprint 74.2: Self-healing worker — периодический re-publish из DLQ
     from backend.core.self_healing import get_self_healing_worker
     self_healing_task = asyncio.create_task(get_self_healing_worker().run_forever())
-    print("🚀 Self-healing worker task created in background", flush=True)
+    print("[*] Self-healing worker task created in background", flush=True)
 
     yield
     get_self_healing_worker().stop()
     self_healing_task.cancel()
-    print("👋 Shutting down...", flush=True)
+    print("[*] Shutting down...", flush=True)
 
 app = FastAPI(
     title="AI Media Factory Dashboard API",

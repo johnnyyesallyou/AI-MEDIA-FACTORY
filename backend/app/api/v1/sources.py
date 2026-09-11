@@ -256,3 +256,86 @@ def source_record_pick(req: SourceRecordPickRequest):
     from engines.source_selection import DEFAULT_REGISTRY
     q = DEFAULT_REGISTRY.bump_selection(req.source_id)
     return {"source_id": req.source_id, "selection_count": q.selection_count}
+
+
+# ---------------------------------------------------------------------------
+# Sprint 76.3: Subscribe.ru Discovery Integration
+# ---------------------------------------------------------------------------
+
+class DiscoveredSourceResponse(BaseModel):
+    url: str
+    name: str
+    source_type: str  # "subscribe_ru", "known_sources"
+    language: str
+    category: Optional[str] = None
+    description: Optional[str] = None
+    is_rss_validated: bool
+    feed_type: Optional[str] = None
+    item_count: int
+    quality_score: float
+
+
+class SubscribeRuDiscoverRequest(BaseModel):
+    topic: str = Query(..., description="Search query (e.g. 'python', 'новости')")
+    language: str = Query("ru", description="Language code")
+    content_type: Optional[str] = Query(None, description="Content type filter")
+    validate_feeds: bool = Query(True, description="Validate feeds as RSS/Atom")
+    top_k: Optional[int] = Query(None, ge=1, le=50, description="Limit results")
+
+
+class SubscribeRuDiscoverResponse(BaseModel):
+    topic: str
+    language: str
+    content_type: Optional[str] = None
+    discovered_count: int
+    validated_count: int
+    results: List[DiscoveredSourceResponse]
+
+
+@router.post("/discover/subscribe-ru", response_model=SubscribeRuDiscoverResponse)
+def discover_subscribe_ru(
+    topic: str = Query(..., description="Search query"),
+    language: str = Query("ru", description="Language"),
+    content_type: Optional[str] = Query(None, description="Content type"),
+    validate_feeds: bool = Query(True, description="Validate as RSS"),
+    top_k: Optional[int] = Query(None, ge=1, le=50, description="Limit"),
+):
+    """Discover источники через Subscribe.ru.
+
+    Находит RSS-фиды через Subscribe.ru, валидирует их и возвращает отсортированный список.
+    При ошибке Subscribe.ru использует fallback на известные источники.
+    """
+    from engines.source_discovery_integrator import SourceDiscoveryIntegrator
+
+    discovered = SourceDiscoveryIntegrator.discover_and_normalize(
+        topic=topic,
+        language=language,
+        content_type=content_type,
+        validate_feeds=validate_feeds,
+        top_k=top_k,
+    )
+
+    validated_count = sum(1 for s in discovered if s.is_rss_validated)
+
+    return SubscribeRuDiscoverResponse(
+        topic=topic,
+        language=language,
+        content_type=content_type,
+        discovered_count=len(discovered),
+        validated_count=validated_count,
+        results=[
+            DiscoveredSourceResponse(
+                url=s.url,
+                name=s.name,
+                source_type=s.source_type,
+                language=s.language,
+                category=s.category,
+                description=s.description,
+                is_rss_validated=s.is_rss_validated,
+                feed_type=s.feed_type,
+                item_count=s.item_count,
+                quality_score=s.quality_score,
+            )
+            for s in discovered
+        ],
+    )
