@@ -16,6 +16,7 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from backend.core.reliability import get_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -113,58 +114,13 @@ class SlidingWindowLimiter:
         }
 
 
-class CircuitBreaker:
-    """Circuit breaker for handling API failures"""
-    
-    def __init__(self, failure_threshold: int = 5, recovery_timeout: int = 60):
-        """Initialize circuit breaker"""
-        self.failure_threshold = failure_threshold
-        self.recovery_timeout = recovery_timeout
-        self.failure_count = 0
-        self.last_failure_time = None
-        self.state = "closed"  # closed, open, half_open
-    
-    def record_success(self) -> None:
-        """Record successful call"""
-        self.failure_count = 0
-        self.state = "closed"
-    
-    def record_failure(self) -> None:
-        """Record failed call"""
-        self.failure_count += 1
-        self.last_failure_time = time.time()
-        
-        if self.failure_count >= self.failure_threshold:
-            self.state = "open"
-            logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
-    
-    def is_available(self) -> bool:
-        """Check if service is available"""
-        if self.state == "closed":
-            return True
-        
-        if self.state == "open":
-            # Check if recovery timeout has passed
-            if (time.time() - self.last_failure_time) > self.recovery_timeout:
-                self.state = "half_open"
-                logger.info("Circuit breaker entering half-open state")
-                return True
-            return False
-        
-        # half_open state
-        return True
-    
-    def get_state(self) -> str:
-        """Get current state"""
-        return self.state
-
 
 class APIRateLimiter:
     """Rate limiter for external APIs"""
     
     def __init__(self):
         self.limiters: Dict[str, SlidingWindowLimiter] = {}
-        self.circuit_breakers: Dict[str, CircuitBreaker] = {}
+                # Compatibility: circuit breaker state delegated to reliability.py (get_breaker)
         
         # Configure API limits
         self._configure_apis()
@@ -204,10 +160,7 @@ class APIRateLimiter:
         
         for api_name, config in apis.items():
             self.limiters[api_name] = SlidingWindowLimiter(config)
-            self.circuit_breakers[api_name] = CircuitBreaker(
-                failure_threshold=5,
-                recovery_timeout=60
-            )
+
     
     async def acquire(self, api_name: str, timeout: float = 5.0) -> bool:
         """Acquire token for API call"""
@@ -216,7 +169,7 @@ class APIRateLimiter:
             return True
         
         # Check circuit breaker first
-        breaker = self.circuit_breakers[api_name]
+        breaker = get_breaker(api_name)
         if not breaker.is_available():
             logger.warning(f"Circuit breaker open for {api_name}")
             return False
@@ -235,17 +188,16 @@ class APIRateLimiter:
         """Record successful API call"""
         if api_name in self.limiters:
             self.limiters[api_name].reset_backoff()
-        
-        if api_name in self.circuit_breakers:
-            self.circuit_breakers[api_name].record_success()
-        
+        # Уведомляем unified circuit breaker (reliability.py)
+        breaker = get_breaker(api_name)
+        breaker.record_success()
         logger.debug(f"API call success: {api_name}")
     
     def record_failure(self, api_name: str) -> None:
         """Record failed API call"""
-        if api_name in self.circuit_breakers:
-            self.circuit_breakers[api_name].record_failure()
-        
+        # Уведомляем unified circuit breaker (reliability.py)
+        breaker = get_breaker(api_name)
+        breaker.record_failure()
         logger.warning(f"API call failed: {api_name}")
     
     def get_stats(self) -> Dict[str, Any]:
@@ -254,7 +206,7 @@ class APIRateLimiter:
         
         for api_name in self.limiters:
             limiter_stats = self.limiters[api_name].get_stats()
-            breaker = self.circuit_breakers[api_name]
+            breaker = get_breaker(api_name)
             
             stats[api_name] = {
                 **limiter_stats,

@@ -53,6 +53,9 @@ class PipelineResult:
     topics_found: int = 0
     # Sprint 73.1: тайминги по стадиям (секунды)
     stage_timings: Dict[str, float] = field(default_factory=dict)
+    # Sprint 73.3: сквозной execution_id + агрегированные LLM-метрики
+    execution_id: str = ""
+    llm_metrics: Dict[str, Any] = field(default_factory=dict)
 
     def stage_summary(self) -> str:
         """Sprint 73.1: человекочитаемая сводка по стадиям с процентами."""
@@ -92,7 +95,13 @@ class UniversalContentPipeline:
         """Выполнить полный pipeline: research → generation → media → publish."""
         start_time = datetime.utcnow()
         result = PipelineResult(success=True)
-        
+
+        # Sprint 73.3: сквозной execution_id (совместим с execution_logs) + LLM-метрики
+        from core.metrics.llm_metrics import start_llm_collection
+        channel_key = str(getattr(self.channel, "id", ""))[:8]
+        result.execution_id = f"{start_time.strftime('%Y%m%d-%H%M%S')}-{channel_key}"
+        llm_collector = start_llm_collection()
+
         try:
             # 1. Research phase
             logger.info(f"[1/4] Research for channel {self.channel.name}")
@@ -175,6 +184,8 @@ class UniversalContentPipeline:
             result.errors.append(f"pipeline: {str(e)}")
         
         result.duration_seconds = (datetime.utcnow() - start_time).total_seconds()
+        # Sprint 73.3: агрегированные LLM-метрики прогона
+        result.llm_metrics = llm_collector.to_dict()
         logger.info(
             f"Pipeline completed in {result.duration_seconds:.1f}s: "
             f"{result.topics_found} topics, {result.posts_generated} generated, "
@@ -183,5 +194,12 @@ class UniversalContentPipeline:
         # Sprint 73.1: разбивка по стадиям
         if result.stage_timings:
             logger.info(f"Pipeline stage timings [{self.channel.name}]: {result.stage_summary()}")
+        # Sprint 73.3: LLM-сводка
+        logger.info(
+            f"Pipeline LLM metrics [{result.execution_id}]: "
+            f"calls={llm_collector.llm_calls}, avg={llm_collector.avg_latency_ms}ms, "
+            f"tokens_in={llm_collector.tokens_in}, tokens_out={llm_collector.tokens_out}, "
+            f"model={llm_collector.llm_model}, errors={llm_collector.llm_errors}"
+        )
         
         return result

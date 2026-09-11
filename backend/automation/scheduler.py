@@ -11,6 +11,7 @@ from pytz import timezone as pytz_timezone
 
 from core.database import SessionLocal
 from core.models.channel_orm import ChannelORM
+from backend.core.reliability import channel_paused_for  # Sprint 74.3
 from core.models.channel_schedule_orm import ChannelScheduleORM
 from .manager import automation_manager
 from .automation_manager_v2 import automation_manager_v2
@@ -241,6 +242,22 @@ class AutomationScheduler:
         print(f"рџ”Ґ Scheduled automation run for channel {channel_id}", flush=True)
 
         try:
+            # Sprint 74.3: ранний exit, если канал на паузе (429) — не запускаем пайплайн
+            db = SessionLocal()
+            try:
+                ch = db.query(ChannelORM).filter(ChannelORM.id == channel_id).first()
+                if ch is not None:
+                    paused_for = channel_paused_for(ch)
+                    if paused_for > 0:
+                        logger.warning(
+                            f"Channel {channel_id} paused for another "
+                            f"{paused_for:.1f}s (rate limit) — scheduled run skipped"
+                        )
+                        return {"status": "skipped", "reason": "channel_paused",
+                                "remaining_seconds": round(paused_for, 1)}
+            finally:
+                db.close()
+
             if USE_AUTOMATION_V2:
                 logger.info("Using AutomationManager v2 for channel %s", channel_id)
                 result = await automation_manager_v2.run_channel_now(channel_id)
