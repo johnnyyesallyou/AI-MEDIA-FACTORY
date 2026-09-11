@@ -1,14 +1,36 @@
 # AI Media Factory — Status
 
-**Last Updated:** 2026-09-09 (Sprint 74.5 Reliability Dashboard + Alerting completed)
-**Current Sprint:** 74.5 (completed)
-**Next Sprint:** Sprint 75+ — Discovery Engine (Subscribe.ru integration)
+**Last Updated:** 2026-09-11 (Sprint 75.3 cross-channel isolation fix completed)
+**Current Sprint:** 75.3 (completed)
+**Next Sprint:** Sprint 76+ — Discovery Engine (Subscribe.ru integration; см. коллизию нумерации с 75.x в заметке ниже)
+
+> ⚠️ **Нумерационная заметка:** ROADMAP.md резервировал «Sprint 75» под Фазу 10 «Discovery Engine»
+> (75.1 Source Discovery / 75.2 Smart Source Selection). Эти номера были заняты фактически
+> реализованной серией **«Sprint 75.x — Channel Profile как runtime config source»**
+> (75.1 профиль→поведение, 75.2 A/B-тесты, 75.3 изоляция каналов). Discovery Engine при этом
+> сдвинут на будущее (Sprint 76+); ROADMAP требует ревизии — см. STATUS/ROADMAP sync.
 
 ---
 
 ## Current State
 
-### Sprint 74.1 — Reliability: Retry Logic + Dead-Letter Queue (completed, 2026-09-09)
+### Sprint 75.3 — Cross-channel isolation fix (completed, 2026-09-11)
+- ✅ **Production-баг (из Sprint 75.2 finding) исправлен:** `WritingJob`, `EvaluatorJob`, `ImageJob`, `PublishJob`, `RevisionJob`, `ReEvaluationJob` получали items ВСЕХ каналов (`repo.list_all(status=...)` без фильтра), из-за чего прогон канала A генерировал/оценивал/публиковал драфты канала B со стилем профиля A (и публиковал чужие approved с credentials канала A).
+- ✅ Фикс: во все `list_all(...)` добавлен `channel_id=getattr(channel, "id", None) if channel else None` — `ContentRepository.list_all` уже поддерживал фильтр, jobs просто не передавали его.
+- ✅ Тесты: `tests/test_profile_ab_behavior.py` A/B-тесты переписаны с проверкой изоляции (прогон канала обрабатывает только СВОИ items); итого профильные тесты **14 passed**.
+- ✅ Полный регресс: **165 passed, 2 failed** (only известные Sprint 60: `test_generate_news_post`, `test_generate_manga_post_no_video`).
+
+### Sprint 75.2 — Channel Profile A/B behavior tests (completed, 2026-09-11)
+- ✅ `tests/test_profile_ab_behavior.py` — 5 тестов: два профиля (Analytical Deep Dive 2500/analytical vs Casual Manga Buzz 800/casual) → разное поведение в Research (sources/freshness), Writing (tone/length/style), Evaluation (target_style); инвариант детерминизма.
+- ✅ Найден и задокументирован cross-channel production-баг (см. 75.3).
+
+### Sprint 75.1 / 75.1.x — Channel Profile as runtime config source (completed, 2026-09-11)
+- ✅ `backend/automation/profile_config.py::load_profile_config` — единый runtime-контракт: Priority 1 = ChannelProfileORM (source=profile) > content_profile > legacy fallback; стиль-aware `target_style` для LLM-as-a-Judge.
+- ✅ Research/Writing/Evaluator jobs завязаны на `load_profile_config` (профильные источники, style_profile, target_style).
+- ✅ Миграция `migrations/003_recreate_channel_profiles.py` (идемпотентная, idempotent data-protection; применена на реальной БД).
+- ✅ Тесты: `tests/test_profile_config.py` — 9 passed (isolated_db + sync-фиксы).
+
+### Sprint 74.5 — Reliability Dashboard + Alerting (completed, 2026-09-09)
 - ✅ `backend/core/reliability.py`: async retry-движок — `with_retry()` / `@retry_async`, exponential backoff с jitter, per-platform политики (`telegram` 4 attempts, `vk` 4 attempts, `external_api` 3), retry только для TRANSIENT/NETWORK (fail fast для PERMANENT/CONFIGURATION), поддержка Retry-After (429)
 - ✅ `VKError` с map error_code → ErrorType (1/6/9/10/29 → transient; 5/7/17 → configuration; 15/100/200 → permanent)
 - ✅ Интеграция: `telegram_publisher.py` (send_message/send_photo через `_post` + retry) и `vk_publisher.py` (wall.post с retry)
