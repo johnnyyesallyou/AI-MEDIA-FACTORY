@@ -11,8 +11,8 @@ from .source_registry import SOURCES, SourceDefinition
 # Капабилити, релевантные для каждого content_type (используются в скоринге)
 CAPABILITY_RELEVANCE = {
     "manga": ("chapters", "covers", "descriptions", "genres"),
-    "anime": ("covers", "descriptions"),
-    "news": ("descriptions", "covers"),
+    "anime": ("episodes", "covers", "descriptions", "genres"),
+    "news": ("articles", "summaries", "covers"),
 }
 
 WEIGHT_CONTENT_TYPE = 40.0

@@ -159,3 +159,100 @@ def discover_validate(req: DiscoverValidateRequest):
             error=r.error,
         ) for r in results],
     )
+
+
+# ---------------------------------------------------------------------------
+# Sprint 76.2: Smart Source Selection — quality / rotation / diversity
+# ---------------------------------------------------------------------------
+
+class SelectSourceItem(BaseModel):
+    source_id: str
+    name: str
+    base_score: float
+    quality_adjustment: float
+    final_score: float
+    languages: List[str]
+    matched_capabilities: List[str]
+    reasons: List[str]
+
+
+class SourceSelectResponse(BaseModel):
+    content_type: str
+    topic: Optional[str] = None
+    language: Optional[str] = None
+    results: List[SelectSourceItem]
+
+
+class SourceMetricsRequest(BaseModel):
+    source_id: str
+    outcome: str  # "success" | "failure"
+    items: int = 0
+
+
+class SourceMetricsResponse(BaseModel):
+    source_id: str
+    success_count: int
+    failure_count: int
+    success_rate: Optional[float]
+    quality_adjustment: float
+
+
+class SourceRecordPickRequest(BaseModel):
+    source_id: str
+
+
+@router.get("/discover/select", response_model=SourceSelectResponse)
+def source_select(
+    content_type: str = Query(..., description="Content type (e.g. 'news', 'manga')"),
+    topic: Optional[str] = Query(None),
+    language: Optional[str] = Query(None),
+    top_k: Optional[int] = Query(None, ge=1, le=30),
+    diversity: bool = Query(True),
+    rotation: bool = Query(True),
+):
+    """Smart Source Selection: score + quality + rotation + diversity."""
+    from engines.source_selection import SmartSourceSelector
+    results = SmartSourceSelector().select(
+        content_type=content_type, topic=topic, language=language,
+        top_k=top_k, diversity=diversity, rotation=rotation,
+    )
+    return SourceSelectResponse(
+        content_type=content_type,
+        topic=topic,
+        language=language,
+        results=[
+            SelectSourceItem(
+                source_id=r.source_id,
+                name=r.name,
+                base_score=r.base_score,
+                quality_adjustment=r.quality_adjustment,
+                final_score=r.final_score,
+                languages=list(r.languages),
+                matched_capabilities=list(r.matched_capabilities),
+                reasons=list(r.reasons),
+            )
+            for r in results
+        ],
+    )
+
+
+@router.post("/metrics", response_model=SourceMetricsResponse)
+def source_metrics(req: SourceMetricsRequest):
+    """Записать результат обращения к источнику (для quality scoring)."""
+    from engines.source_selection import DEFAULT_REGISTRY
+    q = DEFAULT_REGISTRY.record(req.source_id, req.outcome, req.items)
+    return SourceMetricsResponse(
+        source_id=req.source_id,
+        success_count=q.success_count,
+        failure_count=q.failure_count,
+        success_rate=q.success_rate,
+        quality_adjustment=DEFAULT_REGISTRY.quality_adjustment(req.source_id),
+    )
+
+
+@router.post("/select/record-pick")
+def source_record_pick(req: SourceRecordPickRequest):
+    """Учесть выбор источника (для ротации). Сообщить новый selection_count."""
+    from engines.source_selection import DEFAULT_REGISTRY
+    q = DEFAULT_REGISTRY.bump_selection(req.source_id)
+    return {"source_id": req.source_id, "selection_count": q.selection_count}
