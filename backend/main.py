@@ -24,7 +24,14 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(automation_scheduler.start())
     print("🚀 Automation scheduler task created in background", flush=True)
 
+    # Sprint 74.2: Self-healing worker — периодический re-publish из DLQ
+    from backend.core.self_healing import get_self_healing_worker
+    self_healing_task = asyncio.create_task(get_self_healing_worker().run_forever())
+    print("🚀 Self-healing worker task created in background", flush=True)
+
     yield
+    get_self_healing_worker().stop()
+    self_healing_task.cancel()
     print("👋 Shutting down...", flush=True)
 
 app = FastAPI(

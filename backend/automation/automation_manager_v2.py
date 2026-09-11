@@ -24,6 +24,7 @@ try:
     from backend.core.error_logger import get_error_logger
 except ImportError:
     get_error_logger = None
+from backend.core.reliability import channel_paused_for  # Sprint 74.3: skip каналов на паузе
 from core.models.channel_orm import ChannelORM
 from core.models.channel_profile_orm import ChannelProfileORM
 from core.models.execution_log_orm import ExecutionLogORM
@@ -344,10 +345,10 @@ class AutomationManagerV2:
 
             db = SessionLocal()
             try:
+                llm = getattr(pipe_result, "llm_metrics", {}) or {}
                 db.add(PipelineRunMetrics(
                     channel_id=str(task.channel_id),
                     channel_name=task.channel_name,
-                    execution_id=getattr(task, "execution_id", None),
                     research_ms=int(timings.get("research", 0) * 1000),
                     writing_ms=int(timings.get("writing", 0) * 1000),
                     media_ms=int(timings.get("media", 0) * 1000),
@@ -358,9 +359,20 @@ class AutomationManagerV2:
                     topics_published=getattr(pipe_result, "posts_published", 0) or 0,
                     errors_count=len(getattr(pipe_result, "errors", []) or []),
                     success="true" if getattr(pipe_result, "success", False) else "false",
+                    # Sprint 73.3: сквозной execution_id из pipeline (fallback на task) + LLM-метрики
+                    execution_id=getattr(pipe_result, "execution_id", "") or getattr(task, "execution_id", None),
+                    llm_calls=int(llm.get("llm_calls", 0)),
+                    llm_errors=int(llm.get("llm_errors", 0)),
+                    llm_latency_ms=int(llm.get("llm_latency_ms", 0)),
+                    tokens_in=int(llm.get("tokens_in", 0)),
+                    tokens_out=int(llm.get("tokens_out", 0)),
+                    llm_model=llm.get("llm_model") or None,
                 ))
                 db.commit()
-                logger.info(f"Sprint 73.1: run metrics saved for {task.channel_name}")
+                logger.info(
+                    f"Sprint 73.1/73.3: run metrics saved for {task.channel_name} "
+                    f"(execution_id={getattr(pipe_result, 'execution_id', '')}, llm_calls={llm.get('llm_calls', 0)})"
+                )
             finally:
                 db.close()
         except Exception as e:
@@ -401,6 +413,18 @@ class AutomationManagerV2:
                 if not channel:
                     raise ValueError(f"Channel {task.channel_id} not found")
                 
+                # Sprint 74.3: пропускаем канал, если он на паузе (429)
+                paused_for = channel_paused_for(channel)
+                if paused_for > 0:
+                    logger.warning(
+                        f"Channel {task.channel_name} paused for another "
+                        f"{paused_for:.1f}s (rate limit) — task skipped"
+                    )
+                    task.status = TaskStatus.FAILED
+                    task.error = f"Channel paused (429) for {paused_for:.1f}s"
+                    task.completed_at = datetime.utcnow()
+                    return
+
                 # Проверяем rate limits
                 if not self.rate_limit_policy.can_run(channel):
                     logger.warning(f"Rate limit exceeded for channel {task.channel_name}")

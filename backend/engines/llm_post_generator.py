@@ -1,8 +1,10 @@
 """Sprint 69.4: LLM-based post generation для NewsGenerationStrategy."""
 import logging
 from backend.engines.ollama_limiter import with_ollama_limit
+from core.metrics.llm_metrics import get_llm_collector
 import os
 import json
+import time
 import requests
 import httpx
 from typing import Dict, Any, Optional
@@ -43,7 +45,7 @@ Requirements:
 Write the post directly, no explanations:"""
 
     try:
-        # Sprint 69.12: concurrency limit для предотвращения перегрузки Ollama
+        # Sprint 73.3: замер latency + запись LLM-метрик в коллектор прогона
         async def _make_request():
             async with httpx.AsyncClient(timeout=180.0) as client:
                 return await client.post(
@@ -54,13 +56,30 @@ Write the post directly, no explanations:"""
                         "stream": False,
                     },
                 )
-        
-        response = await with_ollama_limit(_make_request())
-        response.raise_for_status()
-        
+
+        collector = get_llm_collector()
+        _t0 = time.perf_counter()
+        try:
+            response = await with_ollama_limit(_make_request())
+            response.raise_for_status()
+        except Exception:
+            collector.record_error()
+            raise
+        _latency_ms = int((time.perf_counter() - _t0) * 1000)
+
         result = response.json()
+        # Sprint 73.3: Ollama отдаёт token counts: prompt_eval_count / eval_count
+        _tokens_in = int(result.get("prompt_eval_count") or 0)
+        _tokens_out = int(result.get("eval_count") or 0)
+        _model = result.get("model") or OLLAMA_MODEL
+        collector.record_call(
+            latency_ms=_latency_ms,
+            tokens_in=_tokens_in,
+            tokens_out=_tokens_out,
+            model=_model,
+        )
         generated_text = result.get("response", "").strip()
-        
+
         if generated_text and len(generated_text) > 50:
             logger.info(f"LLM generated {len(generated_text)} chars for: {topic.get('title', '')[:50]}")
             return generated_text
@@ -141,10 +160,27 @@ Write the post directly, no explanations:"""
                     },
                 )
 
-        response = await with_ollama_limit(_make_request())
-        response.raise_for_status()
+        collector = get_llm_collector()
+        _t0 = time.perf_counter()
+        try:
+            response = await with_ollama_limit(_make_request())
+            response.raise_for_status()
+        except Exception:
+            collector.record_error()
+            raise
+        _latency_ms = int((time.perf_counter() - _t0) * 1000)
 
         result = response.json()
+        # Sprint 73.3: Ollama token counts
+        _tokens_in = int(result.get("prompt_eval_count") or 0)
+        _tokens_out = int(result.get("eval_count") or 0)
+        _model = result.get("model") or OLLAMA_MODEL
+        collector.record_call(
+            latency_ms=_latency_ms,
+            tokens_in=_tokens_in,
+            tokens_out=_tokens_out,
+            model=_model,
+        )
         generated_text = result.get("response", "").strip()
 
         if generated_text and len(generated_text) > 50:
