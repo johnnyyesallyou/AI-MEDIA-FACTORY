@@ -1,7 +1,7 @@
 # AI Media Factory — Development Roadmap
 
-**Last Updated:** 2026-09-08
-**Current Phase:** Editorial Standardization
+**Last Updated:** 2026-09-11
+**Current Phase:** Editorial Standardization (см. STATUS — серия Sprint 75.x = Channel Profile runtime config)
 
 ---
 
@@ -15,9 +15,9 @@ Phase 6: VK + Universal Publishing ✅ Complete (Sprint 71)
 Phase 7: Editorial / Publication 🔄 In Progress (Sprint 72)
 Phase 8: Observability → Next (Sprint 73)
 Phase 9: Reliability → Next (Sprint 74)
-Phase 10: Discovery Engine → Future (Sprint 75+)
-Phase 11: Learning Loop → Future (Sprint 76+)
-Phase 12: Smart Scaling → Future (Sprint 77+)
+Phase 10: Discovery Engine → Future (Sprint 76+, ранее 75+)
+Phase 11: Learning Loop → Future (Sprint 77+)
+Phase 12: Smart Scaling → Future (Sprint 78+)
 
 ---
 
@@ -204,15 +204,18 @@ Phase 12: Smart Scaling → Future (Sprint 77+)
 
 ---
 
-### Phase 10: Discovery Engine → FUTURE (Sprint 75+)
+### Phase 10: Discovery Engine → FUTURE (Sprint 76+, ранее 75+)
 
-#### 75.1 Source Discovery
+> Нумерация 75.x занята реализованной серией «Channel Profile runtime config»
+> (см. STATUS.md). Discovery сдвинут на 76+.
+
+#### 76.1 Source Discovery
 - Subscribe.ru integration (discovery only)
 - RSS feed validation
 - Source scoring
 - Automatic source recommendations
 
-#### 75.2 Smart Source Selection
+#### 76.2 Smart Source Selection
 - Topic-based source matching
 - Source quality metrics
 - Diversity optimization
@@ -222,15 +225,15 @@ Phase 12: Smart Scaling → Future (Sprint 77+)
 
 ---
 
-### Phase 11: Learning Loop → FUTURE (Sprint 76+)
+### Phase 11: Learning Loop → FUTURE (Sprint 77+)
 
-#### 76.1 Analytics Collection
+#### 77.1 Analytics Collection
 - Post engagement metrics
 - Click-through rates
 - Audience behavior
 - Content performance
 
-#### 76.2 Learning Engine
+#### 77.2 Learning Engine
 - A/B testing framework
 - Performance correlation
 - Strategy optimization
@@ -240,15 +243,15 @@ Phase 12: Smart Scaling → Future (Sprint 77+)
 
 ---
 
-### Phase 12: Smart Scaling → FUTURE (Sprint 77+)
+### Phase 12: Smart Scaling → FUTURE (Sprint 78+)
 
-#### 77.1 Gradual Scaling
+#### 78.1 Gradual Scaling
 - 10 → 25 → 50 → 100 channels
 - Health gates at each level
 - Resource monitoring
 - Load balancing
 
-#### 77.2 Distributed Architecture
+#### 78.2 Distributed Architecture
 - Worker pools
 - Redis queues
 - Distributed locks
