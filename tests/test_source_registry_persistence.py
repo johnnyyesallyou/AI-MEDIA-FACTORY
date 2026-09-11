@@ -277,17 +277,19 @@ class TestSourceRepository:
 
 @pytest.fixture
 def db_session():
-    """Fixture for database session."""
-    from core.database import SessionLocal, Base, engine
+    """Fixture for database session (isolated SQLite for Sprint 76.x tests)."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from core.database import Base
 
-    # Create tables
+    # Use isolated in-memory SQLite to avoid postgres FK cycles
+    engine = create_engine("sqlite:///:memory:", echo=False)
     Base.metadata.create_all(bind=engine)
 
-    session = SessionLocal()
+    TestSession = sessionmaker(bind=engine)
+    session = TestSession()
     yield session
     session.close()
-
-    # Drop tables
     Base.metadata.drop_all(bind=engine)
 
 
