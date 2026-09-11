@@ -22,11 +22,14 @@ class ResearchEngine:
         self.scorer = TopicScorer()
         self._initialized = False
 
-    def initialize(self, channel=None):
+    def initialize(self, channel=None, sources_override=None):
         if self._initialized:
             return
-        # Sprint 8.4.1 fix: используем channel.sources если передан
-        if channel and getattr(channel, "sources", None):
+        # Sprint 75.1: Profile sources (primary runtime config) → channel.sources (legacy) → RSS fallback
+        if sources_override:
+            sources_to_use = sources_override
+            logger.info(f"Инициализация Research Engine с {len(sources_to_use)} источниками из Channel Profile (Sprint 75.1)")
+        elif channel and getattr(channel, "sources", None):
             sources_to_use = channel.sources
             logger.info(f"Инициализация Research Engine с {len(sources_to_use)} источниками из канала")
         else:
@@ -41,10 +44,14 @@ class ResearchEngine:
                 logger.warning(f"Failed to init source {source_config.get('name', 'unknown')}: {e}")
         self._initialized = True
 
-    def run(self, channel=None) -> dict:
-        """Синхронный прогон полного research pipeline. Возвращает dict с темами."""
+    def run(self, channel=None, sources_override=None) -> dict:
+        """Синхронный прогон полного research pipeline. Возвращает dict с темами.
+
+        Sprint 75.1: sources_override — источники из Channel Profile
+        (приоритет над channel.sources / RSS fallback).
+        """
         if not self._initialized:
-            self.initialize(channel=channel)
+            self.initialize(channel=channel, sources_override=sources_override)
 
         logger.info("Запуск Research Pipeline")
 
