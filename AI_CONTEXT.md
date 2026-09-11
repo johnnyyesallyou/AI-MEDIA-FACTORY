@@ -1,7 +1,7 @@
 # AI Media Factory - AI-Assisted Development Context
 
 **Last Updated:** 2026-09-11
-**Current Sprint:** 75.3 (completed) — Channel Profile runtime config series
+**Current Sprint:** 75.4 (completed) — Sprint 60 flake fix, regression green
 **Next Sprint:** 76+ (Discovery Engine — дед: ROADMAP «Sprint 75» занят серией 75.x channel-profile)
 
 ---
@@ -9,10 +9,10 @@
 ## Quick Reference
 
 ### Current State
-- **Sprint:** 75.3 completed
+- **Sprint:** 75.4 completed
 - **Next:** Sprint 76+ (Discovery Engine) — серия 75.x занята Channel Profile runtime config
-- **Status:** Channel Profile as runtime config source (75.1) + A/B behavior tests (75.2) + cross-channel isolation fix (75.3)
-- **Last Test:** full regression 165 passed, 2 known Sprint 60 fails; profile tests 14 passed
+- **Status:** Channel Profile runtime config + A/B tests + cross-channel fix + Sprint 60 flakes closed
+- **Last Test:** full regression 165 passed, 2 skipped (LLM-dependent integration), 0 failed
 
 ### Source of Truth (read these first)
 1. **STATUS.md** - project state and completed sprints
