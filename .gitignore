@@ -114,3 +114,4 @@ logs/
 # Telethon session (Sprint 69)
 pilot_session.session
 pilot_session.session-journal
+.aider*

@@ -62,6 +62,7 @@ class AutomationManagerTest(unittest.TestCase):
         self.assertEqual(payload['research_interval'], '60m')
         self.assertEqual(payload['publish_times'], ['09:00', '13:00', '18:00'])
 
+    @pytest.mark.integration
     def test_run_now_endpoint_is_available(self):
         """Test POST /api/v1/automation/run-now starts pipeline"""
         response = self.client.post('/api/v1/automation/run-now')
