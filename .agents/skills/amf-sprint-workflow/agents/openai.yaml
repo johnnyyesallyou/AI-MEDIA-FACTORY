@@ -1,0 +1,6 @@
+interface:
+  display_name: "AMF Sprint Workflow"
+  short_description: "Run AMF sprints with evidence and safety"
+  default_prompt: "Use $amf-sprint-workflow to plan and verify the next AMF sprint within the approved scope."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "AMF Read-only Audit"
+  short_description: "Audit AMF safely without repository changes"
+  default_prompt: "Use $amf-readonly-audit to perform a strictly read-only audit of this repository."
+policy:
+  allow_implicit_invocation: true
