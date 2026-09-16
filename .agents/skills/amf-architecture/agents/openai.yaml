@@ -1,0 +1,6 @@
+interface:
+  display_name: "AMF Architecture"
+  short_description: "Trace and improve AMF system architecture"
+  default_prompt: "Use $amf-architecture to review this change against the AMF architecture and propose a safe design."
+policy:
+  allow_implicit_invocation: true

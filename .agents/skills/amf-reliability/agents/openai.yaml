@@ -1,0 +1,6 @@
+interface:
+  display_name: "AMF Reliability"
+  short_description: "Harden retries, failures, and recovery"
+  default_prompt: "Use $amf-reliability to analyze the failure path and verify AMF recovery behavior."
+policy:
+  allow_implicit_invocation: true
