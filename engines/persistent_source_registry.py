@@ -7,11 +7,27 @@ from typing import Optional, List
 from datetime import datetime
 import logging
 
-from core.database import get_db
+from core.database import SessionLocal
 from core.models.source_orm import SourceORM
 from core.repositories.source_repository import SourceRepository
 
 logger = logging.getLogger(__name__)
+
+# ``SourceDefinition`` predates the persistent registry and deliberately has no
+# URL field.  Keep this bridge explicit: it is a compatibility contract, not a
+# name/domain matching heuristic.  The values are the canonical endpoints used
+# by the corresponding adapters/RSS jobs.
+LOGICAL_SOURCE_URLS = {
+    "remanga": "https://remanga.org/api/",
+    "mangadex": "https://api.mangadex.org/",
+    "readmanga": "https://readmanga.me/",
+    "anilist": "https://graphql.anilist.co",
+    "myanimelist": "https://myanimelist.net/rss/news.xml",
+    "habr": "https://habr.com/ru/rss/articles/",
+    "vc": "https://vc.ru/rss/all",
+    "techcrunch": "https://techcrunch.com/feed/",
+    "theverge": "https://www.theverge.com/rss/index.xml",
+}
 
 
 class PersistentSourceRegistry:
@@ -20,12 +36,25 @@ class PersistentSourceRegistry:
     def __init__(self, db_session=None):
         """Initialize registry with optional session (for testing)."""
         self.db = db_session
+        self._owns_session = db_session is None
 
     def _get_db(self):
         """Get database session."""
         if self.db is None:
-            self.db = next(get_db())
+            self.db = SessionLocal()
         return self.db
+
+    def close(self) -> None:
+        """Close a session created by this registry, never an injected one."""
+        if self._owns_session and self.db is not None:
+            self.db.close()
+            self.db = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self.close()
 
     def _get_repo(self):
         """Get repository instance."""
@@ -92,9 +121,21 @@ class PersistentSourceRegistry:
         return max(-10.0, min(8.0, adjustment))
 
     def get_source(self, source_id: str) -> Optional[SourceORM]:
-        """Get source by ID."""
+        """Get a source by database ID or an explicitly mapped logical ID."""
         repo = self._get_repo()
-        return repo.get_by_id(source_id)
+        source = repo.get_by_id(source_id)
+        if source is not None:
+            return source
+
+        canonical_url = LOGICAL_SOURCE_URLS.get(source_id)
+        return repo.get_by_url(canonical_url) if canonical_url else None
+
+    def get_source_by_logical_id(self, source_id: str) -> Optional[SourceORM]:
+        """Resolve a legacy logical source ID through its exact canonical URL."""
+        canonical_url = LOGICAL_SOURCE_URLS.get(source_id)
+        if canonical_url is None:
+            return None
+        return self._get_repo().get_by_url(canonical_url)
 
     def get_source_by_url(self, canonical_url: str) -> Optional[SourceORM]:
         """Get source by URL."""

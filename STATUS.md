@@ -1,7 +1,7 @@
 # AI Media Factory — Status
 
-**Last Updated:** 2026-09-11 (Sprint 76.5 Source Health & Quarantine IMPLEMENTED)
-**Current Sprint:** 76.5 (completed) — Source Health & Quarantine
+**Last Updated:** 2026-09-16 (Sprint 76.3–76.5 production-pipeline integration completed)
+**Current Sprint:** 76.3–76.5 integration (completed)
 **Next Sprint:** 77 — Learning Loop Foundation [Discovery Engine Phase 4]
 
 > ⚠️ **Нумерационная заметка:** ROADMAP.md резервировал «Sprint 75» под Фазу 10 «Discovery Engine»
@@ -13,6 +13,17 @@
 ---
 
 ## Current State
+
+### Sprint 76.3–76.5 — Source Discovery & Health production-pipeline integration (completed, 2026-09-16)
+- ✅ `SmartSourceSelector` integrated into `ResearchJob`: selects sources for every run from the channel profile's topic/language; on selector failure, the legacy profile-source path remains the fallback.
+- ✅ `PersistentSourceRegistry` integrated into `SmartSourceSelector`: source metadata is read from the persistent registry first, with the in-memory `SOURCES` registry retained as a fallback.
+- ✅ `SourceHealthChecker` registered in `AutomationScheduler` as `source_health_check_job`, running every 15 minutes; the scheduled helper logs healthy/degraded/quarantined totals.
+- ✅ Compile check passed for the three integration files: `automation_jobs.py`, `source_selection.py`, and `scheduler.py`.
+- ✅ Sprint 76.x target suite: **86 passed, 25 warnings**.
+- ✅ Full regression: **246 passed, 7 deselected, 0 failed** (25 warnings).
+- ⚠️ Docker runtime/API smoke test was not completed: the backend could not resolve the `postgres` hostname, and no PostgreSQL Compose service was visible. This is an environment/runtime blocker, not a claimed successful smoke verification.
+
+**Next:** Sprint 77 — Learning Loop Foundation.
 
 ### Sprint 76.5 — Source Health & Quarantine (completed, 2026-09-11)
 - ✅ `engines/source_health_checker.py` — Health monitoring engine
