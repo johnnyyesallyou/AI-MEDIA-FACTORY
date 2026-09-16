@@ -6,10 +6,12 @@
   - diversity (избегаем редундантных источников с идентичным coverage)
   - topic-based matching  (уже встроен в base score через scoring engine)
 """
+import logging
 from dataclasses import dataclass
 from typing import Dict, FrozenSet, List, Optional, Tuple
 
 from .source_registry import SOURCES
+from .persistent_source_registry import PersistentSourceRegistry
 from .source_scoring import SourceDiscoveryEngine
 
 DIVERSITY_PENALTY = 5.0
@@ -17,6 +19,8 @@ ROTATION_PENALTY = 3.0
 QUALITY_MIN = -10.0
 QUALITY_MAX = 8.0
 QUALITY_TARGET_RATE = 0.7
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -119,39 +123,62 @@ class SmartSourceSelector:
         seen_keys: set = set()
         results: List[SelectedSource] = []
 
-        for sc in base:  # уже отсортирован по base_score desc
-            langs = SOURCES[sc.source_id].languages
-            q_adj = self.registry.quality_adjustment(sc.source_id)
-            final = sc.score + q_adj
-            reasons = [f"base={sc.score}"]
-            if q_adj:
-                reasons.append(f"quality={q_adj:+.1f}")
+        # The selector creates this registry, so it must also close its session.
+        with PersistentSourceRegistry() as persistent_registry:
+            for sc in base:  # уже отсортирован по base_score desc
+                # Sprint 76.4: resolve legacy logical IDs through the explicit
+                # canonical-URL mapping.  Legacy registry data remains the
+                # compatibility fallback for sources not yet persisted.
+                try:
+                    persistent_source = persistent_registry.get_source_by_logical_id(
+                        sc.source_id
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "PersistentSourceRegistry lookup failed for %s: %s; "
+                        "using in-memory registry",
+                        sc.source_id,
+                        exc,
+                    )
+                    persistent_source = None
 
-            # Diversity: полное дублирование coverage (caps+language) штрафуем
-            key: FrozenSet = (frozenset(sc.matched_capabilities), frozenset(langs))
-            if diversity and key in seen_keys:
-                final -= DIVERSITY_PENALTY
-                reasons.append("redundant")
-            seen_keys.add(key)
+                if persistent_source is not None:
+                    langs = (persistent_source.language,) if persistent_source.language else ()
+                    q_adj = persistent_registry.quality_adjustment(persistent_source.id)
+                else:
+                    legacy_source = SOURCES.get(sc.source_id)
+                    langs = legacy_source.languages if legacy_source else ()
+                    q_adj = self.registry.quality_adjustment(sc.source_id)
+                final = sc.score + q_adj
+                reasons = [f"base={sc.score}"]
+                if q_adj:
+                    reasons.append(f"quality={q_adj:+.1f}")
 
-            # Rotation: недавно часто выбираемые — чуть ниже
-            if rotation:
-                used = self.registry.selection_count(sc.source_id)
-                if used:
-                    final -= ROTATION_PENALTY * used
-                    reasons.append(f"used={used}")
+                # Diversity: полное дублирование coverage (caps+language) штрафуем
+                key: FrozenSet = (frozenset(sc.matched_capabilities), frozenset(langs))
+                if diversity and key in seen_keys:
+                    final -= DIVERSITY_PENALTY
+                    reasons.append("redundant")
+                seen_keys.add(key)
 
-            final = max(0.0, round(final, 1))
-            results.append(SelectedSource(
-                source_id=sc.source_id,
-                name=sc.name,
-                base_score=sc.score,
-                quality_adjustment=q_adj,
-                final_score=final,
-                languages=langs,
-                matched_capabilities=sc.matched_capabilities,
-                reasons=tuple(reasons),
-            ))
+                # Rotation: недавно часто выбираемые — чуть ниже
+                if rotation:
+                    used = self.registry.selection_count(sc.source_id)
+                    if used:
+                        final -= ROTATION_PENALTY * used
+                        reasons.append(f"used={used}")
+
+                final = max(0.0, round(final, 1))
+                results.append(SelectedSource(
+                    source_id=sc.source_id,
+                    name=sc.name,
+                    base_score=sc.score,
+                    quality_adjustment=q_adj,
+                    final_score=final,
+                    languages=langs,
+                    matched_capabilities=sc.matched_capabilities,
+                    reasons=tuple(reasons),
+                ))
 
         results.sort(key=lambda s: s.final_score, reverse=True)
         if top_k:

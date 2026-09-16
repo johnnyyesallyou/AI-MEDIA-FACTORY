@@ -19,6 +19,7 @@ from .jobs import MonitoringJob
 from .jobs.manga_pipeline_job import MangaPipelineJob
 from .jobs.anime_pipeline_job import AnimePipelineJob
 from .jobs.news_pipeline_job import NewsPipelineJob
+from engines.source_health_checker import SourceHealthChecker
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,20 @@ class AutomationScheduler:
         )
         logger.info("Added news pipeline job (every 30 minutes)")
 
+        # Sprint 76.5: quarantine unhealthy RSS sources and periodically
+        # validate quarantined sources for recovery.
+        self.scheduler.add_job(
+            func=lambda: asyncio.to_thread(self._run_source_health_check),
+            trigger="interval",
+            minutes=15,
+            id="source_health_check_job",
+            name="Source Health Check (quarantine + recovery)",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+        )
+        logger.info("Added source health check job (every 15 minutes)")
+
         self.scheduler.start()
         logger.info("Automation scheduler started with %d jobs", len(self.scheduler.get_jobs()))
         print(f"рџљЂ Automation scheduler started with {len(self.scheduler.get_jobs())} jobs", flush=True)
@@ -135,6 +150,23 @@ class AutomationScheduler:
         except Exception as e:
             import logging
             logging.getLogger(__name__).error(f"Analytics collection failed: {e}")
+
+    def _run_source_health_check(self):
+        """Run source health checks with a scheduler-owned DB session."""
+        db = SessionLocal()
+        try:
+            results = SourceHealthChecker(db).check_all_sources()
+            logger.info(
+                "Source health check: %(total)s sources "
+                "(healthy=%(healthy)s, degraded=%(degraded)s, "
+                "sick=%(sick)s, quarantined=%(quarantined)s, "
+                "recovered=%(recovered)s)",
+                results,
+            )
+        except Exception as exc:
+            logger.exception("Source health check failed: %s", exc)
+        finally:
+            db.close()
 
     async def run_analytics_collection(self):
         """Sprint 58: hourly analytics collection for active connected channels."""
@@ -330,4 +362,3 @@ class AutomationScheduler:
 
 
 automation_scheduler = AutomationScheduler()
-

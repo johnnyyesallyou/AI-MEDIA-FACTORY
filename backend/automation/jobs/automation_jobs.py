@@ -91,11 +91,80 @@ class ResearchJob:
                 profile_cfg["freshness_hours"],
             )
 
+            # Sprint 76.3: rank the existing RSS configurations before handing
+            # them to ResearchEngine.  The selector works with logical source
+            # IDs (for example ``habr``); ResearchEngine consumes RSS config
+            # dictionaries, so retain only matching configured feeds.
+            sources_to_process = profile_cfg["sources"]
+            content_profile = getattr(channel, "content_profile", None) or {}
+            preserve_legacy_resolution = (
+                profile_cfg["source"] == "legacy"
+                and not content_profile
+                and not getattr(channel, "sources", None)
+            )
+            try:
+                from engines.research.config import RSS_SOURCES
+                from engines.source_selection import SmartSourceSelector
+
+                content_type = content_profile.get("content_type", "news")
+                topic = profile_cfg.get("topic")
+                language = profile_cfg.get("language") or content_profile.get("language")
+
+                selected = SmartSourceSelector().select(
+                    content_type=content_type,
+                    topic=topic,
+                    language=language,
+                    top_k=10,
+                )
+
+                # A profile may intentionally omit sources; in that case mirror
+                # ResearchEngine's legacy candidate resolution before filtering.
+                candidates = (
+                    sources_to_process
+                    or getattr(channel, "sources", None)
+                    or RSS_SOURCES
+                )
+                selected_ids = {source.source_id.lower() for source in selected}
+                ranked_sources = [
+                    source
+                    for source in candidates
+                    if any(source_id in source.get("name", "").lower()
+                           or source_id in source.get("url", "").lower()
+                           for source_id in selected_ids)
+                ]
+
+                if ranked_sources:
+                    sources_to_process = ranked_sources
+                else:
+                    # A non-overlapping registry/profile must never leave the
+                    # production research run with an empty source list.
+                    sources_to_process = candidates
+                    logger.warning(
+                        "SmartSourceSelector returned no configured RSS sources; "
+                        "using %d fallback sources",
+                        len(candidates),
+                    )
+
+                logger.info(
+                    "SmartSourceSelector: selected %d sources for topic=%s "
+                    "language=%s; using %d RSS feeds",
+                    len(selected), topic, language, len(sources_to_process),
+                )
+                if preserve_legacy_resolution:
+                    # ResearchEngine owns the historical RSS resolution for
+                    # channels without a profile; keep its None contract.
+                    sources_to_process = None
+            except Exception as exc:
+                logger.warning(
+                    "SmartSourceSelector failed: %s; using configured sources",
+                    exc,
+                )
+
             engine = ResearchEngine()
 
             research_result = engine.run(
                 channel=channel,
-                sources_override=profile_cfg["sources"],
+                sources_override=sources_to_process,
             )
 
             topics = research_result.get("topics", [])
@@ -201,6 +270,7 @@ from typing import Any, Dict
 from core.repositories.content_repository import ContentRepository
 from engines.writing.engine import WritingEngine
 from engines.writing.models import ContentBrief
+from engines.source_selection import SmartSourceSelector
 
 logger = logging.getLogger(__name__)
 
